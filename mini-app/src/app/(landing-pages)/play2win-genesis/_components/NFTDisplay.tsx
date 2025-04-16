@@ -12,7 +12,7 @@ export default function NFTDisplay() {
     <div className="flex flex-col gap-4">
       {/* NFT  */}
       <div
-        className="play-2-win-reward-button-border rounded-2lg backdrop-blur-md px-[13px] py-2 flex items-center gap-2 w-fit mx-auto cursor-pointer"
+        className="play-2-win-reward-button-border rounded-2lg backdrop-blur-md p-[9px] py-2 flex items-center gap-2 w-fit mx-auto cursor-pointer"
         tabIndex={0}
         onClick={() => {
           if (reachedMaxScore) setShowNFTDialog(true);
@@ -30,7 +30,7 @@ export default function NFTDisplay() {
         />
         <Typography
           variant="caption2"
-          className="flex text-[10px] leading-4 flex-col text-brand-divider-dark w-[42px] text-center"
+          className="flex text-[10px] leading-4 flex-col text-brand-divider-dark w-[50px] text-center"
         >
           {reachedMaxScore ? "Play2win NFT" : "Unclaimed"}
         </Typography>
