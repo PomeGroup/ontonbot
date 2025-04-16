@@ -32,7 +32,7 @@ export default function NFTDisplay() {
           variant="caption2"
           className="flex text-[10px] leading-4 flex-col text-brand-divider-dark w-[42px] text-center"
         >
-          {reachedMaxScore ? "Play2win NFT" : "Locked"}
+          {reachedMaxScore ? "Play2win NFT" : "Unclaimed"}
         </Typography>
       </div>
       {/* Description */}
