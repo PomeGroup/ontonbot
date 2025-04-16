@@ -3,6 +3,8 @@
 import { trpc } from "@/app/_trpc/client";
 import { useConfig } from "@/context/ConfigContext";
 import { getTimeLeft } from "@/lib/time.utils";
+import { QueryStatus } from "@tanstack/react-query";
+import { fromNano } from "@ton/core";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { P2WUnlockedDialog } from "./P2WUnlockedDialog";
 
@@ -18,6 +20,7 @@ type Play2WinData = {
     reward: string;
     threshold: string;
     gameLink: string | null;
+    dataFetchStatus: QueryStatus;
   };
   nftReserved: number;
   userScore: number;
@@ -41,6 +44,7 @@ const mockData = {
     reward: "$150",
     threshold: ">1500",
     gameLink: null,
+    dataFetchStatus: "loading",
   },
   nftReserved: 66,
   userScore: 0,
@@ -76,30 +80,73 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   /*
-   SET COUNTDOWN 
+   SET DAYS LEFT
   */
   useEffect(() => {
     const endDate = new Date(+config["play2win-enddate"]!);
-
     const { days } = getTimeLeft(endDate);
 
     setData((prev) => ({
       ...prev,
       daysLeft: days,
     }));
+  }, [config]);
 
-    const timer = setInterval(() => {
-      const { hours, minutes, seconds } = getTimeLeft(new Date(play2winGameQuery.data?.endDate!));
+  /*
+   SET CONTEST DATA ON QUERY SUCCESS
+  */
+  useEffect(() => {
+    if (play2winGameQuery.isSuccess && play2winGameQuery.data) {
+      const endDate = new Date(play2winGameQuery.data?.endDate!);
+      const { hours, minutes, seconds } = getTimeLeft(endDate);
 
       setData((prev) => ({
         ...prev,
-        daysLeft: days,
-        contest: { ...prev.contest, minutes, hours, seconds },
+        contest: {
+          ...prev.contest,
+          gameLink: play2winGameQuery.data?.tournamentLink ?? "#",
+          noGame: !Boolean(play2winGameQuery.data?.tournamentLink),
+          reward: `${fromNano(play2winGameQuery.data?.currentPrizePool ?? 0) ?? 0} TON`,
+          ticketPrice: `${fromNano(play2winGameQuery.data?.entryFee ?? 0)} TON`,
+          dataFetchStatus: play2winGameQuery.status,
+          hours,
+          minutes,
+          seconds,
+        },
       }));
-    }, 1000);
+    } else {
+      setData((prev) => ({
+        ...prev,
+        contest: {
+          ...prev.contest,
+          dataFetchStatus: play2winGameQuery.status,
+        },
+      }));
+    }
+  }, [play2winGameQuery.isLoading, play2winGameQuery.isSuccess, play2winGameQuery.data]);
+
+  // Timer to update countdown every second
+  useEffect(() => {
+    if (!play2winGameQuery.data?.endDate) return;
+
+    const updateCountdown = () => {
+      const { hours, minutes, seconds } = getTimeLeft(new Date(play2winGameQuery.data?.endDate!));
+      setData((prev) => ({
+        ...prev,
+        contest: {
+          ...prev.contest,
+          hours,
+          minutes,
+          seconds,
+        },
+      }));
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(timer);
-  }, [play2winGameQuery.isSuccess]);
+  }, [play2winGameQuery.data?.endDate]);
 
   // Open dialog if reached the max score and dialog never shown before
   useEffect(() => {
@@ -119,11 +166,6 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
         nftReserved: reservedNFTsQuery.data?.total ?? 0,
         userPlayed: Boolean(userScoreQuery.data?.maxScore.maxScore),
         reachedMaxScore: (userScoreQuery.data?.maxScore.maxScore ?? 0) >= data.maxScore,
-        contest: {
-          ...data.contest,
-          gameLink: play2winGameQuery.data?.tournamentLink ?? "#",
-          noGame: !Boolean(play2winGameQuery.data?.tournamentLink),
-        },
         showNFTDialog,
         setShowNFTDialog,
       }}

@@ -36,7 +36,11 @@ export default function GameCard() {
   const { contest } = usePlay2Win();
   const { noGame } = contest;
 
-  if (noGame) {
+  if (contest.dataFetchStatus === "loading") {
+    return <div className="backdrop-blur-md h-[116px] animate-pulse bg-white/10 rounded-2lg p-2 w-full" />;
+  }
+
+  if (noGame || contest.dataFetchStatus === "error") {
     return (
       <div className="flex flex-col items-center gap-1">
         <video
