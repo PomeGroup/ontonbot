@@ -98,7 +98,7 @@ export default function GameCard() {
               />
               <KeyValue
                 icon={<GemIcon />}
-                label="Threshold for NFT"
+                label="Points required for NFT"
                 value={contest.threshold}
               />
             </div>
