@@ -89,7 +89,7 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
     }));
 
     const timer = setInterval(() => {
-      const { hours, minutes, seconds } = getTimeLeft(endDate);
+      const { hours, minutes, seconds } = getTimeLeft(new Date(play2winGameQuery.data?.endDate!));
 
       setData((prev) => ({
         ...prev,
