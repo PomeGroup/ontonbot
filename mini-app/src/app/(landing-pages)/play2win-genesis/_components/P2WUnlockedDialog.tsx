@@ -31,16 +31,16 @@ export const P2WUnlockedDialog: FC = () => {
           <Typography variant="title3">Congrats!</Typography>
           <Typography variant="title3">You unlocked the Play2win NFT</Typography>
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 w-full">
           <div className="flex flex-col gap-1">
             <Typography variant="footnote">You’re now eligible for the Play2win NFT reward.</Typography>
             <Typography variant="footnote">Your NFT will be minted at May 9th.</Typography>
           </div>
-          <div className="flex gap-3 items-center justify-center">
+          <div className="flex gap-3 items-center justify-center w-full">
             <DialogClose asChild>
               <Button
                 variant="link"
-                className="text-[#5297FF]"
+                className="text-[#5297FF] w-full"
                 onClick={() => setShowNFTDialog(false)}
               >
                 <Typography
@@ -52,7 +52,7 @@ export const P2WUnlockedDialog: FC = () => {
               </Button>
             </DialogClose>
             <Button
-              className="border border-[#51AEFF] bg-transparent py-3 px-[20.5px] hover:bg-[#3485FE]/10"
+              className="border border-[#51AEFF] bg-transparent py-3 px-[20.5px] hover:bg-[#3485FE]/10 w-full"
               onClick={() => {
                 webapp?.openLink(collectionLink);
               }}
