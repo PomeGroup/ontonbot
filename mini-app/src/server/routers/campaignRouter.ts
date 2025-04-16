@@ -15,6 +15,7 @@ import { generateRandomHash } from "@/lib/generateRandomHash";
 import { Address } from "@ton/core";
 import { logger } from "@/server/utils/logger";
 import { checkRateLimit } from "@/lib/checkRateLimit";
+import { affiliateClicksDB } from "@/server/db/affiliateClicks.db";
 
 export const campaignRouter = router({
   /**
@@ -332,6 +333,9 @@ export const campaignRouter = router({
           message: `CAMPAIGN_LOG:Router:getOnionCampaignAffiliateData: Failed to create affiliate link for userId ${userId}`,
         });
       }
+
+      await affiliateClicksDB.enqueueClick(link.linkHash, userId);
+
       logger.info(
         `CAMPAIGN_LOG:Router:getOnionCampaignAffiliateData: Created affiliate link for userId ${userId}: ${link.linkHash}`
       );
