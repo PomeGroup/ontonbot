@@ -26,10 +26,15 @@ export const campaignRouter = router({
     .input(
       z.object({
         campaignType: z.enum(campaignTypes.enumValues),
+        affiliateHash: z.string().optional(),
       })
     )
-    .query(async ({ input }) => {
-      const { campaignType } = input;
+    .query(async ({ input, ctx }) => {
+      const { campaignType, affiliateHash } = input;
+      const userId = ctx.user?.user_id;
+      if (affiliateHash) {
+        await affiliateClicksDB.enqueueClick(affiliateHash, userId);
+      }
       return tokenCampaignNftCollectionsDB.getCollectionsByCampaignTypeSecure(campaignType);
     }),
   /**
