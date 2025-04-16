@@ -22,7 +22,7 @@ export const P2WUnlockedDialog: FC = () => {
       <div className="flex flex-col gap-4 items-center justify-center text-center">
         <div className="flex flex-col items-center justify-center text-center gap-3">
           <Image
-            src="https://storage.onton.live/ontonimage/play-2-win-genesis-ticket.png"
+            src="https://storage.onton.live/ontonimage/p2w-badge.png"
             width={160}
             height={160}
             alt="Play2Win NFT Image"
