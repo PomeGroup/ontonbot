@@ -124,10 +124,11 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
         contest: {
           ...prev.contest,
           dataFetchStatus: play2winGameQuery.status,
+          noGame: !Boolean(play2winGameQuery.data?.tournamentLink),
         },
       }));
     }
-  }, [play2winGameQuery.isLoading, play2winGameQuery.isSuccess, play2winGameQuery.data]);
+  }, [play2winGameQuery.isLoading, play2winGameQuery.isSuccess, play2winGameQuery.data?.tournamentLink]);
 
   // Timer to update countdown every second
   useEffect(() => {
