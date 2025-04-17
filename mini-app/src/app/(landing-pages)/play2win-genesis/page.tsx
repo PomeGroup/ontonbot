@@ -36,7 +36,7 @@ function Play2WinApp() {
             <Play2WinCard />
             <div className="absolute -left-12 -z-10 opacity-30 h-full w-[] -right-18 bottom-0">
               <Image
-                src="https://storage.onton.live/ontonimage/play-2-win-black-hole.jpg"
+                src="https://storage.onton.live/ontonimage/p2w-black-hole.jpg"
                 fill
                 alt="background"
                 className="object-cover"

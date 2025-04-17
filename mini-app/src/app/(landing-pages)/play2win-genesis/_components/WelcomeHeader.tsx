@@ -11,7 +11,7 @@ const WelcomeHeader: React.FC = () => {
     <div className="text-center flex flex-col gap-2">
       <div className="absolute -left-4 -top-4 -z-10 h-[210px] w-screen opacity-40">
         <Image
-          src="https://storage.onton.live/ontonimage/play-2-win-header-background.jpg"
+          src="https://storage.onton.live/ontonimage/p2w-head-bg.jpg"
           fill
           alt="background"
           className="object-bottom object-cover"
