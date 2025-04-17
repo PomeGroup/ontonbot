@@ -18,7 +18,7 @@ const TicketSvg: React.FC<SVGProps<SVGSVGElement>> = (props) => {
           height="128"
         >
           <image
-            href="https://storage.onton.live/ontonimage/p2w-badge.png"
+            href="https://storage.onton.live/ontonimage/p2w-badge-cm.jpg"
             x="0"
             y="0"
             width="138"

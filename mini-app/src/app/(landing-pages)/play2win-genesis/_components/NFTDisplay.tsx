@@ -25,7 +25,7 @@ export default function NFTDisplay() {
           alt="Play2Win NFT Image"
           width={44}
           height={44}
-          src="https://storage.onton.live/ontonimage/p2w-badge.png"
+          src="https://storage.onton.live/ontonimage/p2w-badge-cm.jpg"
           className={cn("rounded-lg w-11 h-11 filter", !reachedMaxScore && "grayscale")}
         />
         <Typography
