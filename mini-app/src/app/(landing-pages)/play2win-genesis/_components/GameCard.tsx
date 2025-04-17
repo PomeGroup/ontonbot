@@ -16,11 +16,11 @@ function KeyValue({ label, value, icon }: KeyValueProps) {
   return (
     <div className="flex justify-between items-center">
       <Typography
-        variant="caption2"
+        variant="footnote"
         className="flex items-center gap-1"
       >
         <span className="text-[#51AEFF]">{icon}</span>
-        <span className="text-sm">{label}</span>
+        <span className="text-[10px]">{label}</span>
       </Typography>
       <Typography
         weight="medium"
