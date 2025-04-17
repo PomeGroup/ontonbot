@@ -7,6 +7,7 @@ import { sendLogNotification } from "@/lib/tgBot";
 import { usersDB } from "@/server/db/users";
 import { tokenCampaignSpinPackagesDB } from "@/server/db/tokenCampaignSpinPackages.db";
 import { is_mainnet } from "@/server/routers/services/tonCenter";
+import { attemptSendTelegramWithRetries } from "@/cronJobs/helper/attemptSendTelegramWithRetries";
 
 /**
  * Cron job that checks for "confirming" orders on TON blockchain,
@@ -58,12 +59,34 @@ export async function processCampaignOrders() {
             `userId : ${User?.user_id}\n` +
             `price: ${order.finalPrice} ${order.currency}\n` +
             `Trx Hash: <a href='https://${prefix}tonviewer.com/transaction/${trxHashUrl}'>🔗 TRX</a>\n` +
-            `Spin Package ID: ${spinPackage?.name}` +
+            `Spin Package ID: ${spinPackage?.name}\n` +
             `Transaction comment: OnionCampaign=${order.uuid}\n`,
           topic: "campaign",
         });
       } catch (e) {
         logger.warn(`processCampaignOrders: Error sending log notification: for order ${order.id}`, e);
+      }
+      // 7) Notify the user of the order completion
+      // e.g. via Telegram or other means
+      try {
+        const messageText =
+          `Your order has been successfully processed! 🎉\n` +
+          `Your order ID is ${order.id}.\n` +
+          `You have bought ${spinPackage?.name} Package.\n` +
+          `Thank you for your support!`;
+        const response = await attemptSendTelegramWithRetries(
+          {
+            telegramUserId: order.userId.toString(),
+            rewardLink: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tab_campaign`,
+            buttonText: "Check Your Spin Now",
+          },
+          messageText
+        );
+        if (!response) {
+          logger.warn(`processCampaignOrders:  Failed to send order completion notification to ${order.userId}`);
+        }
+      } catch (e) {
+        logger.warn(`processCampaignOrders: Error notifying user of order completion: for order ${order.id}`, e);
       }
       logger.log(
         `processCampaignOrders: Order completed: order.id ${order.id} and order.uuid ${order.uuid} for user ${User?.username} 

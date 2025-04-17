@@ -99,7 +99,11 @@ export const CheckTransactions = async () => {
         .where(
           and(
             eq(tokenCampaignOrders.uuid, co.order_uuid),
-            or(eq(tokenCampaignOrders.status, "new"), eq(tokenCampaignOrders.status, "confirming")),
+            or(
+              eq(tokenCampaignOrders.status, "new"),
+              eq(tokenCampaignOrders.status, "confirming"),
+              eq(tokenCampaignOrders.status, "cancelled")
+            ),
             // If you want to verify the price matches `co.value`:
             eq(tokenCampaignOrders.finalPrice, co.value.toString())
           )

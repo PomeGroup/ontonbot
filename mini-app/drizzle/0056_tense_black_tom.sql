@@ -1,0 +1,1 @@
+ALTER TABLE "user_wallet_balances" ALTER COLUMN "last_balance" SET DATA TYPE real;

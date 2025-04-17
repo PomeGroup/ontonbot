@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
-import { eventRegistrants, users, visitors, events } from "@/db/schema";
+import { eventRegistrants, users, visitors, events, tokenCampaignOrders, orders } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { InferSelectModel, eq, sql, and, or, not, inArray } from "drizzle-orm";
+import { InferSelectModel, eq, sql, and, or, not, inArray, isNull } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import xss from "xss";
 import { logSQLQuery } from "@/lib/logSQLQuery";
@@ -609,17 +609,17 @@ export const fetchUsersByOffset = async (offset: number, limit: number) => {
     .from(users)
     .where(
       sql`
-        ${users.updatedAt} IS NULL 
+          ${users.updatedAt} IS NULL 
         OR
-        ${users.updatedAt}
-        <
-        NOW
-        (
-        )
-        -
-        interval
-        '10 days'
-    `
+          ${users.updatedAt}
+          <
+          NOW
+          (
+          )
+          -
+          interval
+          '10 days'
+      `
     )
     .orderBy(users.updatedAt) // ascending by default
     .offset(offset)
@@ -647,6 +647,59 @@ export const fetchUsersByCursor = async (lastId: number, limit: number) => {
   return await query.execute();
 };
 
+/**
+ * Returns the (userId, walletAddress) of users who have
+ * a non-null wallet_address that does NOT appear in either:
+ *   - orders.owner_address
+ *   - token_campaign_orders.wallet_address
+ *
+ * We'll refer to these as "unused" wallets,
+ * meaning they're only found in the users table.
+ */
+async function getDistinctUnusedWallets(): Promise<{ userId: number; walletAddress: string | null }[]> {
+  return await db
+    .select({
+      userId: users.user_id,
+      walletAddress: users.wallet_address,
+    })
+    .from(users)
+    .where(
+      and(
+        not(isNull(users.wallet_address)), // wallet_address not null
+        sql`${users.wallet_address} <> ''`, // not empty string
+        // "NOT EXISTS" in orders
+        sql`NOT EXISTS (
+          SELECT 1
+          FROM
+        ${orders}
+        AS
+        o
+        WHERE
+        o
+        .
+        owner_address
+        =
+        ${users.wallet_address}
+        )`,
+        // "NOT EXISTS" in token_campaign_orders
+        sql`NOT EXISTS (
+          SELECT 1
+          FROM
+        ${tokenCampaignOrders}
+        AS
+        tco
+        WHERE
+        tco
+        .
+        wallet_address
+        =
+        ${users.wallet_address}
+        )`
+      )
+    )
+    .execute();
+}
+
 export const usersDB = {
   selectUserById,
   insertUser,
@@ -659,4 +712,5 @@ export const usersDB = {
   updateUserRole,
   fetchUsersByOffset,
   fetchUsersByCursor,
+  getDistinctUnusedWallets,
 };

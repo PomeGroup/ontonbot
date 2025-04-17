@@ -63,8 +63,21 @@ async function MainCronJob() {
   );
 
   new CronJob(
-    "*/2 * * * *", // (cronTime) =>  every 5 minutes
+    "*/2 * * * *", // (cronTime) =>  every 2 minutes
     cronJobs.sendTournamentRewardsNotifications, // (onTick)   => function to run
+    null, // (onComplete) => no special callback after job
+    true, // (start) => start immediately
+    null, // (timeZone) => e.g. "UTC" or your local
+    null, // (context)
+    false, // (runOnInit) => don't run immediately on app start
+    null, // (utcOffset)
+    false, // (unrefTimeout)
+    true // (waitForCompletion) => wait for onTick to finish
+    // No errorHandler passed
+  );
+  new CronJob(
+    "*/1 * * * *", // (cronTime) =>  every 5 minutes
+    cronJobs.checkAndEnrollUserInPlay2WinCampaign, // (onTick)   => function to run
     null, // (onComplete) => no special callback after job
     true, // (start) => start immediately
     null, // (timeZone) => e.g. "UTC" or your local
