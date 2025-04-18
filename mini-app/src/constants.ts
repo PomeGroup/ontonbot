@@ -723,7 +723,7 @@ export const ALLOWED_TONFEST_EVENT_UUIDS = [
   "839960c1-12ec-405e-b372-be88ece4fa18",
 ];
 
-export const PLAY2WIN_CAMPAIGN_MIN_DATE = new Date("2025-04-13T00:00:00Z");
+export const PLAY2WIN_CAMPAIGN_MIN_DATE = new Date("2025-04-18T00:00:00Z");
 export const PLAY2WIN_CAMPAIGN_TARGET_GAME_ID = 1;
 export const PLAY2WIN_DEFAULT_CAMPAIGN_TYPE: Play2WinCampaignType = "genesis_onion";
 export const PLAY2WIN_DEFAULT_MIN_POINTS = 1500;
