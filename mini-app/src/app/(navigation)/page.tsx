@@ -215,6 +215,8 @@ const OngoingEvents = () => {
     }
   );
 
+  if (ongoingEvents.isSuccess && ongoingEvents.data?.totalCount === 0) return null;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="w-full pb-2 flex justify-between items-center">
@@ -308,6 +310,11 @@ const UpcomingEvents = () => {
         </div>
       </div>
     );
+  }
+
+  // if there were zero events don't show anything
+  if (upcomingEvents.data?.totalCount === 0) {
+    return null;
   }
 
   return (
