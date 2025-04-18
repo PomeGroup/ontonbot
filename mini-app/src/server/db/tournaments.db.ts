@@ -1,10 +1,10 @@
-import { db } from "@/db/db";
-import { games } from "@/db/schema";
+import { db, dbLower } from "@/db/db";
+import { games, users } from "@/db/schema";
 import { prizeTypeEnum, tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/tournaments";
 import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import crypto from "crypto";
-import { and, asc, desc, eq, gt, gte, isNotNull, lt, lte, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNotNull, lt, lte, or, like, SQL } from "drizzle-orm";
 
 const getTournamentCacheKey = (tournamentId: number) => {
   return redisTools.cacheKeys.getTournamentById + tournamentId;
@@ -114,21 +114,22 @@ export const insertTournamentTx = async (
 };
 
 interface TournamentOrganizer {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-  imageUrl: string;
+  id: number | null;
+  name: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
+  imageUrl: string | null;
+  tournamentLink: string | null;
   pricePool: {
     type: "None" | "Coin" | null;
-    value: number;
-  };
+    value: number | null;
+  } | null;
   organizer: {
     id: number;
-    channel_name: string;
-    imageUrl: string;
-    username: string;
-  };
+    username: string | null;
+    imageUrl: string | null;
+    channel_name: string | null;
+  } | null;
 }
 
 export const getTournamentsWithFiltersDB = async ({
@@ -151,7 +152,7 @@ export const getTournamentsWithFiltersDB = async ({
   sortBy: "prize" | "entryFee" | "timeRemaining";
   sortOrder: "asc" | "desc";
   search?: string;
-}) => {
+}): Promise<TournamentOrganizer[]> => {
   // Generate cache key based on input parameters
   const cacheParams = { limit, cursor, filter, sortBy, sortOrder, search };
   const hash = crypto.createHash("md5").update(JSON.stringify(cacheParams)).digest("hex");
@@ -167,6 +168,7 @@ export const getTournamentsWithFiltersDB = async ({
       startDate: tournaments.startDate,
       endDate: tournaments.endDate,
       imageUrl: tournaments.imageUrl,
+      tournamentLink: tournaments.tournamentLink,
       pricePool: {
         type: tournaments.prizeType,
         value: tournaments.currentPrizePool,
