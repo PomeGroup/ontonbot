@@ -9,12 +9,13 @@ import { logger } from "@/server/utils/logger";
  */
 export const isUserEligible = async (telegramUserId: number): Promise<boolean> => {
   try {
-    const [row] = await db
-      .select()
-      .from(tokenCampaignEligibleUsers)
-      .where(eq(tokenCampaignEligibleUsers.userTelegramId, telegramUserId))
-      .execute();
 
+    // const [row] = await db
+    //   .select()
+    //   .from(tokenCampaignEligibleUsers)
+    //   .where(eq(tokenCampaignEligibleUsers.userTelegramId, telegramUserId))
+    //   .execute();
+    //
     // return !!row; // true if row is found, false otherwise
     return true;
   } catch (error) {

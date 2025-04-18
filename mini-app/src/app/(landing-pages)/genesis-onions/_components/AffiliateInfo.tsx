@@ -10,8 +10,23 @@ interface Props {
     onClose: () => void;
 }
 
-const SectionTitle = ({ children }: PropsWithChildren) => <Typography variant="callout" weight="semibold">{children}</Typography>;
-const SectionBody = ({ children, className }: PropsWithChildren & { className?: string }) => <Typography variant="subheadline1" weight="normal" className={className}>{children}</Typography>;
+const SectionTitle = ({ children }: PropsWithChildren) => (
+    <Typography
+        variant="callout"
+        weight="semibold"
+    >
+        {children}
+    </Typography>
+);
+const SectionBody = ({ children, className }: PropsWithChildren & { className?: string }) => (
+    <Typography
+        variant="subheadline1"
+        weight="normal"
+        className={className}
+    >
+        {children}
+    </Typography>
+);
 
 export const AffiliateInfo = ({ open, onClose }: Props) => {
     const handleOnClick = () => {
@@ -41,7 +56,9 @@ export const AffiliateInfo = ({ open, onClose }: Props) => {
 
                 <div className="overflow-x-hidden overflow-y-auto">
                     <SectionTitle>Share Your Link</SectionTitle>
-                    <SectionBody className="mb-3">Get a personal link to share. Anyone who buys spins through it counts as your referral.</SectionBody>
+                    <SectionBody className="mb-3">
+                        Get a personal link to share. Anyone who buys spins through it counts as your referral.
+                    </SectionBody>
 
                     <SectionTitle>Spins Counted</SectionTitle>
                     <SectionBody className="mb-3">
@@ -61,35 +78,6 @@ export const AffiliateInfo = ({ open, onClose }: Props) => {
 
                     <SectionTitle>Why It Works</SectionTitle>
                     <SectionBody>Easy to share, rewards grow with referrals, and everything is auto-tracked.</SectionBody>
-                </div>
-
-                <hr className="border-brand-divider-dark" />
-
-                <div className="justify-between flex gap-1 h-13">
-                    <Button
-                        className="flex-1 h-full text-orange"
-                        variant="link"
-                        onClick={onClose}
-                    >
-                        <Typography
-                            variant="body"
-                            weight="medium"
-                        >
-                            Dismiss
-                        </Typography>
-                    </Button>
-
-                    <Button
-                        className="flex-1 h-full bg-orange hover:bg-orange/80"
-                        onClick={handleOnClick}
-                    >
-                        <Typography
-                            variant="body"
-                            weight="medium"
-                        >
-                            Discover ONION
-                        </Typography>
-                    </Button>
                 </div>
             </Box>
         </Modal>

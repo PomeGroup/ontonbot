@@ -1,0 +1,2 @@
+ALTER TABLE "user_wallet_balances" ALTER COLUMN "created_at" DROP DEFAULT;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "last_checked_at_idx" ON "user_wallet_balances" USING btree ("created_at");

@@ -14,6 +14,8 @@ import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
 import { generateRandomHash } from "@/lib/generateRandomHash";
 import { Address } from "@ton/core";
 import { logger } from "@/server/utils/logger";
+import { checkRateLimit } from "@/lib/checkRateLimit";
+import { affiliateClicksDB } from "@/server/db/affiliateClicks.db";
 
 export const campaignRouter = router({
   /**
@@ -24,10 +26,15 @@ export const campaignRouter = router({
     .input(
       z.object({
         campaignType: z.enum(campaignTypes.enumValues),
+        affiliateHash: z.string().optional(),
       })
     )
-    .query(async ({ input }) => {
-      const { campaignType } = input;
+    .query(async ({ input, ctx }) => {
+      const { campaignType, affiliateHash } = input;
+      const userId = ctx.user?.user_id;
+      if (affiliateHash) {
+        await affiliateClicksDB.enqueueClick(affiliateHash, userId);
+      }
       return tokenCampaignNftCollectionsDB.getCollectionsByCampaignTypeSecure(campaignType);
     }),
   /**
@@ -53,7 +60,13 @@ export const campaignRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { campaignType } = input;
       const userId = ctx.user?.user_id;
-
+      const { allowed } = await checkRateLimit(userId.toString(), "spinForNftCampaign", 30, 60);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "CAMPAIGN_LOG:Router:addOrder: Rate limit exceeded. Try again later.",
+        });
+      }
       return await db.transaction(async (tx) => {
         // 1) Find an existing *unused* spin row
         const spinRow = await tokenCampaignUserSpinsDB.getUnusedSpinForUserTx(tx, userId);
@@ -117,7 +130,13 @@ export const campaignRouter = router({
     .mutation(async ({ input, ctx }) => {
       // Ensure the user is logged in (ctx.user set by your auth)
       const userId = ctx.user?.user_id;
-
+      const { allowed } = await checkRateLimit(userId.toString(), "addOrderCampaign", 30, 60);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "CAMPAIGN_LOG:Router:addOrder: Rate limit exceeded. Try again later.",
+        });
+      }
       const eligibility = await userEligibilityDB.isUserEligible(userId);
       if (!eligibility) {
         throw new TRPCError({
@@ -305,6 +324,7 @@ export const campaignRouter = router({
 
   getOnionCampaignAffiliateData: initDataProtectedProcedure.query(async ({ ctx }) => {
     // 1) Check user
+
     const userId = ctx.user?.user_id;
 
     // 2) See if there's already a link for onion1-campaign
@@ -319,11 +339,11 @@ export const campaignRouter = router({
           message: `CAMPAIGN_LOG:Router:getOnionCampaignAffiliateData: Failed to create affiliate link for userId ${userId}`,
         });
       }
-      logger.info(
+      logger.log(
         `CAMPAIGN_LOG:Router:getOnionCampaignAffiliateData: Created affiliate link for userId ${userId}: ${link.linkHash}`
       );
     }
-
+    //await affiliateClicksDB.enqueueClick(link.linkHash, userId);
     // 4) Sum the spin counts from completed orders with this linkHash
     const totalSpins = await tokenCampaignOrdersDB.sumSpinCountByAffiliateHash(link.linkHash);
     const botUserName = process.env.NEXT_PUBLIC_BOT_USERNAME || "theontonbot";

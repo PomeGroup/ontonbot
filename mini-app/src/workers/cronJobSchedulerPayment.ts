@@ -5,7 +5,7 @@ import { logger } from "@/server/utils/logger";
 import "@/lib/gracefullyShutdown";
 import cronJobs, { cronJobRunner } from "@/cronJobs";
 import { redisTools } from "@/lib/redisTools";
-import { processCampaignAffiliateSpins } from "@/cronJobs/tasks/processCampaignAffiliateSpins";
+import { is_prod_env, is_stage_env } from "@/server/utils/evnutils";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -71,6 +71,20 @@ async function MainCronJob() {
     false, // unrefTimeout => false
     true // waitForCompletion => true
   );
+  if (is_prod_env()) {
+    new CronJob(
+      "* */10 * * * *", // Every 10 minutes
+      cronJobs.updateAllUserWalletBalances, // The function to run
+      null, // onComplete (not needed)
+      true, // start immediately
+      null, // timeZone
+      null, // context
+      false, // runOnInit => false (don't run on app start)
+      null, // utcOffset => null
+      false, // unrefTimeout => false
+      true // waitForCompletion => true
+    );
+  }
 }
 
 MainCronJob().then(() => logger.log("Cron Jobs Started"));

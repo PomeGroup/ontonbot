@@ -113,6 +113,21 @@ import {
   TokenCampaignNftCollectionsPublic,
 } from "./schema/tokenCampaignNftCollections";
 import { tokenCampaignEligibleUsers, TokenCampaignEligibleUsers } from "./schema/tokenCampaignEligibleUsers";
+
+import {
+  userWalletBalances,
+  placeOfWalletConnection,
+  UserWalletBalances,
+  UserWalletBalancesInsert,
+  PlaceOfWalletConnection,
+} from "./schema/userWalletBalances";
+import {
+  play2winCampaigns,
+  Play2WinCampaignsInsert,
+  Play2WinCampaignsRow,
+  Play2WinCampaignType,
+  play2winCampaignType,
+} from "./schema/play2winCampaigns";
 // export all the enums
 export {
   accessRoleEnum,
@@ -196,6 +211,10 @@ export {
   tokenCampaignOrders,
   tokenCampaignNftCollections,
   tokenCampaignEligibleUsers,
+  userWalletBalances,
+  placeOfWalletConnection,
+  play2winCampaigns,
+  play2winCampaignType,
 };
 
 // Type Exports
@@ -254,4 +273,10 @@ export type {
   TokenCampaignNftCollectionsInsert,
   CampaignType,
   TokenCampaignEligibleUsers,
+  UserWalletBalances,
+  UserWalletBalancesInsert,
+  PlaceOfWalletConnection,
+  Play2WinCampaignsInsert,
+  Play2WinCampaignsRow,
+  Play2WinCampaignType,
 };
