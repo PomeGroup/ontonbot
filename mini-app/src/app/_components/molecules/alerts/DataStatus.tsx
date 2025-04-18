@@ -9,7 +9,7 @@ export type DataStatusProps = {
   description?: ReactNode;
   size?: keyof typeof ANIMATION_SIZES;
   className?: string;
-  canvasWrapperClassName?: string
+  canvasWrapperClassName?: string;
 };
 
 export const DATA_STATUS_ANIMATIONS = {
@@ -23,6 +23,7 @@ export const DATA_STATUS_ANIMATIONS = {
   searching: "https://storage.onton.live/ontonimage/duck-searching.json",
   blocked: "https://storage.onton.live/ontonimage/tea_drinking_green_frog.json",
   map_looking: "https://storage.onton.live/ontonimage/duck_looking_at_map.json",
+  archive_duck: "https://storage.onton.live/ontonimage/archive_duck.json",
 } as const;
 
 export const ANIMATION_SIZES = {
