@@ -16,6 +16,11 @@ import { useDebouncedState } from "@mantine/hooks";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+/**
+ * Page showing events and contests you host. ✨
+ *
+ * @returns JSX.Element
+ */
 export default function MyHostedPage() {
   const webApp = useWebApp();
   const userId = webApp?.initDataUnsafe?.user?.id;
@@ -150,7 +155,7 @@ export default function MyHostedPage() {
             )}
             <ContestsTimeline
               tournaments={contests}
-              isLoading={eventsInfinite.isFetching}
+              isLoading={contestsInfinite.isFetching}
             />
             {!contestsInfinite.isFetching && contestsInfinite.data?.pages.at(-1)?.nextCursor && (
               <CustomButton

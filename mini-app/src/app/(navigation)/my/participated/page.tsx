@@ -11,8 +11,16 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useWebApp from "@/hooks/useWebApp";
 import { useDebouncedState } from "@mantine/hooks";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import CustomCard from "@/app/_components/atoms/cards/CustomCard";
+import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
+import Link from "next/link";
 
+/**
+ * MyParticipatedEventsPage displays events and contests you’ve joined. 🤝
+ *
+ * @returns JSX.Element
+ */
 export default function MyParticipatedEventsPage() {
   const webApp = useWebApp();
   const userId = webApp?.initDataUnsafe?.user?.id;
@@ -20,7 +28,7 @@ export default function MyParticipatedEventsPage() {
   const [contestsSearch, setContestsSearch] = useDebouncedState("", 500);
   const [activeTab, setActiveTab] = useState("events");
 
-  const infiniteApi = trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
+  const eventsInfinite = trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
     { filter: { user_id: userId }, search: eventsSearch, limit: 10 },
     {
       enabled: Boolean(userId) && Boolean(activeTab === "events"),
@@ -46,6 +54,22 @@ export default function MyParticipatedEventsPage() {
     }
   );
 
+  /**
+   * Flattened list of participated events. 🔄
+   */
+  const events = useMemo(
+    () => eventsInfinite.data?.pages.map((p) => p.items.eventsData).flat() ?? [],
+    [eventsInfinite.data?.pages]
+  );
+
+  /**
+   * Flattened list of participated contests. 🔄
+   */
+  const contests = useMemo(
+    () => contestsInfinite.data?.pages.map((p) => p.tournaments).flat() ?? [],
+    [contestsInfinite.data?.pages]
+  );
+
   return (
     <div className="bg-brand-bg p-4 min-h-screen flex flex-col gap-4">
       <Tabs
@@ -66,16 +90,34 @@ export default function MyParticipatedEventsPage() {
                 setEventsSearch(e.target.value);
               }}
             />
-            <Typography variant="title2">Participated Events ({infiniteApi.data?.pages[0].items.rowsCount})</Typography>
+            <Typography variant="title2">Participated Events ({eventsInfinite.data?.pages[0].items.rowsCount})</Typography>
+            {events.length === 0 && (
+              <CustomCard defaultPadding>
+                <div className="flex flex-col gap-5">
+                  <DataStatus
+                    status="archive_duck"
+                    title="It’s looking quiet here..."
+                    description="Participate in an event and see your activity here."
+                    size="lg"
+                  />
+                  <Link
+                    href="/"
+                    prefetch
+                  >
+                    <CustomButton>Explore Events</CustomButton>
+                  </Link>
+                </div>
+              </CustomCard>
+            )}
             <EventsTimeline
-              isLoading={infiniteApi.isFetching}
+              isLoading={eventsInfinite.isFetching}
               preserveDataOnFetching
-              events={infiniteApi.data?.pages.map((p) => p.items.eventsData).flat() || null}
+              events={events}
             />
-            {!infiniteApi.isFetching && infiniteApi.data?.pages.at(-1)?.nextCursor && (
+            {!eventsInfinite.isFetching && eventsInfinite.data?.pages.at(-1)?.nextCursor && (
               <CustomButton
                 onClick={() => {
-                  infiniteApi.fetchNextPage();
+                  eventsInfinite.fetchNextPage();
                 }}
                 variant="link"
                 fontSize="body"
@@ -98,9 +140,27 @@ export default function MyParticipatedEventsPage() {
             />
             <Typography variant="title2">Past Contests</Typography>
 
+            {contests.length === 0 && (
+              <CustomCard defaultPadding>
+                <div className="flex flex-col gap-5">
+                  <DataStatus
+                    status="archive_duck"
+                    title="It’s looking quiet here..."
+                    description="Join a contest and see your results here."
+                    size="lg"
+                  />
+                  <Link
+                    href="/play-2-win"
+                    prefetch
+                  >
+                    <CustomButton>Explore Contests</CustomButton>
+                  </Link>
+                </div>
+              </CustomCard>
+            )}
             <ContestsTimeline
-              tournaments={contestsInfinite.data?.pages.map((p) => p.tournaments).flat() || null}
-              isLoading={infiniteApi.isFetching}
+              tournaments={contests}
+              isLoading={contestsInfinite.isFetching}
             />
             {!contestsInfinite.isFetching && contestsInfinite.data?.pages.at(-1)?.nextCursor && (
               <CustomButton
