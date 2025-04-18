@@ -102,7 +102,7 @@ module.exports = konstaConfig({
         "main-button-color": "#007AFF",
         "disabled-font": "#B9B9BA",
         confirm: "#34C759",
-        "wallet-tertiary_fill_background": "#747480",
+        fill_background: "#747480",
 
         "cn-primary": {
           DEFAULT: "hsl(var(--shadcn-primary))",
@@ -116,6 +116,10 @@ module.exports = konstaConfig({
         "cn-destructive": {
           DEFAULT: "hsla(var(--shadcn-destructive))",
           foreground: "hsl(var(--shadcn-destructive-foreground))",
+        },
+        "cn-success": {
+          DEFAULT: "hsla(var(--shadcn-success))",
+          foreground: "hsl(var(--shadcn-success-foreground))",
         },
         "cn-muted": {
           DEFAULT: "hsla(var(--shadcn-muted))",

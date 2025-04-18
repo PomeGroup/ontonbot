@@ -4,8 +4,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
 import { Button as KButton } from "konsta/react";
+import { Loader2 } from "lucide-react";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-cn-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cn-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-xl disabled:cursor-not-allowed",
@@ -13,12 +13,18 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary/10 text-cn-primary-foreground hover:bg-cn-primary/30",
-        primary: "bg-cn-primary text-cn-primary-foreground hover:bg-cn-secondary hover:text-cn-primary",
-        destructive: "bg-cn-destructive text-cn-destructive-foreground hover:bg-destructive/90",
-        outline: "bg-primary/10 text-cn-secondary-foreground hover:bg-primary/20",
+        primary: "bg-cn-primary text-cn-primary-foreground",
+        destructive: "bg-cn-destructive text-cn-destructive-foreground",
+        outline: "border-2 border-cn-primary text-cn-primary hover:border-cn-primary/80",
         secondary: "bg-cn-secondary text-cn-secondary-foreground hover:bg-cn-secondary/30",
-        ghost: "hover:bg-cn-accent hover:text-accent-foreground",
-        link: "text-cn-primary underline-offset-4 text-zinc hover:underline",
+        ghost: "hover:bg-cn-accent hover:text-accent-foreground bg-cn-accent",
+        link: "text-cn-primary hover:underline",
+        success: "bg-cn-success text-cn-success-foreground",
+        "success-outline": "border-2 border-cn-success text-cn-success hover:border-cn-success/80",
+        "destructive-outline": "border-2 border-cn-destructive text-cn-destructive hover:border-cn-destructive/80",
+        // link success and destructive
+        "success-link": "text-cn-success hover:underline",
+        "destructive-link": "text-cn-destructive hover:underline",
       },
       size: {
         default: "min-h-10 px-4 py-2",
@@ -34,9 +40,7 @@ const buttonVariants = cva(
   }
 );
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   isLoading?: boolean;
 }

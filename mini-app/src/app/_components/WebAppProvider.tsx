@@ -17,6 +17,8 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
   const { setInitData, initData } = useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
 
+  const theme = webApp?.themeParams;
+
   // Access multi-level stack from the store
   const { goBack } = useSectionStore();
 
@@ -119,7 +121,16 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
 
   // 5) If we don't have initData => show skeleton
   if (!initData) {
-    return <EventsSkeleton />;
+    return (
+      <div
+        className={"p-4"}
+        style={{
+          backgroundColor: theme?.bg_color,
+        }}
+      >
+        <EventsSkeleton />;
+      </div>
+    );
   }
 
   return <>{children}</>;

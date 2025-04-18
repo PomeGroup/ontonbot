@@ -13,11 +13,12 @@ import CustomCard from "../_components/atoms/cards/CustomCard";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { trpc } from "../_trpc/client";
 
+import { Banner } from "../(landing-pages)/genesis-onions/_components/Banner";
 import { cn } from "@/utils";
 import { useMemo } from "react";
-import { Banner } from "../(landing-pages)/genesis-onions/_components/Banner";
 import { Play2WinGenesisBanner } from "../(landing-pages)/play2win-genesis/_components/Play2WinGenesisBanner";
 import CustomSwiper from "../_components/CustomSwiper";
+import EventsTimeline from "../_components/Event/EventsTImeline";
 import EventCardSkeleton from "../_components/EventCard/EventCardSkeleton";
 
 export default function Home() {
@@ -132,7 +133,7 @@ const FeaturedContests = () => {
 
   const tournaments = tournomantsQuery.data;
 
-  if (tournomantsQuery.isSuccess && !tournaments) {
+  if (tournomantsQuery.isSuccess && !tournaments?.length) {
     return null;
   }
 
@@ -247,7 +248,6 @@ const OngoingEvents = () => {
       )}
       {ongoingEvents.isLoading ? (
         <div className="flex flex-col gap-2">
-          <Typography variant="title2">Ongoing Events</Typography>
           <div className="grid gap-4">
             {Array.from({ length: 2 }).map((_, index) => (
               <EventCardSkeleton key={index} />
@@ -259,7 +259,6 @@ const OngoingEvents = () => {
           <EventCard
             key={idx}
             event={event}
-            currentUserId={0}
           />
         ))
       )}
@@ -280,28 +279,6 @@ const UpcomingEvents = () => {
       staleTime: Infinity,
     }
   );
-
-  // Helper function that groups events based on day (formatted as "Sep 10")
-  const groupedEvents = useMemo(() => {
-    const groups: { [day: string]: any[] } = {};
-
-    upcomingEvents.data?.data?.forEach((event) => {
-      // Convert the timestamp (in seconds) to a Date, then format it.
-      const eventDate = new Date(event.startDate * 1000);
-      const dayString = eventDate.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-      });
-
-      if (!groups[dayString]) {
-        groups[dayString] = [];
-      }
-      groups[dayString].push(event);
-    });
-
-    // Convert the groups object into the desired array format.
-    return Object.entries(groups).map(([day, items]) => ({ day, items }));
-  }, [upcomingEvents.data?.data?.length]);
 
   if (upcomingEvents.isError) {
     return (
@@ -334,8 +311,8 @@ const UpcomingEvents = () => {
   }
 
   return (
-    <div>
-      <div className="w-full pb-2 flex justify-between items-center">
+    <div className="flex flex-col gap-4">
+      <div className="w-full flex justify-between items-center">
         <Typography variant="title2">
           Upcoming Events{upcomingEvents.data?.totalCount ? `(${upcomingEvents.data?.totalCount})` : ""}
         </Typography>
@@ -348,32 +325,15 @@ const UpcomingEvents = () => {
           }
           className="text-primary font-medium flex align-center"
         >
-          <span>Show more</span>
+          <span>All Events</span>
           <ChevronRightIcon
             width={20}
             className="ml-1 -my-0.5"
           />
         </Link>
       </div>
-      <div className="border-s border-dashed border-brand-muted ps-2 isolate">
-        {groupedEvents.map((group, idx) => (
-          <div key={group.day}>
-            <h3 className={cn("font-semibold w-full text-lg relative mt-4 mb-3", idx === 0 && "-translate-y-1/2 mb-0")}>
-              {group.day}
-              <div className="rounded-full bg-black w-2 h-2 absolute -translate-x-1/2 -translate-y-1/2 -ms-2 top-1/2" />
-            </h3>
-            <div className="flex w-full flex-col gap-2">
-              {group.items.map((event) => (
-                <EventCard
-                  key={event.event_uuid}
-                  event={event}
-                  timeOnly
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+
+      <EventsTimeline events={upcomingEvents.data.data} />
     </div>
   );
 };

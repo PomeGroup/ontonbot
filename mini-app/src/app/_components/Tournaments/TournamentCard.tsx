@@ -18,7 +18,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
   return (
     <Link
       href={`/play-2-win/${tournament.id}`}
-      className="block w-[160px]"
+      className="block w-full"
     >
       <CustomCard
         defaultPadding

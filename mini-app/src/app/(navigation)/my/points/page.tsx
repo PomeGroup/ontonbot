@@ -56,7 +56,9 @@ export default function MyPointsPage() {
         <p className="text-xs text-gray-500 mb-2">4 Tasks</p>
 
         {/* Slide-down area */}
-        <div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-[1000px]" : "max-h-0"}`}>
+        <div
+          className={`overflow-hidden flex flex-col gap-4 transition-all duration-300 ${isOpen ? "max-h-[1000px]" : "max-h-0"}`}
+        >
           <EventPointsGroup title="Online Events">
             <EventPointsCard
               eventTitle="Attend paid online events"

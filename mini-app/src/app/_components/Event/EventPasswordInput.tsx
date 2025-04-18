@@ -1,14 +1,13 @@
 import { trpc } from "@/app/_trpc/client";
+import PasscodeIcon from "@/components/icons/Passcode";
+import { useUserStore } from "@/context/store/user.store";
+import { useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
+import { List, ListInput } from "konsta/react";
 import { FormEventHandler, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useEventData } from "./eventPageContext";
-import PasscodeIcon from "@/components/icons/Passcode";
 import MainButton from "../atoms/buttons/web-app/MainButton";
-import { useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
-import { useUserStore } from "@/context/store/user.store";
 import CustomButton from "../Button/CustomButton";
-import Typography from "@/components/Typography";
-import { List, ListInput } from "konsta/react";
+import { useEventData } from "./eventPageContext";
 
 export const EventPasswordAndWalletInput = () => {
   const { initData, eventPasswordField, eventHash, eventData } = useEventData();
@@ -89,19 +88,19 @@ export const EventPasswordAndWalletInput = () => {
         {/*  className={"overflow-y-auto"}*/}
         {/*>*/}
         <form
-          className="  "
+          className=""
           ref={formRef}
           onSubmit={submitPassword}
         >
-          <Typography
+          {/* <Typography
             variant="body"
             weight="normal"
           >
             Enter the Event Password that the organizer shared to confirm your participation in the event.
-          </Typography>
+          </Typography> */}
           <List
             strongIos
-            className="!my-6 !-mx-4"
+            className="!-my-0 !-mx-4 [&>ul>li]:mt-0"
           >
             <ListInput
               outline
@@ -109,7 +108,7 @@ export const EventPasswordAndWalletInput = () => {
               name="event_password"
               type="text"
               minLength={4}
-              className={"!-mx-4"}
+              className={"!-mx-4 !-mt-4"}
               error={
                 upsertUserEventFieldMutation.isError
                   ? upsertUserEventFieldMutation.error?.message

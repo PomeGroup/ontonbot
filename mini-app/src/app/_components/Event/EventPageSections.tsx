@@ -8,7 +8,6 @@ import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import { useUserStore } from "@/context/store/user.store";
 import { Address } from "@ton/core";
-import { TonConnectButton } from "@tonconnect/ui-react";
 import { Block, List, ListItem } from "konsta/react";
 import { useRouter } from "next/navigation";
 import React, { useMemo } from "react";
@@ -17,6 +16,7 @@ import SupportButtons from "../atoms/buttons/SupportButton";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import CustomCard from "../atoms/cards/CustomCard";
 import DataStatus from "../molecules/alerts/DataStatus";
+import { ConnectWalletCard } from "../organisms/ConnectWallet";
 import EventKeyValue from "../organisms/events/EventKewValue";
 import ShareEventButton from "../ShareEventButton";
 import { ClaimRewardButton } from "./ClaimRewardButton";
@@ -138,16 +138,6 @@ const EventDescription = React.memo(() => {
 });
 
 EventDescription.displayName = "EventDescription";
-
-const UserWallet = () => {
-  return (
-    <CustomCard title={"Your Wallet"}>
-      <div className="p-4 pt-0 flex items-center justify-center">
-        <TonConnectButton />
-      </div>
-    </CustomCard>
-  );
-};
 
 const EventTitle = React.memo(() => {
   const { eventHash, eventData } = useEventData();
@@ -284,7 +274,10 @@ const OrganizerCard = React.memo(() => {
   if (!organizer) return null;
 
   return (
-    <CustomCard title={"Organizer"}>
+    <CustomCard
+      title={"Organizer"}
+      className="!pb-2"
+    >
       <List className="!mb-0 !-mt-2">
         <ListItem
           className="cursor-pointer"
@@ -343,14 +336,14 @@ const SbtCollectionLink = React.memo(() => {
 
   return (
     <CustomCard
-      title={"SBT Reward Badge"}
+      title={"SBTs"}
       description="Reward you receive by attending the event and submitting proof of attendance."
     >
       <Block
         className="!mt-0 mb-4 cursor-pointer"
         onClick={() => window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank")}
       >
-        <div className="w-full flex gap-3 items-stretch bg-brand-fill-bg/10 p-2 rounded-lg">
+        <div className="w-full flex gap-2 items-stretch bg-brand-fill-bg/10 p-2 rounded-lg">
           {eventData.data?.tsRewardImage && (
             <LoadableImage
               alt={eventData.data?.title}
@@ -455,9 +448,11 @@ const EventPassword = React.memo(() => {
   return (
     <CustomCard
       title="Claim Your Reward"
-      defaultPadding
+      description="Enter the Event Password that the organizer shared to confirm your participation in the event."
     >
-      <EventPasswordAndWalletInput />
+      <div className="p-4 pt-0">
+        <EventPasswordAndWalletInput />
+      </div>
     </CustomCard>
   );
 });
@@ -505,7 +500,7 @@ export const EventSections = () => {
       <ManageEventButton />
       <OrganizerCard />
       <SbtCollectionLink />
-      <UserWallet />
+      <ConnectWalletCard />
       <EventRegistrationStatus />
 
       <SupportButtons orgSupportTelegramUserName={eventData.data?.organizer?.org_support_telegram_user_name || undefined} />

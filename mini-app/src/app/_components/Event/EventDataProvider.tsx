@@ -1,16 +1,19 @@
 import { trpc } from "@/app/_trpc/client";
+import { useUserStore } from "@/context/store/user.store";
+import { useGetEvent } from "@/hooks/events.hooks";
 import useWebApp from "@/hooks/useWebApp";
 import { useEffect, useMemo, useState } from "react";
 import zod from "zod";
-import { EventDataContext } from "./eventPageContext";
-import { useGetEvent } from "@/hooks/events.hooks";
 import { ErrorState } from "../ErrorState";
+import { EventDataContext } from "./eventPageContext";
 
 export const EventDataProvider = ({ children, eventHash }: { children: React.ReactNode; eventHash: string }) => {
   const webApp = useWebApp();
+  const trpcUtils = trpc.useUtils();
+  const currentUser = useUserStore();
+
   const [isInitialized, setIsInitialized] = useState(false);
   const [initData, setInitData] = useState<string>("");
-  const trpcUtils = trpc.useUtils();
 
   const userEventFields = trpc.userEventFields.getUserEventFields.useQuery(
     {
@@ -75,11 +78,14 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
   }, [eventPasswordField?.id, userEventFields.data]);
 
   if (eventData.isError) {
+    // KNOWN ERRORS
     if (eventData.error.data?.code === "NOT_FOUND") {
       return <ErrorState errorCode="event_not_found" />;
-    } else {
-      return <ErrorState errorCode="something_went_wrong" />;
+    } else if (eventData.error.data?.code === "UNPROCESSABLE_CONTENT") {
+      return <ErrorState errorCode="event_not_published" />;
     }
+    // ELSE
+    return <ErrorState errorCode="something_went_wrong" />;
   }
 
   return (
