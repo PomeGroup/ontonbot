@@ -51,19 +51,19 @@ export const P2WUnlockedDialog: FC = () => {
                 </Typography>
               </Button>
             </DialogClose>
-            <Button
-              className="border border-[#51AEFF] bg-transparent py-3 px-[20.5px] hover:bg-[#3485FE]/10 w-full"
-              onClick={() => {
-                webapp?.openLink(collectionLink);
-              }}
-            >
-              <Typography
-                variant="body"
-                className="font-[600]"
-              >
-                Visit Collection
-              </Typography>
-            </Button>
+            {/* <Button */}
+            {/*   className="border border-[#51AEFF] bg-transparent py-3 px-[20.5px] hover:bg-[#3485FE]/10 w-full" */}
+            {/*   onClick={() => { */}
+            {/*     webapp?.openLink(collectionLink); */}
+            {/*   }} */}
+            {/* > */}
+            {/*   <Typography */}
+            {/*     variant="body" */}
+            {/*     className="font-[600]" */}
+            {/*   > */}
+            {/*     Visit Collection */}
+            {/*   </Typography> */}
+            {/* </Button> */}
           </div>
         </div>
       </div>
