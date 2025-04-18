@@ -89,7 +89,7 @@ module.exports = withSentryConfig(nextConfig, {
     ];
   },
   org: "onton",
-  project: "onton-miniapp",
+  project: "mini-app",
   sentryUrl: "https://sentry.io/",
 
   // Only print logs for uploading source maps in CI
