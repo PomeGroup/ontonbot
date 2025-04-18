@@ -121,6 +121,13 @@ import {
   UserWalletBalancesInsert,
   PlaceOfWalletConnection,
 } from "./schema/userWalletBalances";
+import {
+  play2winCampaigns,
+  Play2WinCampaignsInsert,
+  Play2WinCampaignsRow,
+  Play2WinCampaignType,
+  play2winCampaignType,
+} from "./schema/play2winCampaigns";
 // export all the enums
 export {
   accessRoleEnum,
@@ -206,6 +213,8 @@ export {
   tokenCampaignEligibleUsers,
   userWalletBalances,
   placeOfWalletConnection,
+  play2winCampaigns,
+  play2winCampaignType,
 };
 
 // Type Exports
@@ -267,4 +276,7 @@ export type {
   UserWalletBalances,
   UserWalletBalancesInsert,
   PlaceOfWalletConnection,
+  Play2WinCampaignsInsert,
+  Play2WinCampaignsRow,
+  Play2WinCampaignType,
 };

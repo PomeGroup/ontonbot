@@ -5,6 +5,16 @@ import { games, GamesRow, GamesRowInsert } from "@/db/schema/games";
 import type { PgTransaction } from "drizzle-orm/pg-core/session";
 import { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 
+export interface GamerData {
+  telegramId: number;
+  userId: string;
+  nickname?: string;
+  position: number;
+  points: number;
+  matchId: string;
+  endedAt: string;
+}
+
 /**
  * Insert a new row in the 'games' table.
  * Returns the inserted row (GamesRow) or undefined if none.
