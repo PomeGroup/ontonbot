@@ -37,6 +37,7 @@ function bufferToChunks(buff: Buffer, chunkSize: number) {
   }
   return chunks;
 }
+
 function makeSnakeCell(data: Buffer): Cell {
   const chunks = bufferToChunks(data, 127);
 
@@ -64,6 +65,7 @@ function makeSnakeCell(data: Buffer): Cell {
 
   return curCell.endCell();
 }
+
 export function encodeOffChainContent(content: string) {
   let data = Buffer.from(content);
   const offChainPrefix = Buffer.from([0x01]);
@@ -134,6 +136,7 @@ export class NftCollection {
   public get address(): Address {
     return contractAddress(0, this.stateInit);
   }
+
   public createMintBody(params: mintParams): Cell {
     const body = beginCell();
     body.storeUint(1, 32);
@@ -145,6 +148,29 @@ export class NftCollection {
     const uriContent = beginCell();
     uriContent.storeBuffer(Buffer.from(params.commonContentUrl));
     nftItemContent.storeRef(uriContent.endCell());
+    body.storeRef(nftItemContent.endCell());
+    logger.log(`params.commonContentUrl : `, params.commonContentUrl);
+    return body.endCell();
+  }
+
+  public createMintBody2(params: mintParams): Cell {
+    const body = beginCell();
+    body.storeUint(1, 32);
+    body.storeUint(params.queryId || 0, 64);
+    body.storeUint(params.itemIndex, 64);
+    body.storeCoins(params.amount);
+
+    // Begin a cell that stores the itemOwnerAddress and the NFT content
+    const nftItemContent = beginCell();
+    nftItemContent.storeAddress(params.itemOwnerAddress);
+
+    // Use encodeOffChainContent to insert the URL with the 0x01 prefix & snake cell
+    const offChainCell = encodeOffChainContent(params.commonContentUrl);
+
+    // Store the off-chain cell as a reference
+    nftItemContent.storeRef(offChainCell);
+
+    // Finally, store the nftItemContent cell into the body
     body.storeRef(nftItemContent.endCell());
     return body.endCell();
   }
@@ -167,6 +193,7 @@ export class NftCollection {
 
     return seqno;
   }
+
   public async topUpBalance(wallet: OpenedWallet, nftAmount: number): Promise<number> {
     const feeAmount = 0.026; // approximate value of fees for 1 transaction in our case
     const seqno = await wallet.contract.getSeqno();
@@ -220,7 +247,8 @@ export class NftItem {
 
   public async deploy(wallet: OpenedWallet, params: mintParams, collection_address: string): Promise<number> {
     const seqno = await wallet.contract.getSeqno();
-    await wallet.contract.sendTransfer({
+    logger.log(`seqno : `, seqno);
+    const response = await wallet.contract.sendTransfer({
       seqno,
       secretKey: wallet.keyPair.secretKey,
       messages: [
@@ -232,8 +260,10 @@ export class NftItem {
       ],
       sendMode: SendMode.IGNORE_ERRORS + SendMode.PAY_GAS_SEPARATELY,
     });
+    logger.log(`response : `, response);
     return seqno;
   }
+
   static async getAddressByIndex(collectionAddress: string, itemIndex: number) {
     const response = await tonCenter.fetchNFTItemsWithRetry("", collectionAddress, "", itemIndex);
 
@@ -244,17 +274,22 @@ export class NftItem {
   }
 }
 
-export async function mintNFT(owner_address : string , collection_address: string, nftIndex: number | null, nft_metadata_url: string) {
+export async function mintNFT(
+  owner_address: string,
+  collection_address: string,
+  nftIndex: number | null,
+  nft_metadata_url: string
+) {
   if (nftIndex === null) {
     const result = await tonCenter.fetchCollection(collection_address);
     nftIndex = Number(result?.nft_collections[0]?.next_item_index);
   }
-
+  logger.log(`minting nft index : ${nftIndex} for address : ${owner_address} for collection : ${collection_address}`);
   let nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);
   if (nft_addres) return nft_addres;
 
   const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
-
+  logger.log(`minting nft address : ${nft_addres} `, wallet.contract.address);
   const collectionData = {
     ownerAddress: wallet.contract.address,
     royaltyPercent: 0.1, // 0.1 = 10%
@@ -264,6 +299,7 @@ export async function mintNFT(owner_address : string , collection_address: strin
     commonContentUrl: "",
   };
   const collection = new NftCollection(collectionData);
+
   const mintParams = {
     queryId: 0,
     itemOwnerAddress: Address.parse(owner_address),
@@ -271,9 +307,10 @@ export async function mintNFT(owner_address : string , collection_address: strin
     amount: toNano("0.055"),
     commonContentUrl: nft_metadata_url,
   };
-
-  logger.log("seq befor mint : ", await wallet.contract.getSeqno());
+  logger.log(`minting nft address : ${nft_addres} mintParams:`, mintParams);
+  logger.log("seq before mint : ", await wallet.contract.getSeqno());
   const nftItem = new NftItem(collection);
+  logger.log(`Deploying the ${nftIndex + 1}th NFT...`);
   const seqno = await nftItem.deploy(wallet, mintParams, collection_address);
   logger.log(`Successfully deployed the ${nftIndex + 1}th NFT`);
   const seqnoAfter = await waitSeqno(seqno, wallet);

@@ -184,8 +184,8 @@ async function fetchCollection(collection_address: string, limit: number = 100, 
     } catch (error) {
       await delay(50);
       if (attempt === retries) {
+        logger.log(`fetchCollection Failed after ${retries} attempts`);
         throw error;
-        throw new Error(`fetchTransactions Failed after ${retries} attempts`);
       }
     }
   }
