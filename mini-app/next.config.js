@@ -74,6 +74,20 @@ module.exports = withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
+  // Enable browser profiling https://docs.sentry.io/platforms/javascript/guides/nextjs/profiling/browser/
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Document-Policy",
+            value: "js-profiling",
+          },
+        ],
+      },
+    ];
+  },
   org: "onton",
   project: "onton-miniapp",
   sentryUrl: "https://sentry.io/",
