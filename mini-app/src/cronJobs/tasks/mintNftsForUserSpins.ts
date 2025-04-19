@@ -3,18 +3,21 @@ import { tokenCampaignUserSpins } from "@/db/schema/tokenCampaignUserSpins";
 import { tokenCampaignOrders } from "@/db/schema/tokenCampaignOrders";
 import { TokenCampaignNftItemMetaData, tokenCampaignNftCollections } from "@/db/schema/tokenCampaignNftCollections";
 import { tokenCampaignNftItems } from "@/db/schema/tokenCampaignNftItems";
-import { eq, and, isNotNull, desc } from "drizzle-orm";
+import { eq, and, isNotNull, desc, asc, lte } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { mintNFT } from "@/lib/nft"; // your existing helper
 import { uploadJsonToMinio } from "@/lib/minioTools";
+import { sleep } from "@/utils";
+import { fetchOntonSettings } from "@/server/db/ontoSetting";
 
 export async function mintNftForUserSpins() {
+  logger.log("Starting mintNftForUserSpins...");
   // 1) Find user spins that require minting.
   const spinsToMint = await db
     .select()
     .from(tokenCampaignUserSpins)
     .where(and(isNotNull(tokenCampaignUserSpins.nftCollectionId), eq(tokenCampaignUserSpins.isMinted, false)))
-    .orderBy(desc(tokenCampaignUserSpins.createdAt))
+    .orderBy(asc(tokenCampaignUserSpins.id))
     .execute();
 
   if (spinsToMint.length === 0) {
@@ -24,6 +27,11 @@ export async function mintNftForUserSpins() {
 
   // 2) Iterate over each spin and attempt to mint
   for (const spin of spinsToMint) {
+    const { configProtected } = await fetchOntonSettings();
+    if (!configProtected.ONTON_NFT_MINTING_ENABLED || configProtected.ONTON_NFT_MINTING_ENABLED !== "ENABLED") {
+      logger.log("NFT minting is disabled. Exiting...");
+      return;
+    }
     // Wrap in a transaction
     await db.transaction(async (trx) => {
       // 2a) Re-fetch spin in transaction
@@ -60,7 +68,10 @@ export async function mintNftForUserSpins() {
         return;
       }
       logger.log(`Collection found for spinId=${spin.id}:`, collection);
-
+      if (!freshSpin.createdAt) {
+        logger.error(`Fresh spin createdAt is null for spinId=${spin.id}`);
+        return;
+      }
       // 4) Retrieve the user’s wallet address from orders
       const [order] = await trx
         .select({
@@ -72,6 +83,7 @@ export async function mintNftForUserSpins() {
           and(
             eq(tokenCampaignOrders.userId, freshSpin.userId),
             isNotNull(tokenCampaignOrders.wallet_address),
+            lte(tokenCampaignOrders.createdAt, freshSpin.createdAt),
             eq(tokenCampaignOrders.status, "completed")
           )
         )
@@ -137,8 +149,10 @@ export async function mintNftForUserSpins() {
       );
 
       if (!nftAddressOnChain) {
-        logger.error(`Mint returned null for spinId=${spin.id}. Possibly failed on-chain.`);
-        throw new Error(`Failed to mint NFT for spinId=${spin.id}`);
+        logger.error(
+          `!!!!WTF :: Mint returned null for spinId=${spin.id}. Possibly failed on-chain. userId=${freshSpin.userId} wallet=${walletAddress}`
+        );
+        throw new Error(`!!!!WTF :: Failed to mint NFT for spinId=${spin.id}`);
       }
 
       // 9) Update DB
@@ -146,7 +160,7 @@ export async function mintNftForUserSpins() {
       await trx
         .update(tokenCampaignNftCollections)
         .set({ lastRegisteredItemIndex: nextIndex })
-        .where(eq(tokenCampaignNftCollections.id, collection.id))
+        .where(eq(tokenCampaignNftCollections.address, collection.address))
         .execute();
 
       // 9b) Mark spin as minted
@@ -169,9 +183,10 @@ export async function mintNftForUserSpins() {
         })
         .execute();
 
-      logger.log(`Minted spinId=${spin.id} => NFT ${nftAddressOnChain}`);
+      logger.log(
+        `Minted spinId=${spin.id} => NFT ${nftAddressOnChain} for userId=${freshSpin.userId} at index ${nextIndex} wallet ${walletAddress}`
+      );
+      await sleep(3000);
     });
-    // Remove or keep this break depending on whether you only want to mint the first spin
-    break;
   }
 }

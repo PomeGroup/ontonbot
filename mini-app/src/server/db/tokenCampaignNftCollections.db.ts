@@ -148,6 +148,7 @@ export const getCollectionsByCampaignTypeSecure = async (
         salesVolume: tokenCampaignNftCollections.salesVolume,
         isForSale: tokenCampaignNftCollections.isForSale,
         sorting: tokenCampaignNftCollections.sorting,
+        collectionMetaData: tokenCampaignNftCollections.collectionMetaData,
       })
       .from(tokenCampaignNftCollections)
       .where(eq(tokenCampaignNftCollections.campaignType, campaignType))
