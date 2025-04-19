@@ -137,6 +137,25 @@ export class NftCollection {
     return contractAddress(0, this.stateInit);
   }
 
+  public createMintBodyAutoIndex(params: mintParams): Cell {
+    const body = beginCell();
+    body.storeUint(1, 32); // op
+    body.storeUint(params.queryId || 0, 64);
+    // store 0xFFFFFFFF for item index
+    body.storeUint(0xffffffff, 64);
+
+    body.storeCoins(params.amount);
+
+    const nftItemContent = beginCell();
+    nftItemContent.storeAddress(params.itemOwnerAddress);
+
+    const offChainCell = encodeOffChainContent(params.commonContentUrl);
+    nftItemContent.storeRef(offChainCell);
+
+    body.storeRef(nftItemContent.endCell());
+    return body.endCell();
+  }
+
   public createMintBody(params: mintParams): Cell {
     const body = beginCell();
     body.storeUint(1, 32);
@@ -345,17 +364,73 @@ export async function deployCollection(collectio_metadata_url: string) {
   return collection.address.toString();
 }
 
-// async function main() {
-//   // const url =  await uploadJsonToMinio({} , 'ontonitem');
-//   // await deployCollection("https://s.getgems.io/nft/c/626e630d4c1921ba7a0e3b4e/edit/meta-1683207247829.json");
-//   const nft = await mintNFT(
-//     "kQBw2_yccujzsJoGOhgt24gmWmKYvXYBjha_g8cx7laajyeg",
-//     4,
-//     "https://bafybeib57q2gh4tlmzbvqd3i2etytfgzbekxrqkwxkg3apyqoko6xag3se.ipfs.w3s.link/3492.json"
-//   );
-//   // const c = "kQBw2_yccujzsJoGOhgt24gmWmKYvXYBjha_g8cx7laajyeg";
-//   // const nft_addres = await NftItem.getAddressByIndex(c, 10);
-//   logger.log("Addres ", nft);
-// }
+export async function mintNFTOnchainAutoIndex(owner_address: string, collection_address: string, nft_metadata_url: string) {
+  // 1) Open wallet
+  const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
 
-// main().finally(() => logger.log("done"));
+  // 2) Construct a fake "collection" object, ignoring nextItemIndex
+  const collectionData = {
+    ownerAddress: wallet.contract.address,
+    royaltyPercent: 0.1,
+    royaltyAddress: wallet.contract.address,
+    nextItemIndex: 0, // Not used here
+    collectionContentUrl: "",
+    commonContentUrl: "",
+  };
+  const collection = new NftCollection(collectionData);
+
+  // 3) We'll use a new createMintBodyAutoIndex() that stores 0xFFFFFFFF
+  const mintParams: mintParams = {
+    queryId: 0,
+    itemOwnerAddress: Address.parse(owner_address),
+    // itemIndex: 0xffffffff, // or we omit it from the struct
+    itemIndex: 0xffffffff, // let's keep it typed
+    amount: toNano("0.055"),
+    commonContentUrl: nft_metadata_url,
+  };
+
+  logger.log(`Minting NFT with auto-index for address=${owner_address}, collection=${collection_address}`);
+
+  const nftItem = new NftItem(collection);
+  const seqnoBefore = await wallet.contract.getSeqno();
+
+  // 4) Send the transfer (use createMintBodyAutoIndex)
+  await wallet.contract.sendTransfer({
+    seqno: seqnoBefore,
+    secretKey: wallet.keyPair.secretKey,
+    messages: [
+      internal({
+        value: "0.055",
+        to: collection_address,
+        body: collection.createMintBodyAutoIndex(mintParams),
+      }),
+    ],
+    sendMode: SendMode.IGNORE_ERRORS + SendMode.PAY_GAS_SEPARATELY,
+  });
+
+  logger.log(`Mint transaction submitted for auto-index NFT. seqno=${seqnoBefore}`);
+
+  // 5) Wait for finality
+  const seqnoAfter = await waitSeqno(seqnoBefore, wallet);
+  logger.log("seq after mint : ", seqnoAfter);
+
+  // 6) Wait a bit more for the NFT to appear on chain
+  await sleep(22000);
+
+  // 7) We read the updated collection info to see the new next_item_index
+  const result = await tonCenter.fetchCollection(collection_address);
+  const nextItemIndexOnChain = Number(result?.nft_collections[0]?.next_item_index);
+
+  // If the contract was at index i before, now it should be i+1
+  const mintedItemIndex = nextItemIndexOnChain - 1;
+
+  // 8) Check which NFT was actually created
+  const nftAddress = await NftItem.getAddressByIndex(collection_address, mintedItemIndex);
+  if (nftAddress) {
+    logger.log(`Successfully minted NFT with on-chain auto-index: index=${mintedItemIndex}, address=${nftAddress}`);
+    return { nftAddress, mintedItemIndex };
+  } else {
+    logger.error("Could not find minted NFT item address. Possibly a mint failure or indexing delay.");
+    return null;
+  }
+}
