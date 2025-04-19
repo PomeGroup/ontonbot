@@ -265,10 +265,10 @@ export class NftItem {
   }
 
   public async deploy(wallet: OpenedWallet, params: mintParams, collection_address: string): Promise<number> {
-    const seqno = await wallet.contract.getSeqno();
-    logger.log(`seqno : `, seqno);
+    const seqNo = await wallet.contract.getSeqno();
+    logger.log(`deploy NFT: seqNo : `, seqNo);
     const response = await wallet.contract.sendTransfer({
-      seqno,
+      seqno: seqNo,
       secretKey: wallet.keyPair.secretKey,
       messages: [
         internal({
@@ -279,8 +279,14 @@ export class NftItem {
       ],
       sendMode: SendMode.IGNORE_ERRORS + SendMode.PAY_GAS_SEPARATELY,
     });
-    logger.log(`response : `, response);
-    return seqno;
+    logger.log(`mintNFT: deploy sendTransfer response : `, response);
+    const seqnoAfter = await waitSeqno(seqNo, wallet);
+    if (seqnoAfter % 5 === 0) {
+      logger.log("mintNFT: waitSeqno: seq after mint : ", seqnoAfter);
+      await sleep(20000); // wait to avoid fee increase
+    }
+    logger.log("mintNFT: seq after mint : ", seqnoAfter);
+    return seqNo;
   }
 
   static async getAddressByIndex(collectionAddress: string, itemIndex: number) {
@@ -303,12 +309,12 @@ export async function mintNFT(
     const result = await tonCenter.fetchCollection(collection_address);
     nftIndex = Number(result?.nft_collections[0]?.next_item_index);
   }
-  logger.log(`minting nft index : ${nftIndex} for address : ${owner_address} for collection : ${collection_address}`);
+  logger.log(`mintNFT: getAddressByIndex ${nftIndex} for address : ${owner_address} for collection : ${collection_address}`);
   let nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);
   if (nft_addres) return nft_addres;
 
   const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
-  logger.log(`minting nft address : ${nft_addres} `, wallet.contract.address);
+  logger.log(`mintNFT: openWallet minting nft address : ${nft_addres} `, wallet.contract.address);
   const collectionData = {
     ownerAddress: wallet.contract.address,
     royaltyPercent: 0.1, // 0.1 = 10%
@@ -326,22 +332,24 @@ export async function mintNFT(
     amount: toNano("0.055"),
     commonContentUrl: nft_metadata_url,
   };
-  logger.log(`minting nft address : ${nft_addres} mintParams:`, mintParams);
-  logger.log("seq before mint : ", await wallet.contract.getSeqno());
+  logger.log(`mintNFT:  minting nft address : ${nft_addres} mintParams:`, mintParams);
+  const beforeSeqno = await wallet.contract.getSeqno();
+  logger.log("mintNFT:seq before mint : ", beforeSeqno);
   const nftItem = new NftItem(collection);
-  logger.log(`Deploying the ${nftIndex + 1}th NFT...`);
+  logger.log(`mintNFT:Deploying the ${nftIndex + 1}th NFT...`);
   const seqno = await nftItem.deploy(wallet, mintParams, collection_address);
-  logger.log(`Successfully deployed the ${nftIndex + 1}th NFT`);
-  const seqnoAfter = await waitSeqno(seqno, wallet);
-  logger.log("seq after mint : ", seqnoAfter);
+  logger.log(`mintNFT: Successfully deployed the ${nftIndex + 1}th NFT`);
 
   await sleep(22000); // just wait to make sure nft is minted
   logger.log(
-    `getting nft address for index : ${nftIndex} for address : ${owner_address} for collection : ${collection_address}`
+    `mintNFT: getting nft address for index : ${nftIndex} for address : ${owner_address} for collection : ${collection_address}`
   );
   nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);
+  logger.log(`mintNFT: getAddressByIndex nft address : ${nft_addres}`);
   if (nft_addres) return nft_addres;
-
+  logger.error(
+    `mintNFT: 🔴 getAddressByIndex failed to get nft address for index : ${nftIndex} for address : ${owner_address} for collection : ${collection_address}`
+  );
   return null;
 }
 

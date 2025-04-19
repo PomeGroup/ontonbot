@@ -3,7 +3,7 @@ import { tokenCampaignUserSpins } from "@/db/schema/tokenCampaignUserSpins";
 import { tokenCampaignOrders } from "@/db/schema/tokenCampaignOrders";
 import { TokenCampaignNftItemMetaData, tokenCampaignNftCollections } from "@/db/schema/tokenCampaignNftCollections";
 import { tokenCampaignNftItems } from "@/db/schema/tokenCampaignNftItems";
-import { eq, and, isNotNull, desc, asc, lte } from "drizzle-orm";
+import { eq, and, isNotNull, desc, asc, lte, count } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { mintNFT } from "@/lib/nft"; // your existing helper
 import { uploadJsonToMinio } from "@/lib/minioTools";
@@ -21,7 +21,7 @@ export async function mintNftForUserSpins() {
     .execute();
 
   if (spinsToMint.length === 0) {
-    logger.log("No user spins to mint right now.");
+    logger.log("mintNftForUserSpins: No user spins to mint right now.");
     return;
   }
 
@@ -29,9 +29,11 @@ export async function mintNftForUserSpins() {
   for (const spin of spinsToMint) {
     const { configProtected } = await fetchOntonSettings();
     if (!configProtected.ONTON_NFT_MINTING_ENABLED || configProtected.ONTON_NFT_MINTING_ENABLED !== "ENABLED") {
-      logger.log("NFT minting is disabled. Exiting...");
+      logger.log("mintNftForUserSpins: NFT minting is disabled. Exiting...");
       return;
     }
+    // get count  of minted spins by collectionId
+
     // Wrap in a transaction
     await db.transaction(async (trx) => {
       // 2a) Re-fetch spin in transaction
@@ -42,10 +44,18 @@ export async function mintNftForUserSpins() {
         .execute();
 
       if (!freshSpin) {
-        logger.error(`Spin not found or already handled: spinId=${spin.id}`);
+        logger.error(`mintNftForUserSpins: 🔴 Spin not found or already handled: spinId=${spin.id}`);
         return;
       }
-      logger.log(`Processing spinId=${spin.id} for userId=${freshSpin.userId}`, spin);
+      if (freshSpin.isMinted) {
+        logger.error(`mintNftForUserSpins: 🔴 Spin already minted: spinId=${spin.id}`);
+        return;
+      }
+      if (!freshSpin.nftCollectionId) {
+        logger.error(`mintNftForUserSpins: 🔴 Spin has no collectionId: spinId=${spin.id}`);
+        return;
+      }
+      logger.log(`mintNftForUserSpins: 🟠 Processing spinId=${spin.id} for userId=${freshSpin.userId}`, spin);
 
       // 3) Look up the related collection
       const [collection] = await trx
@@ -53,23 +63,39 @@ export async function mintNftForUserSpins() {
         .from(tokenCampaignNftCollections)
         .where(eq(tokenCampaignNftCollections.id, freshSpin.nftCollectionId!))
         .execute();
-
+      const [mintedCount] = await db
+        .select({ count: count() })
+        .from(tokenCampaignUserSpins)
+        .where(
+          and(
+            eq(tokenCampaignUserSpins.nftCollectionId, freshSpin.nftCollectionId),
+            eq(tokenCampaignUserSpins.isMinted, true)
+          )
+        )
+        .execute();
       if (!collection) {
-        logger.error(`No collection found for spinId=${spin.id}, collectionId=${freshSpin.nftCollectionId}`);
+        logger.error(
+          `mintNftForUserSpins: 🔴 No collection found for spinId=${spin.id}, collectionId=${freshSpin.nftCollectionId}`
+        );
         return;
       }
 
       if (!collection.address) {
-        logger.error(`Collection ${collection.id} missing on-chain address. Cannot mint spinId=${spin.id}.`);
+        logger.error(
+          `mintNftForUserSpins: 🔴 Collection ${collection.id} missing on-chain address. Cannot mint spinId=${spin.id}.`
+        );
         return;
       }
       if (!collection?.name || !collection?.description || !collection?.image) {
-        logger.error(`Collection ${collection.id} missing required fields. Cannot mint spinId=${spin.id}.`, collection);
+        logger.error(
+          `mintNftForUserSpins: 🔴 Collection ${collection.id} missing required fields. Cannot mint spinId=${spin.id}.`,
+          collection
+        );
         return;
       }
-      logger.log(`Collection found for spinId=${spin.id}:`, collection);
+      logger.log(`mintNftForUserSpins: Collection found for spinId=${spin.id}:`, collection);
       if (!freshSpin.createdAt) {
-        logger.error(`Fresh spin createdAt is null for spinId=${spin.id}`);
+        logger.error(`mintNftForUserSpins: 🔴 Fresh spin createdAt is null for spinId=${spin.id}`);
         return;
       }
       // 4) Retrieve the user’s wallet address from orders
@@ -92,17 +118,19 @@ export async function mintNftForUserSpins() {
         .execute();
 
       if (!order?.wallet) {
-        logger.error(`No wallet address found for userId=${freshSpin.userId}, spinId=${spin.id}`);
+        logger.error(`mintNftForUserSpins: 🔴 No wallet address found for userId=${freshSpin.userId}, spinId=${spin.id}`);
         return;
       }
 
       const walletAddress = order.wallet.trim();
-      logger.log(`Minting spinId=${spin.id} for userId=${freshSpin.userId} to wallet=${walletAddress}`);
+      logger.log(
+        `mintNftForUserSpins: 🟠 Minting spinId=${spin.id} for userId=${freshSpin.userId} to wallet=${walletAddress}`
+      );
 
       // 5) Determine the next NFT index
       const nextIndex = (collection.lastRegisteredItemIndex ?? 0) + 1;
       logger.log(
-        `Next index for collection ${collection.id} is ${nextIndex} for spinId=${spin.id} and userId=${freshSpin.userId}`
+        `mintNftForUserSpins: 🟠 Next index for collection ${collection.id} is ${nextIndex} for spinId=${spin.id} and userId=${freshSpin.userId}`
       );
 
       // 6) Build final NFT metadata by merging:
@@ -113,7 +141,7 @@ export async function mintNftForUserSpins() {
       const baseItemData = (collection.itemMetaData as TokenCampaignNftItemMetaData) ?? {};
       // If itemMetaData already has "name", it will override. Otherwise fallback:
       const finalItemData = {
-        name: baseItemData.name ?? collection.name,
+        name: (baseItemData.name ?? collection.name) + ` #${mintedCount.count}`,
         description: baseItemData.description ?? collection.description,
         image: baseItemData.image ?? collection.image,
         // Merge optional fields from itemMetaData
@@ -132,13 +160,15 @@ export async function mintNftForUserSpins() {
       };
 
       // 7) Upload finalItemData to Minio
-      logger.log("Final NFT item data:", finalItemData);
+      logger.log("mintNftForUserSpins: 🟠 Final NFT item data:", finalItemData);
       const meta_data_url = await uploadJsonToMinio(finalItemData, "ontonitem");
       if (!meta_data_url) {
-        logger.error(`Failed to upload metadata for spinId=${spin.id} and userId=${freshSpin.userId}`);
+        logger.error(
+          `mintNftForUserSpins: 🔴 Failed to upload metadata for spinId=${spin.id} and userId=${freshSpin.userId}`
+        );
         return;
       }
-      logger.log(`Uploaded metadata for spinId=${spin.id} to ${meta_data_url}`);
+      logger.log(`mintNftForUserSpins: 🟠 Uploaded metadata for spinId=${spin.id} to ${meta_data_url}`);
 
       // 8) Mint the NFT
       const nftAddressOnChain = await mintNFT(
@@ -150,9 +180,9 @@ export async function mintNftForUserSpins() {
 
       if (!nftAddressOnChain) {
         logger.error(
-          `!!!!WTF :: Mint returned null for spinId=${spin.id}. Possibly failed on-chain. userId=${freshSpin.userId} wallet=${walletAddress}`
+          `mintNftForUserSpins:  🔴 !!!!WTF :: Mint returned null for spinId=${spin.id}. Possibly failed on-chain. userId=${freshSpin.userId} wallet=${walletAddress}`
         );
-        throw new Error(`!!!!WTF :: Failed to mint NFT for spinId=${spin.id}`);
+        throw new Error(`mintNftForUserSpins: !!!!WTF :: Failed to mint NFT for spinId=${spin.id}`);
       }
 
       // 9) Update DB
@@ -184,7 +214,7 @@ export async function mintNftForUserSpins() {
         .execute();
 
       logger.log(
-        `Minted spinId=${spin.id} => NFT ${nftAddressOnChain} for userId=${freshSpin.userId} at index ${nextIndex} wallet ${walletAddress}`
+        `mintNftForUserSpins: 🟠🟠🟠 Minted spinId=${spin.id} => NFT ${nftAddressOnChain} for userId=${freshSpin.userId} at index ${nextIndex} wallet ${walletAddress}`
       );
       await sleep(3000);
     });
