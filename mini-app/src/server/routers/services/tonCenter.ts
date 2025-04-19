@@ -156,7 +156,13 @@ async function fetchNFTItemsWithRetry(
   while (attempt < retries) {
     try {
       // Call fetchNFTItems function
+      logger.log(
+        `fetchNFTItemsWithRetry: Attempt ${attempt + 1} for ownerAddress ${ownerAddress} collectionAddress ${collectionAddress} nft_address ${nft_address}`
+      );
       const result = await fetchNFTItems(ownerAddress, collectionAddress, nft_address, index, limit, offset);
+      logger.log(
+        `fetchNFTItemsWithRetry compeleted: Attempt ${attempt + 1} successful for ownerAddress ${ownerAddress} collectionAddress ${collectionAddress} nft_address ${nft_address}`
+      );
       return result; // Return the result if successful
     } catch (error) {
       attempt++;
@@ -184,8 +190,8 @@ async function fetchCollection(collection_address: string, limit: number = 100, 
     } catch (error) {
       await delay(50);
       if (attempt === retries) {
+        logger.log(`fetchCollection Failed after ${retries} attempts`);
         throw error;
-        throw new Error(`fetchTransactions Failed after ${retries} attempts`);
       }
     }
   }

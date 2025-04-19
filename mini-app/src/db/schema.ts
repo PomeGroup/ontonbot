@@ -128,6 +128,7 @@ import {
   Play2WinCampaignType,
   play2winCampaignType,
 } from "./schema/play2winCampaigns";
+import { tokenCampaignNftItems, TokenCampaignNftItems, TokenCampaignNftItemsInsert } from "./schema/tokenCampaignNftItems";
 // export all the enums
 export {
   accessRoleEnum,
@@ -215,6 +216,7 @@ export {
   placeOfWalletConnection,
   play2winCampaigns,
   play2winCampaignType,
+  tokenCampaignNftItems,
 };
 
 // Type Exports
@@ -279,4 +281,6 @@ export type {
   Play2WinCampaignsInsert,
   Play2WinCampaignsRow,
   Play2WinCampaignType,
+  TokenCampaignNftItems,
+  TokenCampaignNftItemsInsert,
 };
