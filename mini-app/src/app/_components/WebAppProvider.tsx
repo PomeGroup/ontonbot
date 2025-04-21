@@ -31,7 +31,7 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
         username: webApp.initDataUnsafe.user?.username,
       });
     }
-  }, [webApp?.initDataUnsafe.user?.id]);
+  }, [setInitData, webApp?.initData, webApp?.initDataUnsafe.user?.id, webApp?.initDataUnsafe.user?.username]);
 
   // 2) Track initial history length
   const initialHistoryLength = useRef<number>(0);
