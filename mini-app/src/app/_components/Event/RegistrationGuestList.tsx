@@ -1,7 +1,4 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-// adjust these imports as needed
-// adjust as needed
 import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
 import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
 import { trpc } from "@/app/_trpc/client";
