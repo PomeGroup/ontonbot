@@ -1,7 +1,7 @@
 import Typography from "@/components/Typography";
 import { cn } from "@/lib/utils";
 import { Card } from "konsta/react";
-import React, { ReactNode } from "react";
+import React, { MouseEventHandler, ReactNode } from "react";
 
 interface CustomCardProps {
   title?: string;
@@ -15,7 +15,7 @@ interface CustomCardProps {
   /**
    * Callbacks
    */
-  onClick?: () => void;
+  onClick?: MouseEventHandler<HTMLElement>;
 }
 
 const CustomCard: React.FC<CustomCardProps> = ({

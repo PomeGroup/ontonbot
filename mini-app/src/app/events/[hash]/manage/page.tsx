@@ -1,6 +1,6 @@
 "use client";
 
-import { Block, Page } from "konsta/react";
+import { Page } from "konsta/react";
 import { useParams, useRouter } from "next/navigation";
 // svg icons
 import coOrganizerIcon from "./co-organizers.svg";
@@ -63,7 +63,7 @@ export default function ManageIndexPage() {
   return (
     <Page>
       {/* Show an EventCard with the event data */}
-      <div className="bg-white rounded-2lg mx-4 mt-4 pb-3">
+      <div className="bg-white rounded-2lg mx-4 my-4 pb-3">
         <EventCard
           event={{
             eventUuid: eventData.event_uuid,
@@ -151,7 +151,7 @@ export default function ManageIndexPage() {
       </div>
 
       {/* Action Cards for each sub-route */}
-      <Block className="-mx-4 !my-0">
+      <div className="px-4 !my-0 flex flex-col gap-4">
         {eventData.has_payment && canEditEvent && (
           <>
             <ActionCard
@@ -213,7 +213,7 @@ export default function ManageIndexPage() {
             ]}
           />
         )}
-      </Block>
+      </div>
     </Page>
   );
 }
