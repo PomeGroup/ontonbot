@@ -1,0 +1,35 @@
+{
+  "projects": [
+    {
+      "name": "sample",
+      "path": "./sources/sample/contract.tact",
+      "output": "./sources/sample/output",
+      "mode": "full",
+      "options": {
+        "external": false,
+        "debug": false,
+        "ipfsAbiGetter": false,
+        "interfacesGetter": false,
+        "experimental": {
+          "inline": false
+        }
+      }
+    },
+    {
+      "name": "nftMergeOnion",
+      "path": "./sources/nftMergeOnion/contract.tact",
+      "output": "./sources/nftMergeOnion/output",
+      "mode": "full",
+      "options": {
+        "external": false,
+        "debug": false,
+        "ipfsAbiGetter": false,
+        "interfacesGetter": false,
+        "experimental": {
+          "inline": false
+        }
+      }
+    }
+  ]
+}
+

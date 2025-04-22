@@ -1,0 +1,318 @@
+// automatically generated from `@stdlib/std/stdlib.fc` `@stdlib/std/stdlib_ex.fc` `/home/inanloo/MyProject/ontonBotProjects/ontonbot/blockChain/tactContracts/sources/nftMergeOnion/output/nftMergeOnion_NftMergeOnionContract.fc` 
+PROGRAM{
+  DECLPROC __tact_context_get_sender
+  DECLPROC __tact_slice_eq
+  DECLPROC $SendNFT$_load_without_opcode
+  DECLPROC $Merge$_load_without_opcode
+  DECLPROC $NftMergeOnionContract$_store
+  DECLPROC $NftMergeOnionContract$_load
+  DECLPROC $NftMergeOnionContract$_contract_load
+  DECLPROC $NftMergeOnionContract$_contract_store
+  DECLPROC $global_requireNFT
+  DECLPROC $NftMergeOnionContract$_fun_has_gold
+  DECLPROC $NftMergeOnionContract$_fun_has_silver
+  DECLPROC $NftMergeOnionContract$_fun_has_bronze
+  DECLPROC $NftMergeOnionContract$_fun_requireOwner
+  DECLPROC $NftMergeOnionContract$_fun_owner
+  114286 DECLMETHOD %has_gold
+  124611 DECLMETHOD %has_silver
+  86471 DECLMETHOD %has_bronze
+  83229 DECLMETHOD %owner
+  DECLPROC recv_internal
+  65535 DECLMETHOD __tact_selector_hack
+  DECLGLOBVAR __tact_context
+  DECLGLOBVAR __tact_context_sender
+  DECLGLOBVAR __tact_child_contract_codes
+  DECLGLOBVAR __tact_randomized
+  __tact_context_get_sender PROCINLINE:<{
+    __tact_context_sender GETGLOB
+  }>
+  __tact_slice_eq PROCINLINE:<{
+    SWAP
+    HASHSU
+    SWAP
+    HASHSU
+    EQUAL
+  }>
+  $SendNFT$_load_without_opcode PROCINLINE:<{
+    LDREF
+    SWAP
+    CTOS
+  }>
+  $Merge$_load_without_opcode PROCINLINE:<{
+    PUSHNULL
+  }>
+  $NftMergeOnionContract$_store PROCINLINE:<{
+    s4 s3 XCHG2
+    STSLICER
+    1 STI
+    s1 s2 XCHG
+    1 STI
+    1 STI
+  }>
+  $NftMergeOnionContract$_load PROCINLINE:<{
+    LDMSGADDR
+    1 LDI
+    1 LDI
+    1 LDI
+    4 -ROLL
+  }>
+  $NftMergeOnionContract$_contract_load PROCINLINE:<{
+    c4 PUSH
+    CTOS
+    $NftMergeOnionContract$_load INLINECALLDICT
+    1 4 BLKDROP2
+  }>
+  $NftMergeOnionContract$_contract_store PROCINLINE:<{
+    NEWC
+    4 -ROLL
+    $NftMergeOnionContract$_store INLINECALLDICT
+    ENDC
+    c4 POP
+  }>
+  $global_requireNFT PROCREF:<{
+    SWAP
+    NOT
+    IF:<{
+      THROWANY
+    }>ELSE<{
+      DROP
+    }>
+  }>
+  $NftMergeOnionContract$_fun_has_gold PROCREF:<{
+    s2 PUSH
+  }>
+  $NftMergeOnionContract$_fun_has_silver PROCREF:<{
+    OVER
+  }>
+  $NftMergeOnionContract$_fun_has_bronze PROCREF:<{
+    DUP
+  }>
+  $NftMergeOnionContract$_fun_requireOwner PROCREF:<{
+    __tact_context_get_sender INLINECALLDICT
+    s4 s(-1) PUXC
+    SDEQ
+    132 THROWIFNOT
+  }>
+  $NftMergeOnionContract$_fun_owner PROCREF:<{
+    s3 PUSH
+  }>
+  %has_gold PROC:<{
+    $NftMergeOnionContract$_contract_load INLINECALLDICT
+    $NftMergeOnionContract$_fun_has_gold INLINECALLDICT
+    4 1 BLKDROP2
+  }>
+  %has_silver PROC:<{
+    $NftMergeOnionContract$_contract_load INLINECALLDICT
+    $NftMergeOnionContract$_fun_has_silver INLINECALLDICT
+    4 1 BLKDROP2
+  }>
+  %has_bronze PROC:<{
+    $NftMergeOnionContract$_contract_load INLINECALLDICT
+    $NftMergeOnionContract$_fun_has_bronze INLINECALLDICT
+    4 1 BLKDROP2
+  }>
+  %owner PROC:<{
+    $NftMergeOnionContract$_contract_load INLINECALLDICT
+    $NftMergeOnionContract$_fun_owner INLINECALLDICT
+    4 1 BLKDROP2
+  }>
+  recv_internal PROC:<{
+    SWAP
+    CTOS
+    2 PUSHINT
+    SDSKIPFIRST
+    1 LDI
+    1 LDI
+    LDMSGADDR
+    OVER
+    s3 s4 XCHG
+    s6 s6 XCHG2
+    4 TUPLE
+    __tact_context SETGLOB
+    s0 s2 XCHG
+    __tact_context_sender SETGLOB
+    $NftMergeOnionContract$_contract_load INLINECALLDICT
+    s0 s5 XCHG
+    IFJMP:<{
+      5 BLKDROP
+    }>
+    0 PUSHINT
+    s4 PUSH
+    SBITS
+    DUP
+    31 GTINT
+    IF:<{
+      NIP
+      s0 s4 XCHG
+      32 LDU
+      s0 s5 XCHG
+    }>
+    OVER
+    1 EQINT
+    IFJMP:<{
+      2DROP
+      s0 s3 XCHG
+      $SendNFT$_load_without_opcode INLINECALLDICT
+      NIP
+      s1 s3 s4 XCHG3
+      $NftMergeOnionContract$_fun_requireOwner INLINECALLDICT
+          B{b5ee9c72410101010006000008476f6c64b045d722} B>boc <s PUSHSLICE
+      s5 PUSH
+      __tact_slice_eq INLINECALLDICT
+      IF:<{
+        s4 POP
+        SWAP
+        NOT
+        101 PUSHINT
+        $global_requireNFT INLINECALLDICT
+        TRUE
+      }>ELSE<{
+            B{b5ee9c7241010101000800000c53696c7665724ddf35fd} B>boc <s PUSHSLICE
+        s5 PUSH
+        __tact_slice_eq INLINECALLDICT
+        IF:<{
+          s4 POP
+          NOT
+          102 PUSHINT
+          $global_requireNFT INLINECALLDICT
+          TRUE
+        }>ELSE<{
+              B{b5ee9c7241010101000800000c42726f6e7a6552cc86e6} B>boc <s PUSHSLICE
+          s0 s5 XCHG2
+          __tact_slice_eq INLINECALLDICT
+          IF:<{
+            s0 s3 XCHG
+            NOT
+            103 PUSHINT
+            $global_requireNFT INLINECALLDICT
+            TRUE
+          }>ELSE<{
+            104 THROW
+            s0 s3 XCHG
+          }>
+          s0 s3 XCHG
+        }>
+        SWAP
+      }>
+      s0 s1 s3 XCHG3
+      $NftMergeOnionContract$_contract_store INLINECALLDICT
+    }>
+    s5 POP
+    DUP
+    2 EQINT
+    IFJMP:<{
+      DROP
+      s3 POP
+      s0 s0 s3 XCHG3
+      $NftMergeOnionContract$_fun_requireOwner INLINECALLDICT
+      s0 s2 XCHG
+      IF:<{
+      }>ELSE<{
+        DROP
+        FALSE
+      }>
+      IF:<{
+      }>ELSE<{
+        DROP
+        FALSE
+      }>
+      105 PUSHINT
+      $global_requireNFT INLINECALLDICT
+      FALSE
+      FALSE
+      FALSE
+      $NftMergeOnionContract$_contract_store INLINECALLDICT
+    }>
+    s5 POP
+    3 BLKDROP
+    SWAP
+    0 EQINT
+    SWAP
+    33 LESSINT
+    AND
+    IFJMP:<{
+      __tact_context_get_sender INLINECALLDICT
+          16 PUSHINT       // 0x10, i.e. 0x18 but with bounce = false
+          NEWC
+          6 STU            // .storeUint(0x10, 6)
+          STSLICE          // .storeAddress(to)
+          0 PUSHINT        // 0
+          111 STUR         // .storeUint(0, 111)
+                           // 4 zeros for coins and 107 zeros for lt, fees, etc.
+          ENDC
+          66 PUSHINT       // SendRemainingValue | SendIgnoreErrors
+          SENDRAWMSG
+    }>
+    130 THROW
+  }>
+  __tact_selector_hack PROC:<{
+    @atend @ 1 {
+            execute current@ context@ current!
+            {
+                // The core idea of this function is to save gas by avoiding unnecessary dict jump, when recv_internal/recv_external is called
+                // We want to extract recv_internal/recv_external from the dict and select needed function
+                // not by jumping to the needed function by it's index, but by using usual IF statements.
+                }END> b> // Close previous builder, now we have a cell of previous code on top of the stack
+                <{ // Start of the new code builder
+                    SETCP0
+                    // Swap the new code builder with the previous code, now we have previous code on top of the stack
+                    swap
+                    // Transform cell to slice and load first ref from the previous code, now we have the dict on top of the stack
+                    <s ref@
+                    // Extract the recv_internal from the dict
+                    dup 0 swap @procdictkeylen idict@ { "internal shortcut error" abort } ifnot
+                    swap
+                    // Delete the recv_internal from the dict
+                    0 swap @procdictkeylen idict- drop
+                    // Delete the recv_external from the dict (it's okay if it's not there)
+                    -1 swap @procdictkeylen idict- drop
+                    // Delete the __tact_selector_hack from the dict
+                    65535 swap @procdictkeylen idict- drop
+                    // Bring the code builder from the bottom of the stack
+                    // because if recv_external extraction is optional, and the number of elements on the stack is not fixed
+                    depth 1- roll
+                    // Swap with the dict from which we extracted recv_internal and (maybe) recv_external
+                    swap
+                    // Check if the dict is empty
+                    dup null?
+                    // Store a copy of this flag in the bottom of the stack
+                    dup depth 1- -roll
+                    {
+                        // If the dict is empty, just drop it (it will be null if it's empty)
+                        drop
+                    }
+                    {
+                        // If the dict is not empty, prepare continuation to be stored in c3
+                        <{
+                            // Save this dict as first ref in this continuation, it will be pushed in runtime by DICTPUSHCONST
+                            swap @procdictkeylen DICTPUSHCONST
+                            // Jump to the needed function by it's index
+                            DICTIGETJMPZ
+                            // If such key is not found, throw 11 along with the key as an argument
+                            11 THROWARG
+                        }> PUSHCONT
+                        // Store the continuation in c3
+                        c3 POP
+                    } cond
+                    // Function id is on top of the (runtime) stack
+                    DUP IFNOTJMP:<{
+                        // place recv_internal here
+                        DROP swap @addop
+                    }>
+                    // Bring back the flag, indicating if the dict is empty or not from the bottom of the stack
+                    depth 1- roll
+                    {
+                        // If the dict is empty, throw 11
+                        11 THROWARG
+                    }
+                    {
+                        // If the dict is not empty, jump to continuation from c3
+                        c3 PUSH JMPX
+                    } cond
+                }> b>
+            } : }END>c
+            current@ context! current!
+        } does @atend !
+  }>
+}END>c

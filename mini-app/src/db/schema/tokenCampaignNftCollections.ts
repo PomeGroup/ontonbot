@@ -1,6 +1,26 @@
-import { pgTable, varchar, jsonb, bigint, serial, timestamp, text, index, boolean } from "drizzle-orm/pg-core";
+import { pgTable, varchar, jsonb, bigint, serial, timestamp, text, index, boolean, json } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { campaignTypes } from "@/db/enum";
+
+export interface NftAttribute extends Record<string, string | number | boolean | undefined> {
+  trait_type?: string;
+  value?: string | number | boolean;
+}
+
+export interface TokenCampaignNftItemMetaData {
+  name?: string;
+  description?: string;
+  image?: string;
+  animation_url?: string;
+  content_url?: string;
+  content_type?: string;
+  cover_image?: string;
+  social_links?: string[];
+  links?: { label: string; url: string }[];
+  buttons?: { label: string; uri: string }[];
+  // Now an array of NftAttribute
+  attributes?: NftAttribute[];
+}
 
 export const tokenCampaignNftCollections = pgTable(
   "token_campaign_nft_collections",
@@ -14,7 +34,8 @@ export const tokenCampaignNftCollections = pgTable(
     socialLinks: varchar("social_links", { length: 255 }),
     address: varchar("address", { length: 255 }),
     metadataUrl: varchar("metadata_url", { length: 255 }),
-    itemMetaData: jsonb("item_meta_data"),
+    itemMetaData: json("item_meta_data"),
+    collectionMetaData: json("collection_meta_data"),
     salesVolume: bigint("sales_volume", { mode: "number" }).default(0),
     salesCount: bigint("sales_count", { mode: "number" }).default(0),
     lastRegisteredItemIndex: bigint("last_registered_item_index", { mode: "number" }),
