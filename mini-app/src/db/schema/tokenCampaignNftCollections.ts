@@ -2,6 +2,11 @@ import { pgTable, varchar, jsonb, bigint, serial, timestamp, text, index, boolea
 import { InferSelectModel } from "drizzle-orm";
 import { campaignTypes } from "@/db/enum";
 
+export interface NftAttribute extends Record<string, string | number | boolean | undefined> {
+  trait_type?: string;
+  value?: string | number | boolean;
+}
+
 export interface TokenCampaignNftItemMetaData {
   name?: string;
   description?: string;
@@ -13,7 +18,8 @@ export interface TokenCampaignNftItemMetaData {
   social_links?: string[];
   links?: { label: string; url: string }[];
   buttons?: { label: string; uri: string }[];
-  attributes?: Record<string, any>;
+  // Now an array of NftAttribute
+  attributes?: NftAttribute[];
 }
 
 export const tokenCampaignNftCollections = pgTable(

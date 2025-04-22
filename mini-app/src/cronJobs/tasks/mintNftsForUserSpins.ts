@@ -139,9 +139,18 @@ export async function mintNftForUserSpins() {
       //    - spin-specific "spin_id"
       //    We'll store result in `finalItemData`.
       const baseItemData = (collection.itemMetaData as TokenCampaignNftItemMetaData) ?? {};
+
+      const existingAttributes = baseItemData.attributes || [];
+
+      // Suppose the user wants an object like { spin_id: freshSpin.id.toString() }
+      const spinIdObject = { spin_id: freshSpin.id.toString() };
+
+      // Now we just append that to the array
+      const finalAttributes = [...existingAttributes, spinIdObject];
+
       // If itemMetaData already has "name", it will override. Otherwise fallback:
       const finalItemData = {
-        name: (baseItemData.name ?? collection.name) + ` #${mintedCount.count}`,
+        name: (baseItemData.name ?? collection.name) + ` #${mintedCount.count + 1}`,
         description: baseItemData.description ?? collection.description,
         image: baseItemData.image ?? collection.image,
         // Merge optional fields from itemMetaData
@@ -153,10 +162,7 @@ export async function mintNftForUserSpins() {
         links: baseItemData.links,
         buttons: baseItemData.buttons,
         // Merge attributes, plus spin_id:
-        attributes: {
-          ...baseItemData.attributes,
-          spin_id: freshSpin.id, // inject the spin_id attribute
-        },
+        attributes: finalAttributes,
       };
 
       // 7) Upload finalItemData to Minio
