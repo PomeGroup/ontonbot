@@ -56,7 +56,32 @@ export async function mintNftForUserSpins() {
         return;
       }
       logger.log(`mintNftForUserSpins: 🟠 Processing spinId=${spin.id} for userId=${freshSpin.userId}`, spin);
+      if (!freshSpin.createdAt) {
+        logger.error(`mintNftForUserSpins: 🔴 Fresh spin createdAt is null for spinId=${spin.id}`);
+        return;
+      }
+      const [order] = await trx
+        .select({
+          wallet: tokenCampaignOrders.wallet_address,
+          uuid: tokenCampaignOrders.uuid,
+        })
+        .from(tokenCampaignOrders)
+        .where(
+          and(
+            eq(tokenCampaignOrders.userId, freshSpin.userId),
+            isNotNull(tokenCampaignOrders.wallet_address),
+            lte(tokenCampaignOrders.createdAt, freshSpin.createdAt),
+            eq(tokenCampaignOrders.status, "completed")
+          )
+        )
+        .orderBy(desc(tokenCampaignOrders.createdAt))
+        .limit(1)
+        .execute();
 
+      if (!order?.wallet) {
+        logger.error(`mintNftForUserSpins: 🔴 No wallet address found for userId=${freshSpin.userId}, spinId=${spin.id}`);
+        return;
+      }
       // 3) Look up the related collection
       const [collection] = await trx
         .select()
@@ -99,28 +124,6 @@ export async function mintNftForUserSpins() {
         return;
       }
       // 4) Retrieve the user’s wallet address from orders
-      const [order] = await trx
-        .select({
-          wallet: tokenCampaignOrders.wallet_address,
-          uuid: tokenCampaignOrders.uuid,
-        })
-        .from(tokenCampaignOrders)
-        .where(
-          and(
-            eq(tokenCampaignOrders.userId, freshSpin.userId),
-            isNotNull(tokenCampaignOrders.wallet_address),
-            lte(tokenCampaignOrders.createdAt, freshSpin.createdAt),
-            eq(tokenCampaignOrders.status, "completed")
-          )
-        )
-        .orderBy(desc(tokenCampaignOrders.createdAt))
-        .limit(1)
-        .execute();
-
-      if (!order?.wallet) {
-        logger.error(`mintNftForUserSpins: 🔴 No wallet address found for userId=${freshSpin.userId}, spinId=${spin.id}`);
-        return;
-      }
 
       const walletAddress = order.wallet.trim();
       logger.log(

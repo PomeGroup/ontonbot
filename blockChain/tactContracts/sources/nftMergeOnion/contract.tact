@@ -1,31 +1,25 @@
 import "@stdlib/ownable";
+import "@stdlib/dict";
 
-///**
-// * We'll define:
-// *   1) A dictionary: index -> color
-// *   2) A new message setIndexColor(index, color) to fill or update that dictionary
-// *   3) A get_color(index) method for reading it
-// *
-// * We'll also keep your existing SendNFT and Merge logic
-//*/
 
-// A helper function for your existing checks
+
+// A helper check
 fun requireNFT(cond: Bool, code: Int) {
-    if (!cond) {
-        throw(code);
-    }
+if (!cond) {
+throw(code);
+}
 }
 
-// We'll define your existing messages
-message(0x1) SendNFT {
-    color: String
+// Messages
+message(1) SendNFT {
+color: String;
 }
-message(0x2) Merge {}
 
-// New message for populating the data set one entry at a time
-message(0x3) SetIndexColor {
-    index: Int;
-color: String
+message(2) Merge {}
+
+message(3) SetIndexColor {
+index: Int;
+color: String;
 }
 
 contract NftMergeOnionContract(
@@ -36,25 +30,24 @@ hasBronze: Bool
 ) with Ownable {
 
 //------------------------------------------------------------
-// 1) Dictionary: itemIndex -> color
+// Dictionary: we store (index: Int -> cell).
+// We'll interpret that cell as a string for the color.
 //------------------------------------------------------------
-dict: IndexToColor <Int, String> = dict();
+dict indexToColor: Int -> cell = dict();
 
 //------------------------------------------------------------
-// Fallback receive: bounce coins
+// fallback: bounce coins
 //------------------------------------------------------------
 receive() {
 cashback(sender());
 }
 
 //------------------------------------------------------------
-// 2) (Unchanged) - The user sends an NFT by calling SendNFT(color)
-//    Only the owner can do this. We do simple color checks.
+// 1) SendNFT (unchanged from your snippet)
 //------------------------------------------------------------
 receive(msg: SendNFT) {
 self.requireOwner();
 
-// Check color
 if (msg.color == "Gold") {
 requireNFT(!self.hasGold, 101);
 self.hasGold = true;
@@ -65,55 +58,57 @@ self.hasSilver = true;
 requireNFT(!self.hasBronze, 103);
 self.hasBronze = true;
 } else {
-// unrecognized color
 throw(104);
 }
 }
 
 //------------------------------------------------------------
-// 3) (Unchanged) - Merge method. Requires we have G/S/B => reset them
+// 2) Merge (unchanged from your snippet)
 //------------------------------------------------------------
 receive(_: Merge) {
 self.requireOwner();
 requireNFT(self.hasGold && self.hasSilver && self.hasBronze, 105);
 
-// For demonstration, just clear flags
 self.hasGold = false;
 self.hasSilver = false;
 self.hasBronze = false;
 }
 
 //------------------------------------------------------------
-// 4) New method: "setIndexColor(index, color)"
-//    The owner can store or update a data set entry in the dictionary.
+// 3) setIndexColor => let the owner store "index -> color"
 //------------------------------------------------------------
-
 receive(msg: SetIndexColor) {
 self.requireOwner();
-indexToColor.replace(msg.index, msg.color);
+;; Convert color string to a slice/cell
+var colorSlice = string_to_slice(msg.color);
+
+;; Put it in the dictionary
+dict_set(indexToColor, msg.index, colorSlice);
 }
 
 //------------------------------------------------------------
-// 5) GET method to read color from the dictionary
-//    e.g. "get_color(123)" => "Gold"
+// GET method => retrieve color by index
+// If not found, return "Unknown"
 //------------------------------------------------------------
 get fun get_color(index: Int): String {
-var colorOpt = indexToColor.fetch(index);
-if null?(colorOpt) {
+var stored = dict_fetch(indexToColor, index);
+if (null?(stored)) {
 return "Unknown";
 }
-return slice_to_string(colorOpt);
+return slice_to_string(stored);
 }
 
 //------------------------------------------------------------
-// 6) (Unchanged) - GET methods for hasGold/hasSilver/hasBronze
+// 4) existing GET bools
 //------------------------------------------------------------
 get fun has_gold(): Bool {
 return self.hasGold;
 }
+
 get fun has_silver(): Bool {
 return self.hasSilver;
 }
+
 get fun has_bronze(): Bool {
 return self.hasBronze;
 }
