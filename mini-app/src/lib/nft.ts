@@ -255,6 +255,7 @@ export type mintParams = {
   itemIndex: number;
   amount: bigint;
   commonContentUrl: string;
+  color?: string;
 };
 
 export class NftItem {
