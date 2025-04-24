@@ -1,7 +1,6 @@
 "use client";
 
 import { Banner } from "@/app/(landing-pages)/genesis-onions/_components/Banner";
-import { Play2WinGenesisBanner } from "@/app/(landing-pages)/play2win-genesis/_components/Play2WinGenesisBanner";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
 import CustomButton from "@/app/_components/Button/CustomButton";
@@ -67,7 +66,6 @@ const Play2WinFeatured = () => {
   return (
     <>
       <Banner className="mb-3" />
-      <Play2WinGenesisBanner />
       <Typography variant="title2">Featured Contests</Typography>
       <div>
         <CustomSwiper>

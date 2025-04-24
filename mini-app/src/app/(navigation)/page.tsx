@@ -14,9 +14,6 @@ import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { trpc } from "../_trpc/client";
 
 import { Banner } from "../(landing-pages)/genesis-onions/_components/Banner";
-import { cn } from "@/utils";
-import { useMemo } from "react";
-import { Play2WinGenesisBanner } from "../(landing-pages)/play2win-genesis/_components/Play2WinGenesisBanner";
 import CustomSwiper from "../_components/CustomSwiper";
 import EventsTimeline from "../_components/Event/EventsTImeline";
 import EventCardSkeleton from "../_components/EventCard/EventCardSkeleton";
@@ -30,7 +27,6 @@ export default function Home() {
         </div>
 
         <Banner className="mt-3 mb-4" />
-        <Play2WinGenesisBanner className="w-full mb-4" />
 
         <div className=" flex-grow">
           <div className="flex-grow flex flex-col gap-6">
