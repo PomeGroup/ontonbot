@@ -14,6 +14,7 @@ interface CustomButtonProps {
   fontSize?: TypographyProps["variant"];
   fontWeight?: TypographyProps["weight"];
   className?: string;
+  btnClassName?: string;
   onClick?: (_e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -38,13 +39,14 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   size,
   isLoading = false,
   className,
+  btnClassName,
   onClick,
 }) => (
   <Button
     itemType="button"
     disabled={isLoading}
     onClick={onClick}
-    className={customButtonVariants({ size })}
+    className={cn(customButtonVariants({ size }), btnClassName)}
     type="button"
     variant={variant}
   >

@@ -102,8 +102,8 @@ export default function GenesisOnions() {
         />
       )}
       <main className="bg-navy text-white min-h-screen pb-5">
+        <Header />
         <div className="flex flex-col bg-gradient-radial from-navy-mid to-navy items-center justify-center bg-repeat relative mb-3 pt-5">
-          <Header />
           <MergeNftsButton />
           <TonConnectButton />
 
