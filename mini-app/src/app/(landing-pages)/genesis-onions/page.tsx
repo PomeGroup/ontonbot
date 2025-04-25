@@ -15,6 +15,7 @@ import dynamic from "next/dynamic";
 import { customToast } from "./GenesisOnions.utils";
 import { MergeNftsButton } from "./_components/MergeNftsButton";
 import { TonConnectButton } from "@tonconnect/ui-react";
+import Typography from "@/components/Typography";
 
 const AccessRestrictedModal = dynamic(
   () => import("./_components/AccessRestrictedModal").then((mod) => mod.AccessRestrictedModal),
@@ -103,6 +104,77 @@ export default function GenesisOnions() {
       )}
       <main className="bg-navy text-white min-h-screen pb-5">
         <Header />
+        <div className="flex items-center gap-5 px-4 py-5">
+          <div className="border-white flex-wrap border border-solid flex flex-col gap-2 w-fit p-2 bg-white/10 backdrop-blur-lg rounded-2lg">
+            <div className="flex justify-between flex-wrap items-center gap-2">
+              <Image
+                width={40}
+                height={40}
+                alt="Gold"
+                src="https://storage.onton.live/ontonimage/p2w-badge.png"
+                className="rounded-md mx-auto"
+              />
+              <div className="flex flex-col gap-1 justify-center items-center mx-auto">
+                <Typography
+                  variant="body"
+                  weight="medium"
+                >
+                  Gold
+                </Typography>
+                <span className="text-xs">2.5K TON</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center gap-2 text-[9px]">
+              <span className="text-[#DFDFDF]">Floor: 8.9 TON</span> <span className="text-[#73E891]">+3.2</span>
+            </div>
+          </div>
+          <div className="border-white flex-wrap border border-solid flex flex-col gap-2 w-fit p-2 bg-white/10 backdrop-blur-lg rounded-2lg">
+            <div className="flex justify-between flex-wrap items-center gap-2">
+              <Image
+                width={40}
+                height={40}
+                alt="Gold"
+                src="https://storage.onton.live/ontonimage/p2w-badge.png"
+                className="rounded-md mx-auto"
+              />
+              <div className="flex flex-col gap-1 justify-center items-center mx-auto">
+                <Typography
+                  variant="body"
+                  weight="medium"
+                >
+                  Gold
+                </Typography>
+                <span className="text-xs">2.5K TON</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center gap-2 text-[9px]">
+              <span className="text-[#DFDFDF]">Floor: 8.9 TON</span> <span className="text-[#73E891]">+3.2</span>
+            </div>
+          </div>
+          <div className="border-white flex-wrap border border-solid flex flex-col gap-2 w-fit p-2 bg-white/10 backdrop-blur-lg rounded-2lg">
+            <div className="flex justify-between flex-wrap items-center gap-2">
+              <Image
+                width={40}
+                height={40}
+                alt="Gold"
+                src="https://storage.onton.live/ontonimage/p2w-badge.png"
+                className="rounded-md mx-auto"
+              />
+              <div className="flex flex-col gap-1 justify-center items-center mx-auto">
+                <Typography
+                  variant="body"
+                  weight="medium"
+                >
+                  Gold
+                </Typography>
+                <span className="text-xs">2.5K TON</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center gap-2 text-[9px]">
+              <span className="text-[#DFDFDF]">Floor: 8.9 TON</span> <span className="text-[#73E891]">+3.2</span>
+            </div>
+          </div>
+        </div>
         <div className="flex flex-col bg-gradient-radial from-navy-mid to-navy items-center justify-center bg-repeat relative mb-3 pt-5">
           <MergeNftsButton />
           <TonConnectButton />
