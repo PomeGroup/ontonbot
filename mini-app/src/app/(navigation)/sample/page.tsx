@@ -8,11 +8,14 @@ import { useUserStore } from "@/context/store/user.store"; // adjust path
 import { Button } from "konsta/react";
 import Image from "next/image";
 import tonIcon from "@/components/icons/ton.svg";
-import OntonDialog from "@/components/OntonDialog"; // from your snippet
+import OntonDialog from "@/components/OntonDialog";
 import { Card } from "konsta/react";
 import Typography from "@/components/Typography";
 import PaymentFlow from "@/app/(navigation)/sample/PaymentFlow";
 import { useConfig } from "@/context/ConfigContext";
+
+// IMPORTANT: Import your MergeNftsFlow component
+import { MergeNftsFlow } from "./MergeNftsFlow"; // <-- adjust to correct import path
 
 // ====================== //
 //   CONNECT WALLET CARD  //
@@ -67,7 +70,6 @@ function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () =>
   const { user } = useUserStore();
   const addWalletMutation = trpc.users.addWallet.useMutation({
     onSuccess: () => {
-      // any invalidations if needed
       onClose();
     },
   });
@@ -141,6 +143,7 @@ export default function CampaignTestPage() {
   // convert to Format: YYYY-MM-DDTHH:mm:ss (ISO format)
   const campaignEndingDate = new Date(campaignEndingTime * 1000).toISOString().slice(0, 19);
 
+  // Mutations and queries
   const addOrderMutation = trpc.campaign.addOrder.useMutation({
     onSuccess(data) {
       if (!data) return;
@@ -226,7 +229,6 @@ export default function CampaignTestPage() {
   }
 
   // 8) CHECK USER ELIGIBILITY
-  // This calls `checkUserEligible` which uses ctx.user?.user_id on the backend.
   const {
     data: eligibilityData,
     isFetching: isFetchingEligibility,
@@ -240,7 +242,6 @@ export default function CampaignTestPage() {
   }
 
   // 9) GET ONION CAMPAIGN AFFILIATE DATA
-  // Calls `getOnionCampaignAffiliateData`, which returns { linkHash, totalSpins }
   const {
     data: onionAffiliateData,
     isLoading: isLoadingOnionAff,
@@ -265,6 +266,9 @@ export default function CampaignTestPage() {
     });
   }
 
+  // We need the user's TonConnect wallet address to pass to MergeNftsFlow
+  const userTonAddress = useTonAddress();
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Campaign Test Page</h1>
@@ -275,6 +279,7 @@ export default function CampaignTestPage() {
           The campaign will end on: <strong>{campaignEndingDate}</strong>
         </p>
       </section>
+
       {/* Connect Wallet Section */}
       <ConnectWalletCard />
 
@@ -296,8 +301,6 @@ export default function CampaignTestPage() {
               />
             </label>
           </div>
-
-          <div></div>
 
           <button
             type="submit"
@@ -325,7 +328,6 @@ export default function CampaignTestPage() {
             finalPrice={parseFloat(createdOrder.finalPrice)}
             onSuccess={() => {
               toast.success("Order Payment Confirmed!");
-              // Do something else, e.g. refresh or show new status
             }}
             onCancel={() => {
               toast.error("User canceled or transaction failed.");
@@ -545,7 +547,7 @@ export default function CampaignTestPage() {
           <ul className="mt-2 list-disc list-inside text-gray-800">
             {getCollectionsByTypeQuery.data.map((col) => (
               <li key={col.id}>
-                ID: {col.id}, Name: {col.name},
+                ID: {col.id}, Name: {col.name}
               </li>
             ))}
           </ul>
@@ -613,7 +615,6 @@ export default function CampaignTestPage() {
           </button>
         </form>
 
-        {/* Show the result */}
         {eligibilityError && <p className="mt-2 text-red-600">Error: {eligibilityError.message}</p>}
         {eligibilityData && (
           <p className="mt-2 text-gray-800">
@@ -640,7 +641,6 @@ export default function CampaignTestPage() {
             {isFetchingOnionAff ? "Loading..." : "Get Onion Campaign Affiliate"}
           </button>
         </form>
-
         {onionAffError && <p className="mt-2 text-red-600">Error: {onionAffError.message}</p>}
         {onionAffiliateData && (
           <div className="mt-2 text-gray-800">
@@ -668,6 +668,18 @@ export default function CampaignTestPage() {
             {shareAffiliateLinkMutation.isLoading ? "Sharing..." : "Share Link on Telegram"}
           </button>
         </form>
+      </section>
+
+      {/* ====================================== */}
+      {/* NEW: MergeNftsFlow usage (NFT merging) */}
+      {/* ====================================== */}
+      <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
+        <h2 className="text-lg font-semibold mb-2">Merge Your NFTs (Gold / Silver / Bronze)</h2>
+        {!userTonAddress ? (
+          <p className="text-gray-600">Please connect your wallet first.</p>
+        ) : (
+          <MergeNftsFlow walletAddress={userTonAddress} />
+        )}
       </section>
     </div>
   );

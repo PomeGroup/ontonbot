@@ -15,6 +15,8 @@ import { generateRandomHash } from "@/lib/generateRandomHash";
 import { Address } from "@ton/core";
 import { logger } from "@/server/utils/logger";
 import { checkRateLimit } from "@/lib/checkRateLimit";
+import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
+import { tokenCampaignNftItemsDB } from "@/server/db/tokenCampaignNftItems.db";
 
 export const campaignRouter = router({
   /**
@@ -346,4 +348,98 @@ export const campaignRouter = router({
       totalSpins,
     };
   }),
+
+  /**
+   * 1) Checks the wallet's TON balance,
+   * 2) Fetches all NFT items from the single on-chain collection,
+   * 3) Looks up each NFT in your DB to find out its 'itemType' or 'campaignType',
+   * 4) Groups them by type and returns them in one response.
+   */
+  getWalletInfo: initDataProtectedProcedure
+    .input(
+      z.object({
+        walletAddress: z.string().refine((val) => {
+          try {
+            // Validate that it's a valid TON address
+            Address.parse(val);
+            return true;
+          } catch {
+            return false;
+          }
+        }, "Invalid TON address."),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { walletAddress } = input;
+      // 1) Optional Rate Limit
+      const { allowed } = await checkRateLimit(ctx.user.user_id.toString(), "campaignRouterGetWalletInfo", 10, 60);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Rate limit exceeded. Try again later.",
+        });
+      }
+      try {
+        // 1) Fetch TON balance
+        const balance = await tonCenter.getAccountBalance(walletAddress);
+        const SINGLE_COLLECTION_ADDRESS = "EQBMUbi8PEESk-tb6sqgH2CEmXqqyy0OjcfOqp1mlz6cdfsY";
+        // 2) Fetch on-chain NFT items from the single shared collection
+        //    => This call returns { nft_items, address_book }
+        const chainData = await tonCenter.fetchNFTItemsWithRetry(walletAddress, SINGLE_COLLECTION_ADDRESS);
+        const onChainNftItems: NFTItem[] = chainData?.nft_items ?? [];
+
+        if (!onChainNftItems.length) {
+          // No items found on-chain, just return
+          return {
+            address: walletAddress,
+            balance,
+            itemsByType: {},
+          };
+        }
+
+        // Collect all the on-chain addresses for these NFTs
+        const nftAddresses = onChainNftItems.map((item) => item.address);
+
+        // 3) Look up each NFT in your local DB to determine item type
+        const dbRows = await tokenCampaignNftItemsDB.getItemsByAddresses(nftAddresses);
+        console.log(dbRows);
+        // dbRows => Array of { nftItem: TokenCampaignNftItems, collection: TokenCampaignNftCollections }
+
+        // 4) Group them by itemType or campaignType
+        //    e.g. { gold: [...], silver: [...], bronze: [...] }
+        const grouped: Record<string, any[]> = {};
+
+        for (const row of dbRows) {
+          const { nftItem, collection } = row;
+          const typeKey = collection.id.toString() || collection.id.toString(); // Use collection name or ID as the key
+
+          if (!grouped[typeKey]) {
+            grouped[typeKey] = [];
+          }
+
+          // You can merge on-chain data + DB data
+          // or store them separately, e.g.:
+          // Find the original onChain item to get metadata (uri, index, etc.)
+          const chainItem = onChainNftItems.find((c) => c.address === nftItem.nftAddress);
+
+          grouped[typeKey].push({
+            onChain: chainItem,
+            offChain: nftItem,
+            collectionInfo: collection,
+          });
+        }
+
+        return {
+          address: walletAddress,
+          balance,
+          itemsByType: grouped,
+        };
+      } catch (error) {
+        logger.error("Error fetching wallet info:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch wallet info.",
+        });
+      }
+    }),
 });

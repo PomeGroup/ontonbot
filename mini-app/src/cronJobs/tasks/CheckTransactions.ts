@@ -16,9 +16,10 @@ export const CheckTransactions = async () => {
 
   const wallet_address = config?.ONTON_WALLET_ADDRESS;
   const campaign_wallet_address = config?.ONTON_WALLET_ADDRESS_CAMPAIGN;
+  const minter_wallet_address = config?.ONTON_WALLET_ADDRESS_MINTER;
 
-  if (!wallet_address || !campaign_wallet_address) {
-    logger.error("ONTON_WALLET_ADDRESS NOT SET");
+  if (!wallet_address || !campaign_wallet_address || !minter_wallet_address) {
+    logger.error("ONTON_WALLET_ADDRESS/CAMPAIGN/MINTER NOT SET");
     return;
   }
   const hour_ago = Math.floor((Date.now() - 3600 * 1000) / 1000);

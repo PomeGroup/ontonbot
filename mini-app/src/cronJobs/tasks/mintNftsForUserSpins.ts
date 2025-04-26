@@ -36,6 +36,32 @@ export async function mintNftForUserSpins() {
 
     // Wrap in a transaction
     await db.transaction(async (trx) => {
+      if (!spin.createdAt) {
+        // logger.error(`mintNftForUserSpins: 🔴 Spin createdAt is null for spinId=${spin.id}`);
+        return;
+      }
+      const [order] = await trx
+        .select({
+          wallet: tokenCampaignOrders.wallet_address,
+          uuid: tokenCampaignOrders.uuid,
+        })
+        .from(tokenCampaignOrders)
+        .where(
+          and(
+            eq(tokenCampaignOrders.userId, spin.userId),
+            isNotNull(tokenCampaignOrders.wallet_address),
+            lte(tokenCampaignOrders.createdAt, spin.createdAt),
+            eq(tokenCampaignOrders.status, "completed")
+          )
+        )
+        .orderBy(desc(tokenCampaignOrders.createdAt))
+        .limit(1)
+        .execute();
+
+      if (!order?.wallet) {
+        // logger.error(`mintNftForUserSpins: 🔴 No wallet address found for userId=${spin.userId}, spinId=${spin.id}`);
+        return;
+      }
       // 2a) Re-fetch spin in transaction
       const [freshSpin] = await trx
         .select()
@@ -60,28 +86,7 @@ export async function mintNftForUserSpins() {
         logger.error(`mintNftForUserSpins: 🔴 Fresh spin createdAt is null for spinId=${spin.id}`);
         return;
       }
-      const [order] = await trx
-        .select({
-          wallet: tokenCampaignOrders.wallet_address,
-          uuid: tokenCampaignOrders.uuid,
-        })
-        .from(tokenCampaignOrders)
-        .where(
-          and(
-            eq(tokenCampaignOrders.userId, freshSpin.userId),
-            isNotNull(tokenCampaignOrders.wallet_address),
-            lte(tokenCampaignOrders.createdAt, freshSpin.createdAt),
-            eq(tokenCampaignOrders.status, "completed")
-          )
-        )
-        .orderBy(desc(tokenCampaignOrders.createdAt))
-        .limit(1)
-        .execute();
 
-      if (!order?.wallet) {
-        logger.error(`mintNftForUserSpins: 🔴 No wallet address found for userId=${freshSpin.userId}, spinId=${spin.id}`);
-        return;
-      }
       // 3) Look up the related collection
       const [collection] = await trx
         .select()

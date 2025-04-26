@@ -4,6 +4,14 @@ import { users } from "./users";
 import { InferSelectModel } from "drizzle-orm";
 import { campaignTypes } from "@/db/enum";
 
+export const mergeStatusEnum = pgEnum("merge_status", [
+  "not_allowed_to_merge",
+  "able_to_merge",
+  "waiting_for_transaction",
+  "merging",
+  "merged",
+  "burned",
+]);
 export const tokenCampaignNftItems = pgTable("token_campaign_nft_items", {
   // `id` is int8 in your SQL, so use `bigint(...)`
   id: serial("id").notNull().primaryKey(),
@@ -32,7 +40,7 @@ export const tokenCampaignNftItems = pgTable("token_campaign_nft_items", {
     withTimezone: false,
     precision: 6, // maps to "timestamp(6)"
   }).defaultNow(),
-
+  mergeStatus: mergeStatusEnum("merge_status").notNull().default("not_allowed_to_merge"),
   updatedAt: timestamp("updated_at", {
     withTimezone: false,
     precision: 3,
@@ -57,3 +65,8 @@ export type TokenCampaignNftItemsInsert = Omit<
   InferSelectModel<typeof tokenCampaignNftItems>,
   "id" | "createdAt" | "updatedAt" | "updatedBy"
 >;
+
+/**
+ * export type MergeStatusType
+ */
+export type MergeStatusType = (typeof mergeStatusEnum.enumValues)[number];
