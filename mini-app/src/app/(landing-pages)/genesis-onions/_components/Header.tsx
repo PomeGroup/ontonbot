@@ -6,7 +6,7 @@ import Image from "next/image";
 import GenesisOnionHead from "./../_assets/images/onion-genesis-merge-haed.svg";
 
 export const Header = () => (
-  <div className="flex justify-between px-4 py-3 items-center gap-1 bg-navy-dark">
+  <div className="flex justify-between px-4 py-3 items-center gap-2 bg-navy-dark">
     <div className="text-xs">
       <Image
         src={GenesisOnionHead}

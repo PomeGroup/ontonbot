@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-sync-scripts */
 import NotificationHandler from "@/app/_components/NotificationHandler";
 import { cn } from "@/lib/utils";
 import { GoogleTagManager } from "@next/third-parties/google";
