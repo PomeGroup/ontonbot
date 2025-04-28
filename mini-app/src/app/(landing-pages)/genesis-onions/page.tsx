@@ -1,214 +1,168 @@
 "use client";
-import "./_assets/genesis-onions.css";
-import Image from "next/image";
-import GenesisOnionsLogoImage from "./_assets/images/genesis-onions.svg";
-import { YourNFTs } from "./_components/YourNFTs";
-import { RaffleCarousel } from "./_components/RaffleCarousel";
-import { Capacity } from "./_components/Capacity";
-import { useState } from "react";
-import { Header } from "./_components/Header";
-import { TokenCampaignNftCollections, TokenCampaignOrders } from "@/db/schema";
-import { useUserCampaign } from "./hooks/useUserCampaign";
-import { CheckOrderModal } from "./_components/CheckOrderModal";
-import { useSpin } from "./hooks/useSpin";
-import dynamic from "next/dynamic";
-import { customToast } from "./GenesisOnions.utils";
-import { MergeNftsButton } from "./_components/MergeNftsButton";
-import { TonConnectButton } from "@tonconnect/ui-react";
 import Typography from "@/components/Typography";
-
-const AccessRestrictedModal = dynamic(
-  () => import("./_components/AccessRestrictedModal").then((mod) => mod.AccessRestrictedModal),
-  {
-    ssr: false,
-  }
-);
-const PackagesModal = dynamic(() => import("./_components/PackagesModal").then((mod) => mod.PackagesModal), {
-  ssr: false,
-});
-const Prize = dynamic(() => import("./_components/Prize").then((mod) => mod.Prize), {
-  ssr: false,
-});
-const Footer = dynamic(() => import("./_components/Footer").then((mod) => mod.Footer), {
-  ssr: false,
-});
+import "./_assets/genesis-onions.css";
+import { Header } from "./_components/Header";
+import Image from "next/image";
 
 export default function GenesisOnions() {
-  const { refetchCollections } = useSpin();
-  const [prize, setPrize] = useState<TokenCampaignNftCollections>();
-  const [showPackagesModal, setShowPackagesModal] = useState(false);
-  const [showAccessRestrictedModal, setShowAccessRestrictedModal] = useState(false);
-  const { invalidateUserCollection, invalidateUserSpinStats } = useUserCampaign();
-  const [orderToCheck, setOrderToCheck] = useState<TokenCampaignOrders>();
-
-  const handleSpinStart = () => {
-    setPrize(undefined);
-  };
-
-  const handleSpinEnd = (chosenPrize: TokenCampaignNftCollections) => {
-    setPrize(chosenPrize);
-
-    invalidateUserCollection();
-    refetchCollections();
-  };
-
-  const handleInsufficientBalance = () => {
-    setShowPackagesModal(true);
-  };
-
-  const handleOrderPaid = (order: TokenCampaignOrders) => {
-    setOrderToCheck(order);
-  };
-
-  const handleOrderSuccess = () => {
-    invalidateUserSpinStats();
-    setOrderToCheck(undefined);
-    customToast.success("Payment was successful! Spin and Enjoy");
-  };
-
-  const handleOrderPaymentFailed = (error: Error) => {
-    setOrderToCheck(undefined);
-    customToast.error(error.message);
-  };
-
-  const handleOrderCancel = () => {
-    setOrderToCheck(undefined);
-    customToast.error("Payment was not successful! Please try again.");
-  };
-
   return (
-    <>
-      <Prize
-        prize={prize}
-        onClose={() => setPrize(undefined)}
-      />
-      <AccessRestrictedModal
-        open={showAccessRestrictedModal}
-        onClose={() => setShowAccessRestrictedModal(false)}
-      />
-      {showPackagesModal && (
-        <PackagesModal
-          open={showPackagesModal}
-          onClose={() => setShowPackagesModal(false)}
-          onOrderPaid={handleOrderPaid}
-          onOrderPaymentFailed={handleOrderPaymentFailed}
-        />
-      )}
-      {orderToCheck && (
-        <CheckOrderModal
-          order={orderToCheck}
-          onClose={() => setOrderToCheck(undefined)}
-          onSuccess={handleOrderSuccess}
-          onCancel={handleOrderCancel}
-        />
-      )}
-      <main className="bg-navy text-white min-h-screen pb-5">
-        <Header />
-        <div className="flex jube items-center gap-2 px-4 py-5">
-          <div className="border-white flex-wrap border border-solid flex flex-col gap-2 w-fit p-2 bg-white/10 backdrop-blur-lg rounded-2lg">
-            <div className="flex justify-between items-center gap-2">
-              <Image
-                width={40}
-                height={40}
-                alt="Gold"
-                src="https://storage.onton.live/ontonimage/p2w-badge.png"
-                className="rounded-md mx-auto"
-              />
-              <div className="flex flex-col gap-1 justify-center text-center items-center mx-auto flex-wrap">
-                <Typography
-                  variant="body"
-                  weight="medium"
-                >
-                  Gold
-                </Typography>
-                <span className="text-[10px]">
-                  2.5K <span className="text-[6px]">TON</span>
-                </span>
+    <div>
+      <Header />
+      <main
+        className="bg-navy text-white min-h-screen p-4"
+        style={{
+          background: "radial-gradient(69.74% 28.27% at 50% 33.25%, #31517B 0%, #0A1C33 100%)",
+        }}
+      >
+        {/* Main Card */}
+        <div className="p-4 backdrop-blur-lg bg-white/10 rounded-md flex-col flex gap-3 items-center justify-center">
+          <div className="p-4 backdrop-blur-md bg-black/20 rounded-md gap-5 flex flex-col">
+            <div className="flex flex-col gap-2">
+              <Typography
+                variant="footnote"
+                className="mx-auto w-full text-center"
+                weight="normal"
+              >
+                Required NFTs
+              </Typography>
+              <div className="flex justify-center gap-3 items-center">
+                <div className="relative">
+                  <Image
+                    width={90}
+                    height={90}
+                    src="https://storage.onton.live/ontonimage/on_gold.jpg"
+                    alt="NFT"
+                    className="rounded-md aspect-square"
+                  />
+                  <div className="flex items-center justify-center text-center absolute top-1/2 py-1.5 backdrop-blur-md bg-white/10 w-full -translate-y-1/2">
+                    <Typography
+                      variant="subheadline1"
+                      weight="medium"
+                    >
+                      1x Gold
+                    </Typography>
+                  </div>
+                </div>
+                <div className="relative">
+                  <Image
+                    width={90}
+                    height={90}
+                    src="https://storage.onton.live/ontonimage/on_silver.jpg"
+                    alt="NFT"
+                    className="rounded-md aspect-square"
+                  />
+                  <div className="flex items-center justify-center text-center absolute top-1/2 py-1.5 backdrop-blur-md bg-white/10 w-full -translate-y-1/2">
+                    <Typography
+                      variant="subheadline1"
+                      weight="medium"
+                    >
+                      1x Silver
+                    </Typography>
+                  </div>
+                </div>
+                <div className="relative">
+                  <Image
+                    width={90}
+                    height={90}
+                    src="https://storage.onton.live/ontonimage/on_bronze.jpg"
+                    alt="NFT"
+                    className="rounded-md aspect-square"
+                  />
+                  <div className="flex items-center justify-center text-center absolute top-1/2 py-1.5 backdrop-blur-md bg-white/10 w-full -translate-y-1/2">
+                    <Typography
+                      variant="subheadline1"
+                      weight="medium"
+                    >
+                      1x Bronze
+                    </Typography>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex justify-between items-center gap-2 text-[9px]">
-              <span className="text-[#DFDFDF]">Floor: 8.9 TON</span> <span className="text-[#73E891]">+3.2</span>
+            <div className="flex flex-col gap-2 items-center justify-center">
+              <Typography
+                className="text-center"
+                variant="footnote"
+                weight="normal"
+              >
+                Result
+              </Typography>
+              <div className="relative w-fit mx-auto">
+                <Image
+                  width={200}
+                  height={200}
+                  src="https://storage.onton.live/ontonimage/on_platinum.jpg"
+                  alt="NFT"
+                  className="rounded-2lg aspect-square"
+                />
+                <div className="flex items-center justify-center text-center absolute top-1/2 py-1.5 backdrop-blur-md bg-white/10 w-full -translate-y-1/2">
+                  <Typography
+                    variant="callout"
+                    weight="semibold"
+                  >
+                    💎 Platinum
+                  </Typography>
+                </div>
+              </div>
             </div>
+            <Typography
+              className="text-center text-balance"
+              variant="subheadline1"
+              weight="medium"
+            >
+              Platinum NFTs can only be generated through the merging process, which requires one of each Genesis ONION NFT
+              type.
+            </Typography>
           </div>
-          <div className="border-white flex-wrap border border-solid flex flex-col gap-2 w-fit p-2 bg-white/10 backdrop-blur-lg rounded-2lg">
-            <div className="flex justify-between items-center gap-2">
+          <div className="flex flex-col gap-2 px-4">
+            <div className="flex justify-center gap-2 items-center">
               <Image
-                width={40}
-                height={40}
-                alt="Gold"
-                src="https://storage.onton.live/ontonimage/p2w-badge.png"
-                className="rounded-md mx-auto"
+                src="https://storage.onton.live/ontonimage/onion_badge.png"
+                width={80}
+                height={80}
+                alt="onion"
               />
-              <div className="flex flex-col gap-1 justify-center items-center text-center mx-auto flex-wrap">
-                <Typography
-                  variant="body"
-                  weight="medium"
-                >
-                  Gold
-                </Typography>
-                <span className="text-[10px]">
-                  2.5K <span className="text-[6px]">TON</span>
-                </span>
-              </div>
+              <Typography
+                variant="footnote"
+                weight="normal"
+                className="text-balance"
+              >
+                The merging process is assured and will consume the three NFTs you provide.
+              </Typography>
             </div>
-            <div className="flex justify-between items-center gap-2 text-[9px]">
-              <span className="text-[#DFDFDF]">Floor: 8.9 TON</span> <span className="text-[#73E891]">+3.2</span>
-            </div>
-          </div>
-          <div className="border-white flex-wrap border border-solid flex flex-col gap-2 w-fit p-2 bg-white/10 backdrop-blur-lg rounded-2lg">
-            <div className="flex justify-between items-center gap-2">
+            <div className="flex justify-center gap-2 items-center flex-row-reverse">
               <Image
-                width={40}
-                height={40}
-                alt="Gold"
-                src="https://storage.onton.live/ontonimage/p2w-badge.png"
-                className="rounded-md mx-auto"
+                src="https://storage.onton.live/ontonimage/onion_badege_2.png"
+                width={80}
+                height={80}
+                alt="onion"
               />
-              <div className="flex flex-col gap-1 justify-center items-center mx-auto flex-wrap text-center">
-                <Typography
-                  variant="body"
-                  weight="medium"
-                >
-                  Gold
-                </Typography>
-                <span className="text-[10px]">
-                  2.5K <span className="text-[6px]">TON</span>
-                </span>
-              </div>
+              <Typography
+                variant="footnote"
+                weight="normal"
+                className="text-balance"
+              >
+                Platinums provide the ultimate benefits within the ONTON and ONION ecosystems.
+              </Typography>
             </div>
-            <div className="flex justify-between items-center gap-2 text-[9px]">
-              <span className="text-[#DFDFDF]">Floor: 8.9 TON</span> <span className="text-[#73E891]">+3.2</span>
+            <div className="flex justify-center gap-2 items-center">
+              <Image
+                src="https://storage.onton.live/ontonimage/onion_badge_3.png"
+                width={80}
+                height={80}
+                alt="onion"
+              />
+              <Typography
+                variant="footnote"
+                weight="normal"
+                className="text-balance"
+              >
+                Merging can only be done after minting through the ONTON Mini App.
+              </Typography>
             </div>
           </div>
         </div>
-        <div className="flex flex-col bg-gradient-radial from-navy-mid to-navy items-center justify-center bg-repeat relative mb-3 pt-5">
-          <MergeNftsButton />
-          <TonConnectButton />
-
-          <div className="bg-[url('/rounded-pattern.svg')] h-[292px] bg-repeat bg-contain w-full absolute top-28 opacity-50 z-0" />
-
-          <Image
-            src={GenesisOnionsLogoImage}
-            alt="Secure Your $ONION Airdrop Now"
-            className="mb-8"
-          />
-
-          <RaffleCarousel
-            onEligibilityCheckFailed={() => setShowAccessRestrictedModal(true)}
-            onInsufficientBalance={handleInsufficientBalance}
-            onSpinStart={handleSpinStart}
-            onSpinEnd={handleSpinEnd}
-          />
-        </div>
-
-        <div className="px-4 flex flex-col gap-3 mb-10">
-          <YourNFTs />
-
-          <Capacity />
-        </div>
-
-        <Footer />
       </main>
-    </>
+    </div>
   );
 }
