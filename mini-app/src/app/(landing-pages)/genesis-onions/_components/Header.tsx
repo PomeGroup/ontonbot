@@ -11,7 +11,6 @@ import GenesisOnionHead from "./../_assets/images/onion-genesis-merge-haed.svg";
 export const Header = () => {
   const config = useConfig();
   const endDateString = config["campeign_merge_date"];
-  console.log(endDateString);
 
   const [timeLeft, setTimeLeft] = useState({
     days: 0,

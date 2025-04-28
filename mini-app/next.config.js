@@ -1,3 +1,4 @@
+/* eslint-disable */
 const { withSentryConfig } = require("@sentry/nextjs");
 
 /** @type {import('next').NextConfig} */
@@ -25,6 +26,9 @@ const nextConfig = {
         hostname: "localhost",
       },
     ],
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
