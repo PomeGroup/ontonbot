@@ -17,6 +17,9 @@ import { logger } from "@/server/utils/logger";
 import { checkRateLimit } from "@/lib/checkRateLimit";
 import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
 import { tokenCampaignNftItemsDB } from "@/server/db/tokenCampaignNftItems.db";
+import { tokenCampaignMergeTransactions } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import tokenCampaignMergeTransactionsDB from "@/server/db/tokenCampaignMergeTransactions.db";
 
 export const campaignRouter = router({
   /**
@@ -441,5 +444,68 @@ export const campaignRouter = router({
           message: "Failed to fetch wallet info.",
         });
       }
+    }),
+
+  addTransaction: initDataProtectedProcedure
+    .input(
+      z.object({
+        orderId: z.number().optional(),
+        walletAddress: z.string(),
+        finalPrice: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const result = await tokenCampaignMergeTransactionsDB.createTransactionRecord(
+        input.orderId,
+        input.walletAddress,
+        input.finalPrice
+      );
+      logger.info(`[addTransaction] Inserted row #${result.id} for wallet ${result.walletAddress}`);
+      return result;
+    }),
+
+  addMergeTransaction: initDataProtectedProcedure
+    .input(
+      z.object({
+        walletAddress: z.string().refine((val) => {
+          try {
+            Address.parse(val);
+            return true;
+          } catch {
+            return false;
+          }
+        }, "Invalid TON address."),
+        goldNftAddress: z.string().nonempty(),
+        silverNftAddress: z.string().nonempty(),
+        bronzeNftAddress: z.string().nonempty(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const result = await tokenCampaignMergeTransactionsDB.createMergeTransactionRecord(
+        input.walletAddress,
+        input.goldNftAddress,
+        input.silverNftAddress,
+        input.bronzeNftAddress
+      );
+      logger.info(`[addMergeTransaction] Inserted merge row #${result.id}, status=${result.status}`);
+      return result;
+    }),
+
+  getUserMergeTransactions: initDataProtectedProcedure
+    .input(
+      z.object({
+        walletAddress: z.string().refine((val) => {
+          try {
+            Address.parse(val);
+            return true;
+          } catch {
+            return false;
+          }
+        }, "Invalid TON address."),
+      })
+    )
+    .query(async ({ input }) => {
+      const merges = await tokenCampaignMergeTransactionsDB.getMergeTransactionsByWallet(input.walletAddress);
+      return merges;
     }),
 });

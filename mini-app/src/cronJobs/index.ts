@@ -25,6 +25,8 @@ import { checkAndEnrollUserInPlay2WinCampaign } from "@/cronJobs/tasks/checkAndE
 import { mintNftForUserSpins } from "@/cronJobs/tasks/mintNftsForUserSpins";
 import { deployMissingCampaignCollections } from "@/cronJobs/tasks/deployMissingCampaignCollections";
 import { checkMinterTransactions } from "@/cronJobs/tasks/checkNFTTransactions";
+import { mintPlatinumNftForMergedNFTS } from "@/cronJobs/tasks/mintPlatinumNftForMergedNFTS";
+import { burnMergedNfts } from "@/cronJobs/tasks/burnMergedNfts";
 
 const cronJobs = {
   CheckTransactions,
@@ -53,6 +55,8 @@ const cronJobs = {
   mintNftForUserSpins,
   deployMissingCampaignCollections,
   checkMinterTransactions,
+  mintPlatinumNftForMergedNFTS,
+  burnMergedNfts,
 };
 export { cronJobRunner };
 export default cronJobs;

@@ -41,6 +41,9 @@ export const tokenCampaignNftItems = pgTable("token_campaign_nft_items", {
     precision: 6, // maps to "timestamp(6)"
   }).defaultNow(),
   mergeStatus: mergeStatusEnum("merge_status").notNull().default("not_allowed_to_merge"),
+  mergedIntoNftAddress: text("merged_into_nft_address"),
+  mergedIntoNftIndex: bigint("merged_into_nft_index", { mode: "number" }),
+  burnTrxHash: text("burn_trx_hash"),
   updatedAt: timestamp("updated_at", {
     withTimezone: false,
     precision: 3,

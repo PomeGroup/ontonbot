@@ -135,7 +135,13 @@ import {
   MergeStatusType,
   mergeStatusEnum,
 } from "./schema/tokenCampaignNftItems";
-import { tokenCampaignMergeTransactions } from "./schema/tokenCampaignMergeTransactions";
+import {
+  tokenCampaignMergeTransactions,
+  tokenCampaignMergeTransactionsStatus,
+  TokenCampaignMergeTransactionsStatus,
+  TokenCampaignMergeTransactions,
+  TokenCampaignMergeTransactionsInsert,
+} from "./schema/tokenCampaignMergeTransactions";
 // export all the enums
 export {
   accessRoleEnum,
@@ -162,6 +168,8 @@ export {
   user_flags,
   userRoleStatusEnum,
   affiliateItemType,
+  campaignTypes,
+  tokenCampaignMergeTransactionsStatus,
 };
 
 // export all the tables and relations
@@ -211,7 +219,6 @@ export {
   tournaments,
   games,
   gameLeaderboard,
-  campaignTypes,
   tokenCampaignUserSpins,
   tokenCampaignSpinType,
   tokenCampaignSpinPackages,
@@ -293,4 +300,7 @@ export type {
   TokenCampaignNftItems,
   TokenCampaignNftItemsInsert,
   MergeStatusType,
+  TokenCampaignMergeTransactions,
+  TokenCampaignMergeTransactionsInsert,
+  TokenCampaignMergeTransactionsStatus,
 };
