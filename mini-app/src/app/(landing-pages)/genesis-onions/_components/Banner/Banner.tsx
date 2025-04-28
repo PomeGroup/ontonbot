@@ -27,12 +27,16 @@ export const Banner = ({ className }: Props) => {
     return Math.floor(difference / (1000 * 60 * 60 * 24));
   }, [targetDate]);
 
+  const remaningTime = useMemo(() => {
+    return new Date(targetDate).getTime() - new Date().getTime();
+  }, [targetDate]);
+
   const handleOnClick = () => {
     if (isEligible) router.push(GENESIS_ONIONS_PAGE_ROUTE);
     else setShowAccessRestrictedModal(true);
   };
 
-  if (remainingDays <= 0) return null;
+  if (remaningTime <= 0) return null;
 
   if (isLoadingEligibility || isErrorEligibility) return null;
 
