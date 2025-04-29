@@ -37,7 +37,7 @@ export async function mintNftForUserSpins() {
     // Wrap in a transaction
     await db.transaction(async (trx) => {
       if (!spin.createdAt) {
-        // logger.error(`mintNftForUserSpins: 🔴 Spin createdAt is null for spinId=${spin.id}`);
+         logger.error(`mintNftForUserSpins: 🔴 Spin createdAt is null for spinId=${spin.id}`);
         return;
       }
       const [order] = await trx
@@ -59,7 +59,7 @@ export async function mintNftForUserSpins() {
         .execute();
 
       if (!order?.wallet) {
-        // logger.error(`mintNftForUserSpins: 🔴 No wallet address found for userId=${spin.userId}, spinId=${spin.id}`);
+        logger.error(`mintNftForUserSpins: 🔴 No wallet address found for userId=${spin.userId}, spinId=${spin.id}`);
         return;
       }
       // 2a) Re-fetch spin in transaction
