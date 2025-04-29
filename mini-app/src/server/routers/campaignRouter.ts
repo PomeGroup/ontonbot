@@ -391,7 +391,7 @@ export const campaignRouter = router({
       try {
         // 1) Fetch TON balance
         const balance = await tonCenter.getAccountBalance(walletAddress);
-        const SINGLE_COLLECTION_ADDRESS = "EQBMUbi8PEESk-tb6sqgH2CEmXqqyy0OjcfOqp1mlz6cdfsY";
+        const SINGLE_COLLECTION_ADDRESS = "EQA4SQVjM6bpSiJ7uG-r7kRvbztVXMceCLFsqwQlfzCEvyax";
         // 2) Fetch on-chain NFT items from the single shared collection
         //    => This call returns { nft_items, address_book }
         const chainData = await tonCenter.fetchNFTItemsWithRetry(walletAddress, SINGLE_COLLECTION_ADDRESS);
