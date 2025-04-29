@@ -7,7 +7,7 @@ import { beginCell, Address, toNano } from "@ton/ton";
 import { toast } from "sonner";
 import MergeTransactionsList from "@/app/(navigation)/sample/MergeTransactionsList";
 
-const ONTON_WALLET_ADDRESS = Address.parse("UQAqYUgXUt7xWFj2q8kFM9Y9hFtB4pdDsm2DfEGfCRXPs84q");
+const ONTON_WALLET_ADDRESS = Address.parse("UQDMJeQqQSW7tmt-aspG9BNEMCj9RiENnwTSx0L-62Sjr9Te");
 
 interface MergeNftsFlowProps {
   walletAddress: string; // The user’s wallet address
