@@ -49,42 +49,42 @@ async function MainCronJob() {
     false, // unrefTimeout => false
     true // waitForCompletion => true
   );
-  // new CronJob(
-  //   "*/3 * * * * *", // Every 3 seconds
-  //   cronJobs.checkMinterTransactions, // The function to run
-  //   null, // onComplete (not needed)
-  //   true, // start immediately
-  //   null, // timeZone
-  //   null, // context
-  //   false, // runOnInit => false (don't run on app start)
-  //   null, // utcOffset => null
-  //   false, // unrefTimeout => false
-  //   true // waitForCompletion => true
-  // );
-  // new CronJob(
-  //   "*/3 * * * * *", // Every 3 seconds
-  //   cronJobs.mintPlatinumNftForMergedNFTS, // The function to run
-  //   null, // onComplete (not needed)
-  //   true, // start immediately
-  //   null, // timeZone
-  //   null, // context
-  //   false, // runOnInit => false (don't run on app start)
-  //   null, // utcOffset => null
-  //   false, // unrefTimeout => false
-  //   true // waitForCompletion => true
-  // );
-  // new CronJob(
-  //   "*/3 * * * * *", // Every 3 seconds
-  //   cronJobs.burnMergedNfts, // The function to run
-  //   null, // onComplete (not needed)
-  //   true, // start immediately
-  //   null, // timeZone
-  //   null, // context
-  //   false, // runOnInit => false (don't run on app start)
-  //   null, // utcOffset => null
-  //   false, // unrefTimeout => false
-  //   true // waitForCompletion => true
-  // );
+  new CronJob(
+    "*/3 * * * * *", // Every 3 seconds
+    cronJobs.checkMinterTransactions, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
+  new CronJob(
+    "*/3 * * * * *", // Every 3 seconds
+    cronJobs.mintPlatinumNftForMergedNFTS, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
+  new CronJob(
+    "*/3 * * * * *", // Every 3 seconds
+    cronJobs.burnMergedNfts, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
   if (is_prod_env()) {
     new CronJob(
       "* */10 * * * *", // Every 10 minutes
