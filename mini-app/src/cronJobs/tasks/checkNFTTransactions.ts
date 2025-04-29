@@ -44,7 +44,7 @@ export async function checkMinterTransactions() {
 
 
   // Determine the range from walletChecks
-  const three_hours_ago = Math.floor((Date.now() -   3600 * 1000) / 1000);
+  const three_hours_ago = Math.floor((Date.now() - 3 *  3600 * 1000) / 1000);
   const [existingRow] = await db
     .select({ checked_lt: walletChecks.checked_lt })
     .from(walletChecks)
@@ -55,8 +55,8 @@ export async function checkMinterTransactions() {
   if (existingRow?.checked_lt) {
     start_lt = existingRow.checked_lt + BigInt(1);
   }
-  // const start_utime = start_lt ? null : three_hours_ago;
-  const start_utime =  three_hours_ago;
+  const start_utime = start_lt ? null : three_hours_ago;
+  // const start_utime =  three_hours_ago;
 
   // 1) Fetch new transactions from the minter wallet
   const transactions = await tonCenter.fetchAllTransactions(minter_wallet_address, start_utime, start_lt);
@@ -169,15 +169,15 @@ export async function checkMinterTransactions() {
 
   // 5) Update walletChecks last_lt
   const last_lt = BigInt(transactions[transactions.length - 1].lt);
-  // if (start_lt) {
-  //   await db
-  //     .update(walletChecks)
-  //     .set({ checked_lt: last_lt })
-  //     .where(eq(walletChecks.wallet_address, minter_wallet_address))
-  //     .execute();
-  // } else {
-  //   await db.insert(walletChecks).values({ wallet_address: minter_wallet_address, checked_lt: last_lt }).execute();
-  // }
+  if (start_lt) {
+    await db
+      .update(walletChecks)
+      .set({ checked_lt: last_lt })
+      .where(eq(walletChecks.wallet_address, minter_wallet_address))
+      .execute();
+  } else {
+    await db.insert(walletChecks).values({ wallet_address: minter_wallet_address, checked_lt: last_lt }).execute();
+  }
 
   logger.info(`[MinterCheck] Completed merges for ${minter_wallet_address}`);
 }
