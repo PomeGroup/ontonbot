@@ -19,27 +19,27 @@ export async function checkMinterTransactions() {
   // 1) Fail all "pending" merges older than 2 minutes 30 seconds
   // => 150 seconds = 150,000 ms
   const twoMinutesThirtySecsAgo = new Date(Date.now() - 150_000); // 2m30s ago
-  const updateResult = (
-    await db
+  // Do this instead:
+  const [updateMeta] = await db
       .update(tokenCampaignMergeTransactions)
       .set({ status: "failed" })
       .where(
-        and(
-          eq(tokenCampaignMergeTransactions.status, "pending"),
-          lt(tokenCampaignMergeTransactions.createdAt, twoMinutesThirtySecsAgo)
-        )
+          and(
+              eq(tokenCampaignMergeTransactions.status, "pending"),
+              lt(tokenCampaignMergeTransactions.createdAt, twoMinutesThirtySecsAgo)
+          )
       )
-      .returning({
-        rowCount: count(tokenCampaignMergeTransactions.id),
-      })
-      .execute()
-  ).pop();
+      .execute();
 
-  if (updateResult && updateResult.rowCount > 0) {
+  const rowCount = updateMeta.rowCount;
+
+  if (rowCount > 0) {
     logger.info(
-      `[checkMinterTransactions] Marked ${updateResult.rowCount} "pending" merges as "failed" (older than 2m30s).`
+        `[checkMinterTransactions] Marked ${rowCount} "pending" merges as "failed" (older than 2m30s).`
     );
   }
+
+
   // Determine the range from walletChecks
   const three_hours_ago = Math.floor((Date.now() - 3 * 3600 * 1000) / 1000);
   const [existingRow] = await db
