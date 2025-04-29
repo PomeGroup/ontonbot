@@ -20,7 +20,7 @@ export async function checkMinterTransactions() {
   // => 150 seconds = 150,000 ms
   const twoMinutesThirtySecsAgo = new Date(Date.now() - 150_000); // 2m30s ago
   // Do this instead:
-  const [updateMeta] = await db
+  const updatedRows  = await db
       .update(tokenCampaignMergeTransactions)
       .set({ status: "failed" })
       .where(
@@ -29,9 +29,12 @@ export async function checkMinterTransactions() {
               lt(tokenCampaignMergeTransactions.createdAt, twoMinutesThirtySecsAgo)
           )
       )
+      .returning({ id: tokenCampaignMergeTransactions.id })
       .execute();
 
-  const rowCount = updateMeta.rowCount;
+  // updatedRows is an array of { id: number; } objects
+// The rowCount is simply the length of updatedRows
+  const rowCount = updatedRows.length;
 
   if (rowCount > 0) {
     logger.info(
