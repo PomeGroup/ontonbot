@@ -173,7 +173,7 @@ services:
       apt-get update -y &&
       apt-get install curl -y &&
       gem install fluent-plugin-concat &&
-      gem install fluent-plugin-elasticsearch -v 5.4.2 &&
+      gem install fluent-plugin-elasticsearch-v 5.3.0 &&
       gem install fluent-plugin-prometheus &&
       gem install fluent-plugin-prometheus-pull &&
       fluentd -c /fluentd/etc/fluent.conf -v
