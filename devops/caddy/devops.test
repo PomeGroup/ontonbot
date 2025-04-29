@@ -4,3 +4,4 @@
 #triger swagger again
 log reset
 log reset
+Force fluent-plugin-elasticsearch to treat it as ES 8: major_version 8
