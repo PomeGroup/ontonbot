@@ -9,7 +9,7 @@ import { useWallet } from "../../hooks/useWallet";
 import { useOrder } from "../../hooks/useOrder";
 import RaffleImage from "../../_assets/images/raffle.svg";
 import { useState } from "react";
-import useTransferPayment from "@/app/sample/useTransferPayment";
+import useTransferPayment from "@/app/(navigation)/sample/useTransferPayment";
 
 interface Props {
   pkg: TokenCampaignSpinPackages;
