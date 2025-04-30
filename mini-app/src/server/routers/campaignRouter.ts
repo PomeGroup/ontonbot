@@ -19,6 +19,7 @@ import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
 import { tokenCampaignNftItemsDB } from "@/server/db/tokenCampaignNftItems.db";
 import tokenCampaignMergeTransactionsDB from "@/server/db/tokenCampaignMergeTransactions.db";
 import { affiliateClicksDB } from "../db/affiliateClicks.db";
+import { CampaignNFT } from "@/types/campaign.types";
 
 export const campaignRouter = router({
   /**
@@ -70,6 +71,7 @@ export const campaignRouter = router({
           message: "CAMPAIGN_LOG:Router:addOrder: Rate limit exceeded. Try again later.",
         });
       }
+
       return await db.transaction(async (tx) => {
         // 1) Find an existing *unused* spin row
         const spinRow = await tokenCampaignUserSpinsDB.getUnusedSpinForUserTx(tx, userId);
@@ -377,33 +379,7 @@ export const campaignRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      type NFTData = Record<
-        string,
-        {
-          onChain: NFTItem | undefined;
-          offChain: {
-            itemType: "onion1" | "genesis_season" | "merge_platinum";
-            owner: number;
-            itemId: number;
-            nftAddress: string;
-            index: number;
-            mergeStatus:
-              | "not_allowed_to_merge"
-              | "able_to_merge"
-              | "waiting_for_transaction"
-              | "merging"
-              | "merged"
-              | "burned";
-          };
-          collectionInfo: {
-            address: string | null;
-            image: string | null;
-            id: number;
-            name: string | null;
-            campaignType: "onion1" | "genesis_season" | "merge_platinum";
-          };
-        }[]
-      >;
+      type NFTData = Record<string, CampaignNFT[]>;
 
       const { walletAddress } = input;
       // 1) Optional Rate Limit

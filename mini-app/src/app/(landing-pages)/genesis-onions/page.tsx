@@ -1,16 +1,20 @@
 "use client";
 
-import React from "react";
+import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
-import "./_assets/genesis-onions.css";
-import { Header } from "./_components/Header";
-import Image from "next/image";
-import { FaChevronRight } from "react-icons/fa6";
-import useWebApp from "@/hooks/useWebApp";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { trpc } from "@/app/_trpc/client";
-import { useTonWallet } from "@tonconnect/ui-react";
+import { useConfig } from "@/context/ConfigContext";
+import useWebApp from "@/hooks/useWebApp";
+import { CampaignNFT } from "@/types/campaign.types";
+import { Address, beginCell, toNano } from "@ton/core";
+import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
+import Image from "next/image";
+import React from "react";
+import { FaChevronRight } from "react-icons/fa6";
+import { toast } from "sonner";
+import "./_assets/genesis-onions.css";
+import { Header } from "./_components/Header";
 
 const COLORS = ["gold", "silver", "bronze"] as const;
 
@@ -40,7 +44,11 @@ const badges = [
 
 export default function GenesisOnions() {
   const webapp = useWebApp();
+  const config = useConfig();
   const walletAddress = useTonWallet();
+  const [tonConnectUI] = useTonConnectUI();
+  const addMergeTxMutation = trpc.campaign.addMergeTransaction.useMutation();
+
   const walletInfo = trpc.campaign.getWalletInfo.useQuery(
     { walletAddress: walletAddress?.account.address as string },
     {
@@ -63,6 +71,100 @@ export default function GenesisOnions() {
   const bronzeAbleArr = bronzeArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
 
   const isAbleToMerge = Boolean(goldAbleArr && silverAbleArr && bronzeAbleArr);
+
+  const ontonAddress = config["ONTON_WALLET_ADDRESS"] as string;
+
+  /**
+   * Called when user clicks "Merge one set now"
+   * 1) Insert row => addMergeTransaction (status="pending")
+   * 2) Then build TonConnect multi-message
+   * 3) Send transaction
+   * 4) Cron job sees the chain TX => sets "completed"
+   */
+  async function handleMergeNfts() {
+    const address = walletAddress?.account.address;
+    if (!isAbleToMerge || !address) {
+      toast.error("No full set (gold/silver/bronze) to merge.");
+      return;
+    }
+
+    const goldNft = goldArr[0] as CampaignNFT;
+    const silverNft = silverArr[0] as CampaignNFT;
+    const bronzeNft = bronzeArr[0] as CampaignNFT;
+    try {
+      // (A) Insert "pending" row in DB
+      const newTx = await addMergeTxMutation.mutateAsync({
+        walletAddress: address,
+        goldNftAddress: goldNft.onChain?.address as string,
+        silverNftAddress: silverNft.onChain?.address as string,
+        bronzeNftAddress: bronzeNft.onChain?.address as string,
+      });
+
+      toast.success(`Created mergeTx #${newTx.id}, status=${newTx.status}`);
+
+      // (B) Then build multi-message
+      const messages = [
+        createNftTransferMsg(goldNft),
+        createNftTransferMsg(silverNft),
+        createNftTransferMsg(bronzeNft),
+        createMergeFlagMessage(
+          `user=${walletAddress}&indexes=[${goldNft.onChain?.index},${silverNft.onChain?.index},${bronzeNft.onChain?.index}]`
+        ),
+      ];
+
+      // (C) TonConnect transaction
+      await tonConnectUI.sendTransaction({
+        validUntil: Math.floor(Date.now() / 1000) + 600,
+        messages,
+      });
+      toast.success("NFTs merge transaction submitted!");
+      await walletInfo.refetch(); // re-check user items
+    } catch (err) {
+      console.error("Merge transaction error:", err);
+      toast.error("Failed to merge NFTs or user canceled.");
+    }
+  }
+
+  function createNftTransferMsg(nft: CampaignNFT) {
+    const nftAddr = Address.parse(nft.onChain?.address as string);
+
+    const bodyCell = beginCell()
+      .storeUint(0x5fcc3d14, 32)
+      .storeUint(0, 64)
+      .storeAddress(Address.parse(ontonAddress))
+      .storeAddress(null)
+      .storeBit(true)
+      .storeRef(
+        beginCell().storeStringTail(`Name: ${nft.collectionInfo.name}\nImage: ${nft.collectionInfo.image}`).endCell()
+      )
+      .storeCoins(0)
+      .storeBit(false)
+      .endCell();
+
+    return {
+      address: nftAddr.toString(),
+      amount: toNano("0.05").toString(),
+      payload: bodyCell.toBoc().toString("base64"),
+    };
+  }
+  function createMergeFlagMessage(flagComment: string) {
+    const bodyCell = beginCell().storeUint(0, 32).storeStringTail(flagComment).endCell();
+
+    return {
+      address: ontonAddress,
+      amount: toNano("0.005").toString(),
+      payload: bodyCell.toBoc().toString("base64"),
+    };
+  }
+
+  function hanldeMainButtonClick(): void {
+    if (isAbleToMerge) {
+      void handleMergeNfts();
+    } else {
+      // redirect to getgems
+      void webapp?.openLink("https://getgems.io/genesisonions");
+    }
+  }
 
   return (
     <div>
@@ -210,12 +312,13 @@ export default function GenesisOnions() {
             type="button"
             size="lg"
             className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
+            onClick={hanldeMainButtonClick}
           >
             <Typography
               variant="headline"
               weight="semibold"
             >
-              {isAbleToMerge ? "Collect Sufficient ONIONs" : "Unleash the Platinum"}
+              {isAbleToMerge ? "Unleash the Platinum" : "Collect Sufficient ONIONs"}
             </Typography>
           </Button>
         </div>
