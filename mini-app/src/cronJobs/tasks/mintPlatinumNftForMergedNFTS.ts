@@ -23,7 +23,7 @@ export async function mintPlatinumNftForMergedNFTS() {
   const mergesToMint = await db
     .select()
     .from(tokenCampaignMergeTransactions)
-    .where(isNull(tokenCampaignMergeTransactions.platinumNftAddress))
+    .where(and(isNull(tokenCampaignMergeTransactions.platinumNftAddress) , eq (tokenCampaignMergeTransactions.status, "completed")))
     .execute();
 
   if (!mergesToMint.length) {
