@@ -19,7 +19,8 @@ const buttonVariants = cva(
         secondary: "bg-cn-secondary text-cn-secondary-foreground hover:bg-cn-secondary/30",
         ghost: "hover:bg-cn-accent hover:text-accent-foreground",
         link: "text-cn-primary underline-offset-4 text-zinc hover:underline",
-        "primary-onion": "bg-onion text-white",
+        "primary-onion":
+          "bg-onion text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 disabled:opacity-100 disabled:bg-[#E8E8E9] disabled:text-[#6D6D72] hover:bg-orange",
         "secondary-onion": "bg-white/20 text-white",
       },
       size: {
