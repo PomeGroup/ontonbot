@@ -17,8 +17,6 @@ import { logger } from "@/server/utils/logger";
 import { checkRateLimit } from "@/lib/checkRateLimit";
 import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
 import { tokenCampaignNftItemsDB } from "@/server/db/tokenCampaignNftItems.db";
-import { tokenCampaignMergeTransactions } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import tokenCampaignMergeTransactionsDB from "@/server/db/tokenCampaignMergeTransactions.db";
 import { affiliateClicksDB } from "../db/affiliateClicks.db";
 
@@ -416,11 +414,41 @@ export const campaignRouter = router({
 
         // 4) Group them by itemType or campaignType
         //    e.g. { gold: [...], silver: [...], bronze: [...] }
-        const grouped: Record<string, any[]> = {};
+        const grouped: Record<
+          "gold" | "silver" | "bronze",
+          {
+            onChain: NFTItem | undefined;
+            offChain: {
+              itemType: "onion1" | "genesis_season" | "merge_platinum";
+              owner: number;
+              itemId: number;
+              nftAddress: string;
+              index: number;
+              mergeStatus:
+                | "not_allowed_to_merge"
+                | "able_to_merge"
+                | "waiting_for_transaction"
+                | "merging"
+                | "merged"
+                | "burned";
+            };
+            collectionInfo: {
+              address: string | null;
+              image: string | null;
+              id: number;
+              name: string | null;
+              campaignType: "onion1" | "genesis_season" | "merge_platinum";
+            };
+          }[]
+        > = {
+          bronze: [],
+          gold: [],
+          silver: [],
+        };
 
         for (const row of dbRows) {
           const { nftItem, collection } = row;
-          const typeKey = collection.id.toString() || collection.id.toString(); // Use collection name or ID as the key
+          const typeKey = (collection.id.toString() || collection.id.toString()) as "gold" | "bronze" | "silver"; // Use collection name or ID as the key
 
           if (!grouped[typeKey]) {
             grouped[typeKey] = [];
@@ -431,11 +459,12 @@ export const campaignRouter = router({
           // Find the original onChain item to get metadata (uri, index, etc.)
           const chainItem = onChainNftItems.find((c) => c.address === nftItem.nftAddress);
 
-          grouped[typeKey].push({
+          const item = {
             onChain: chainItem,
             offChain: nftItem,
             collectionInfo: collection,
-          });
+          };
+          grouped[typeKey].push(item);
         }
 
         return {
