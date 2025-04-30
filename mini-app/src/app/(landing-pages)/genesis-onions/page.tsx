@@ -17,32 +17,9 @@ import "./_assets/genesis-onions.css";
 import { Header } from "./_components/Header";
 import { useUserMergeTransactionsPoll } from "@/app/(navigation)/sample/useUserMergeTransactionsPoll";
 import { cn } from "@/lib/utils";
-
-const COLORS = ["gold", "silver", "bronze"] as const;
-
-const getFilterUrl = (color: string) =>
-  `https://getgems.io/genesisonions?filter=%7B%22attributes%22%3A%7B%22color%22%3A%5B%22${color}%22%5D%7D%7D`;
-
-const getImageUrl = (color: string) => `https://storage.onton.live/ontonimage/on_${color.toLowerCase()}.jpg`;
-
-const badges = [
-  {
-    src: "https://storage.onton.live/ontonimage/onion_badge.png",
-    alt: "onion",
-    text: "The merging process is assured and will consume the three NFTs you provide.",
-  },
-  {
-    src: "https://storage.onton.live/ontonimage/onion_badege_2.png",
-    alt: "onion",
-    text: "Platinums provide the ultimate benefits within the ONTON and ONION ecosystems.",
-    reverse: true,
-  },
-  {
-    src: "https://storage.onton.live/ontonimage/onion_badge_3.png",
-    alt: "onion",
-    text: "Merging can only be done after minting through the ONTON Mini App.",
-  },
-];
+import { NFTCard } from "./_components/Merge/NFTCard";
+import { COLORS, getFilterUrl, getImageUrl } from "./_components/Merge/constants";
+import { DescriptionSection } from "./_components/Merge/DescriptionSection";
 
 export default function GenesisOnions() {
   const webapp = useWebApp();
@@ -345,145 +322,8 @@ export default function GenesisOnions() {
         </div>
 
         {/* Description Card */}
-        <div className="p-4 backdrop-blur-lg bg-white/10 rounded-md flex-col flex gap-3 items-center justify-center">
-          <div className="p-4 backdrop-blur-md bg-black/20 rounded-md gap-5 flex flex-col">
-            <div className="flex flex-col gap-2">
-              <Typography
-                variant="footnote"
-                className="mx-auto w-full text-center"
-                weight="normal"
-              >
-                Required NFTs
-              </Typography>
-              <div className="flex justify-center gap-3 items-center">
-                {COLORS.map((color) => (
-                  <RequiredNft
-                    key={color}
-                    color={color}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 items-center justify-center">
-              <Typography
-                className="text-center"
-                variant="footnote"
-                weight="normal"
-              >
-                Result
-              </Typography>
-              <div className="relative w-fit mx-auto">
-                <Image
-                  width={200}
-                  height={200}
-                  src={getImageUrl("Platinum")}
-                  alt="Platinum NFT"
-                  className="rounded-2lg aspect-square"
-                />
-                <div className="flex items-center justify-center text-center absolute top-1/2 py-1.5 backdrop-blur-md bg-white/10 w-full -translate-y-1/2">
-                  <Typography
-                    variant="callout"
-                    weight="semibold"
-                  >
-                    💎 Platinum
-                  </Typography>
-                </div>
-              </div>
-            </div>
-            <Typography
-              className="text-center text-balance"
-              variant="subheadline1"
-              weight="medium"
-            >
-              Platinum NFTs can only be generated through the merging process, which requires one of each Genesis ONION NFT
-              type.
-            </Typography>
-          </div>
-          <div className="flex flex-col gap-2 px-4">
-            {badges.map(({ src, alt, text, reverse }, idx) => (
-              <div
-                key={idx}
-                className={`flex justify-center gap-2 items-center${reverse ? " flex-row-reverse" : ""}`}
-              >
-                <Image
-                  src={src}
-                  width={80}
-                  height={80}
-                  alt={alt}
-                />
-                <Typography
-                  variant="footnote"
-                  weight="normal"
-                  className="text-balance"
-                >
-                  {text}
-                </Typography>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DescriptionSection />
       </main>
-    </div>
-  );
-}
-
-function RequiredNft(props: { color: string }): React.JSX.Element {
-  return (
-    <div
-      key={props.color}
-      className="relative"
-    >
-      <Image
-        width={90}
-        height={90}
-        src={getImageUrl(props.color)}
-        alt={`${props.color} NFT`}
-        className="rounded-md aspect-square"
-      />
-      <div className="flex items-center justify-center text-center absolute top-1/2 py-1.5 backdrop-blur-md bg-white/10 w-full -translate-y-1/2">
-        <Typography
-          variant="subheadline1"
-          weight="medium"
-          className="capitalize"
-        >
-          1x {props.color}
-        </Typography>
-      </div>
-    </div>
-  );
-}
-
-function NFTCard(props: { color: string; nftList: unknown[] }): React.JSX.Element {
-  const walletAddress = useTonWallet();
-
-  return (
-    <div
-      key={props.color}
-      className="border-b border-white p-2 gap-2 flex items-center bg-white/10 backdrop-blur-lg rounded-2lg flex-wrap flex-1"
-    >
-      <Image
-        width={44}
-        height={44}
-        src={getImageUrl(props.color)}
-        alt={`${props.color} NFT`}
-        className={cn("rounded-md aspect-square mx-auto", !props.nftList.length && "grayscale")}
-      />
-      <div className="flex flex-col text-center mx-auto">
-        <Typography
-          variant="headline"
-          weight="semibold"
-          className="mt-2"
-        >
-          x{walletAddress ? props.nftList.length : "?"}
-        </Typography>
-        <Typography
-          variant="body"
-          weight="medium"
-          className={`text-${props.color.toLowerCase()} !text-[8px] capitalize`}
-        >
-          {props.color}
-        </Typography>
-      </div>
     </div>
   );
 }
