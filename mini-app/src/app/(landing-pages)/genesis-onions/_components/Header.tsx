@@ -1,12 +1,9 @@
-// import CustomButton from "@/app/_components/Button/CustomButton";
-// import Typography from "@/components/Typography";
-// import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from "@/components/ui/dropdown-menu";
-// import { UnplugIcon } from "lucide-react";
 "use client";
 import { useState, useEffect } from "react";
 import { useConfig } from "@/context/ConfigContext";
 import Image from "next/image";
 import GenesisOnionHead from "./../_assets/images/onion-genesis-merge-haed.svg";
+import { ONIONConnectWallet } from "./ONIONConnectWallet";
 
 export const Header = () => {
   const config = useConfig();
@@ -54,26 +51,7 @@ export const Header = () => {
           <span className="text-[9px] sansation-normal">S</span>
         </div>
       </div>
-      {/* <DropdownMenu> */}
-      {/*   <DropdownMenuTrigger asChild> */}
-      {/*     <CustomButton */}
-      {/*       variant="primary-onion" */}
-      {/*       btnClassName="!w-fit" */}
-      {/*       fontWeight="semibold" */}
-      {/*     > */}
-      {/*       Connect Wallet */}
-      {/*     </CustomButton> */}
-      {/*   </DropdownMenuTrigger> */}
-      {/*   <DropdownMenuContent className="!bg-navy rounded-2lg p-3 flex items-center gap-2 border border-solid border-brand-divider-dark text-onion-extraLight"> */}
-      {/*     <UnplugIcon /> */}
-      {/*     <Typography */}
-      {/*       variant="body" */}
-      {/*       weight="medium" */}
-      {/*     > */}
-      {/*       Disconnect */}
-      {/*     </Typography> */}
-      {/*   </DropdownMenuContent> */}
-      {/* </DropdownMenu> */}
+      <ONIONConnectWallet />
     </div>
   );
 };

@@ -79,6 +79,10 @@ module.exports = konstaConfig({
           light: "#203248",
           dark: "#020B16",
         },
+        onion: {
+          DEFAULT: "#F36A00",
+          extraLight: "#FF923D",
+        },
         silverBlue: {
           1: "#77B8FE",
           2: "#4C688B",

@@ -7,6 +7,9 @@ import Image from "next/image";
 import { FaChevronRight } from "react-icons/fa6";
 import useWebApp from "@/hooks/useWebApp";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { trpc } from "@/app/_trpc/client";
+import { useTonWallet } from "@tonconnect/ui-react";
 
 const COLORS = ["Gold", "Silver", "Bronze"];
 const getFilterUrl = (color: string) =>
@@ -34,9 +37,54 @@ const badges = [
 
 export default function GenesisOnions() {
   const webapp = useWebApp();
+  const walletAddress = useTonWallet();
+  const walletInfo = trpc.campaign.getWalletInfo.useQuery(
+    { walletAddress: walletAddress?.account.address as string },
+    {
+      enabled: Boolean(walletAddress?.account.address),
+    }
+  );
 
   return (
     <div>
+      {JSON.stringify(walletInfo.data?.itemsByType, null, 2)}
+      {walletInfo.data?.balance}
+      <Dialog>
+        <DialogTrigger>Boom</DialogTrigger>
+        <DialogContent
+          hideClose
+          className="border-none outline-none text-white p-10 flex-col flex gap-5"
+        >
+          <div className="mx-auto text-center">
+            <Typography variant="title2">🎉 Congratulations!</Typography>
+            <Typography
+              variant="subheadline1"
+              weight="medium"
+            >
+              You created a Platinum from scratch!
+            </Typography>
+          </div>
+          <Image
+            src={getImageUrl("Platinum")}
+            width={324}
+            height={324}
+            alt="square"
+            className="mx-auto"
+          />
+          <Button
+            type="button"
+            size="lg"
+            className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
+          >
+            <Typography
+              variant="headline"
+              weight="semibold"
+            >
+              Keep Merging
+            </Typography>
+          </Button>
+        </DialogContent>
+      </Dialog>
       <Header />
       <main
         className="bg-navy text-white min-h-screen p-4 flex flex-col gap-5"
