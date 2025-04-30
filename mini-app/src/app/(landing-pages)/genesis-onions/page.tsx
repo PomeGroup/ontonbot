@@ -47,8 +47,6 @@ export default function GenesisOnions() {
 
   return (
     <div>
-      {JSON.stringify(walletInfo.data?.itemsByType, null, 2)}
-      {walletInfo.data?.balance}
       <Dialog>
         <DialogTrigger>Boom</DialogTrigger>
         <DialogContent
