@@ -377,6 +377,34 @@ export const campaignRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
+      type NFTData = Record<
+        string,
+        {
+          onChain: NFTItem | undefined;
+          offChain: {
+            itemType: "onion1" | "genesis_season" | "merge_platinum";
+            owner: number;
+            itemId: number;
+            nftAddress: string;
+            index: number;
+            mergeStatus:
+              | "not_allowed_to_merge"
+              | "able_to_merge"
+              | "waiting_for_transaction"
+              | "merging"
+              | "merged"
+              | "burned";
+          };
+          collectionInfo: {
+            address: string | null;
+            image: string | null;
+            id: number;
+            name: string | null;
+            campaignType: "onion1" | "genesis_season" | "merge_platinum";
+          };
+        }[]
+      >;
+
       const { walletAddress } = input;
       // 1) Optional Rate Limit
       const { allowed } = await checkRateLimit(ctx.user.user_id.toString(), "campaignRouterGetWalletInfo", 10, 60);
@@ -400,7 +428,7 @@ export const campaignRouter = router({
           return {
             address: walletAddress,
             balance,
-            itemsByType: {},
+            itemsByType: {} as NFTData,
           };
         }
 
@@ -414,41 +442,11 @@ export const campaignRouter = router({
 
         // 4) Group them by itemType or campaignType
         //    e.g. { gold: [...], silver: [...], bronze: [...] }
-        const grouped: Record<
-          "gold" | "silver" | "bronze",
-          {
-            onChain: NFTItem | undefined;
-            offChain: {
-              itemType: "onion1" | "genesis_season" | "merge_platinum";
-              owner: number;
-              itemId: number;
-              nftAddress: string;
-              index: number;
-              mergeStatus:
-                | "not_allowed_to_merge"
-                | "able_to_merge"
-                | "waiting_for_transaction"
-                | "merging"
-                | "merged"
-                | "burned";
-            };
-            collectionInfo: {
-              address: string | null;
-              image: string | null;
-              id: number;
-              name: string | null;
-              campaignType: "onion1" | "genesis_season" | "merge_platinum";
-            };
-          }[]
-        > = {
-          bronze: [],
-          gold: [],
-          silver: [],
-        };
+        const grouped: NFTData = {};
 
         for (const row of dbRows) {
           const { nftItem, collection } = row;
-          const typeKey = (collection.id.toString() || collection.id.toString()) as "gold" | "bronze" | "silver"; // Use collection name or ID as the key
+          const typeKey = collection.id.toString() || collection.id.toString(); // Use collection name or ID as the key
 
           if (!grouped[typeKey]) {
             grouped[typeKey] = [];

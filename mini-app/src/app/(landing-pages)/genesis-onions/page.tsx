@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import Typography from "@/components/Typography";
 import "./_assets/genesis-onions.css";
@@ -11,9 +12,11 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/app/_trpc/client";
 import { useTonWallet } from "@tonconnect/ui-react";
 
-const COLORS = ["Gold", "Silver", "Bronze"];
+const COLORS = ["gold", "silver", "bronze"] as const;
+
 const getFilterUrl = (color: string) =>
   `https://getgems.io/genesisonions?filter=%7B%22attributes%22%3A%7B%22color%22%3A%5B%22${color}%22%5D%7D%7D`;
+
 const getImageUrl = (color: string) => `https://storage.onton.live/ontonimage/on_${color.toLowerCase()}.jpg`;
 
 const badges = [
@@ -44,6 +47,22 @@ export default function GenesisOnions() {
       enabled: Boolean(walletAddress?.account.address),
     }
   );
+
+  const goldArr = walletInfo.data?.itemsByType["1"] || [];
+  const silverArr = walletInfo.data?.itemsByType["2"] || [];
+  const bronzeArr = walletInfo.data?.itemsByType["3"] || [];
+
+  const nfts = {
+    gold: goldArr,
+    silver: silverArr,
+    bronze: bronzeArr,
+  };
+
+  const goldAbleArr = goldArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
+  const silverAbleArr = silverArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
+  const bronzeAbleArr = bronzeArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
+
+  const isAbleToMerge = Boolean(goldAbleArr && silverAbleArr && bronzeAbleArr);
 
   return (
     <div>
@@ -138,34 +157,11 @@ export default function GenesisOnions() {
           <div className="flex flex-col gap-1">
             <div className="flex justify-center items-center gap-4 w-full">
               {COLORS.map((color) => (
-                <div
+                <NFTCard
                   key={color}
-                  className="border-b border-white p-2 gap-2 flex items-center bg-white/10 backdrop-blur-lg rounded-2lg flex-wrap"
-                >
-                  <Image
-                    width={44}
-                    height={44}
-                    src={getImageUrl(color)}
-                    alt={`${color} NFT`}
-                    className="rounded-md aspect-square mx-auto"
-                  />
-                  <div className="flex flex-col text-center mx-auto">
-                    <Typography
-                      variant="headline"
-                      weight="semibold"
-                      className="mt-2"
-                    >
-                      x0
-                    </Typography>
-                    <Typography
-                      variant="body"
-                      weight="medium"
-                      className={`text-${color.toLowerCase()} !text-[8px]`}
-                    >
-                      {color}
-                    </Typography>
-                  </div>
-                </div>
+                  color={color}
+                  nftList={nfts[color]}
+                />
               ))}
             </div>
             <p className="text-[8px] leading-4 text-center">You have a sufficient quantity of ONIONs</p>
@@ -181,9 +177,9 @@ export default function GenesisOnions() {
                     height={40}
                     src={getImageUrl(color)}
                     alt={color}
-                    className="rounded-2lg aspect-square"
+                    className="rounded-2lg aspect-square mx-auto"
                   />
-                  <p className="text-xs font-semibold leading-[18px]">{color}</p>
+                  <p className="text-xs font-semibold leading-[18px] mx-auto">{color}</p>
                 </div>
                 {idx < COLORS.length - 1 && <span className="text-white text-2xl font-semibold">+</span>}
               </React.Fragment>
@@ -219,7 +215,7 @@ export default function GenesisOnions() {
               variant="headline"
               weight="semibold"
             >
-              Unleash the Platinum
+              {isAbleToMerge ? "Collect Sufficient ONIONs" : "Unleash the Platinum"}
             </Typography>
           </Button>
         </div>
@@ -237,26 +233,10 @@ export default function GenesisOnions() {
               </Typography>
               <div className="flex justify-center gap-3 items-center">
                 {COLORS.map((color) => (
-                  <div
+                  <RequiredNft
                     key={color}
-                    className="relative"
-                  >
-                    <Image
-                      width={90}
-                      height={90}
-                      src={getImageUrl(color)}
-                      alt={`${color} NFT`}
-                      className="rounded-md aspect-square"
-                    />
-                    <div className="flex items-center justify-center text-center absolute top-1/2 py-1.5 backdrop-blur-md bg-white/10 w-full -translate-y-1/2">
-                      <Typography
-                        variant="subheadline1"
-                        weight="medium"
-                      >
-                        1x {color}
-                      </Typography>
-                    </div>
-                  </div>
+                    color={color}
+                  />
                 ))}
               </div>
             </div>
@@ -319,6 +299,65 @@ export default function GenesisOnions() {
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+function RequiredNft(props: { color: string }): React.JSX.Element {
+  return (
+    <div
+      key={props.color}
+      className="relative"
+    >
+      <Image
+        width={90}
+        height={90}
+        src={getImageUrl(props.color)}
+        alt={`${props.color} NFT`}
+        className="rounded-md aspect-square"
+      />
+      <div className="flex items-center justify-center text-center absolute top-1/2 py-1.5 backdrop-blur-md bg-white/10 w-full -translate-y-1/2">
+        <Typography
+          variant="subheadline1"
+          weight="medium"
+          className="capitalize"
+        >
+          1x {props.color}
+        </Typography>
+      </div>
+    </div>
+  );
+}
+
+function NFTCard(props: { color: string; nftList: unknown[] }): React.JSX.Element {
+  return (
+    <div
+      key={props.color}
+      className="border-b border-white p-2 gap-2 flex items-center bg-white/10 backdrop-blur-lg rounded-2lg flex-wrap"
+    >
+      <Image
+        width={44}
+        height={44}
+        src={getImageUrl(props.color)}
+        alt={`${props.color} NFT`}
+        className="rounded-md aspect-square mx-auto"
+      />
+      <div className="flex flex-col text-center mx-auto">
+        <Typography
+          variant="headline"
+          weight="semibold"
+          className="mt-2"
+        >
+          x{props.nftList.length}
+        </Typography>
+        <Typography
+          variant="body"
+          weight="medium"
+          className={`text-${props.color.toLowerCase()} !text-[8px] capitalize`}
+        >
+          {props.color}
+        </Typography>
+      </div>
     </div>
   );
 }
