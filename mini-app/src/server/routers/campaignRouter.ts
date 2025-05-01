@@ -419,7 +419,6 @@ export const campaignRouter = router({
 
         // 3) Look up each NFT in your local DB to determine item type
         const dbRows = await tokenCampaignNftItemsDB.getItemsByAddresses(nftAddresses);
-        console.log(dbRows);
         // dbRows => Array of { nftItem: TokenCampaignNftItems, collection: TokenCampaignNftCollections }
 
         // 4) Group them by itemType or campaignType
