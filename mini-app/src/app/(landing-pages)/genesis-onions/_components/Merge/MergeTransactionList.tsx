@@ -10,7 +10,7 @@ import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import Confetti from "react-confetti";
 import { FaCheckCircle } from "react-icons/fa";
-import { COLORS, getImageUrl } from "./constants";
+import { COLORS, getImageUrl, mergeTransactionPendingStatuses } from "./constants";
 
 /**
  * Renders the list of merge transactions.
@@ -18,7 +18,10 @@ import { COLORS, getImageUrl } from "./constants";
  * - Success: overlays green check, centers badges, fades down, then removes.
  * - No merges: falls back to just rendering the color badges.
  */
-export function MergeTransactionsList(props: { setPlatinumCount: (count: number) => void }) {
+export function MergeTransactionsList(props: {
+  setHasPendingTrx: (pending: boolean | null) => void;
+  setPlatinumCount: (count: number) => void;
+}) {
   const [openDialog, setOpenDialog] = useState(false);
 
   const walletAddress = useTonWallet();
@@ -36,6 +39,9 @@ export function MergeTransactionsList(props: { setPlatinumCount: (count: number)
       }
       prevStatuses.current[m.id] = m.status;
     });
+
+    const hasPending = merges.some((v) => mergeTransactionPendingStatuses.includes(v.status));
+    props.setHasPendingTrx(hasPending);
   }, [merges]);
 
   const onMergeStatusChange = (id: number, oldStatus: string, newStatus: string | null) => {
@@ -46,7 +52,7 @@ export function MergeTransactionsList(props: { setPlatinumCount: (count: number)
     }
   };
 
-  const processingCount = merges.filter((v) => ["processing", "pending"].includes(v.status ?? "")).length;
+  const processingCount = merges.filter((v) => mergeTransactionPendingStatuses.includes(v.status)).length;
   const platinumCount = merges.filter((v) => v.status === "completed").length;
 
   useEffect(() => {

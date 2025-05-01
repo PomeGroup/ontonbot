@@ -1,11 +1,12 @@
+import { CampaignMergeTransaction } from "@/types/campaign.types";
+
 export const COLORS = ["gold", "silver", "bronze"] as const;
-export type Color = typeof COLORS[number];
+export type Color = (typeof COLORS)[number];
 
 export const getFilterUrl = (color: Color): string =>
   `https://getgems.io/genesisonions?filter=%7B%22attributes%22%3A%7B%22color%22%3A%5B%22${color}%22%5D%7D%7D`;
 
-export const getImageUrl = (color: string): string =>
-  `https://storage.onton.live/ontonimage/on_${color.toLowerCase()}.jpg`;
+export const getImageUrl = (color: string): string => `https://storage.onton.live/ontonimage/on_${color.toLowerCase()}.jpg`;
 
 export interface Badge {
   src: string;
@@ -32,3 +33,5 @@ export const badges: Badge[] = [
     text: "Merging can only be done after minting through the ONTON Mini App.",
   },
 ];
+
+export const mergeTransactionPendingStatuses: CampaignMergeTransaction["status"][] = ["processing", "pending"];

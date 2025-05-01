@@ -20,9 +20,12 @@ import { MergeTransactionsList } from "./_components/Merge/MergeTransactionList"
 import { NFTCard } from "./_components/Merge/NFTCard";
 import { useState } from "react";
 import { customToast } from "./GenesisOnions.utils";
+import { Loader2 } from "lucide-react";
 
 export default function GenesisOnions() {
   const [platinumCount, setPlatinumCount] = useState<number | null>(null);
+  const [hasPendingTx, setHasPendingTx] = useState<boolean | null>(null);
+
   const webapp = useWebApp();
   const config = useConfig();
   const walletAddress = useTonWallet();
@@ -224,7 +227,11 @@ export default function GenesisOnions() {
           </div>
 
           {/* Merge Preview */}
-          <MergeTransactionsList setPlatinumCount={setPlatinumCount} />
+          <MergeTransactionsList
+            setPlatinumCount={setPlatinumCount}
+            setHasPendingTrx={setHasPendingTx}
+          />
+
           <div className="flex justify-center items-center">
             <span className="text-white text-2xl font-semibold">=</span>
           </div>
@@ -247,9 +254,10 @@ export default function GenesisOnions() {
               </Typography>
             </div>
           </div>
+
           <Button
             type="button"
-            disabled={!walletAddress || walletInfo.isLoading}
+            disabled={!walletAddress || walletInfo.isLoading || addMergeTxMutation.isLoading || Boolean(hasPendingTx)}
             variant="primary-onion"
             className={cn(
               "w-full px-8 py-3 rounded-lg  isolate",
@@ -264,7 +272,13 @@ export default function GenesisOnions() {
               variant="headline"
               weight="semibold"
             >
-              {isAbleToMerge ? "Unleash the Platinum" : "Collect Sufficient ONIONs"}
+              {hasPendingTx ? (
+                <Loader2 className="animate-spin" />
+              ) : isAbleToMerge ? (
+                "Unleash the Platinum"
+              ) : (
+                "Collect Sufficient ONIONs"
+              )}
             </Typography>
           </Button>
         </div>
