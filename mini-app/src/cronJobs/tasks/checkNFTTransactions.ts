@@ -2,14 +2,26 @@ import { config } from "@/server/config";
 import { logger } from "@/server/utils/logger";
 import { db } from "@/db/db";
 import { walletChecks } from "@/db/schema/walletChecks";
-import { eq, inArray, and, lt, count } from "drizzle-orm";
+import {eq, inArray, and, lt, count, or} from "drizzle-orm";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { tokenCampaignNftItems } from "@/db/schema/tokenCampaignNftItems";
 import { tokenCampaignNftCollections } from "@/db/schema/tokenCampaignNftCollections";
 import { tokenCampaignUserSpins } from "@/db/schema/tokenCampaignUserSpins";
 import { tokenCampaignMergeTransactions } from "@/db/schema/tokenCampaignMergeTransactions";
 import { is_prod_env } from "@/server/utils/evnutils";
-
+import { Address } from "@ton/core";
+/**
+ * Returns the raw-hex form (`0:abcd…`) of any TON address that can be parsed.
+ * If the string is already raw, you get the same value back.
+ * If it cannot be parsed, `null` is returned.
+ */
+function toRawIfPossible(addr: string): string | null {
+  try {
+    return Address.parse(addr).toRawString();   // → 0:…64-hex…
+  } catch {
+    return null;                                // malformed address
+  }
+}
 export async function checkMinterTransactions() {
   const minter_wallet_address = config?.ONTON_MINTER_WALLET;
   if (!minter_wallet_address) {
@@ -61,7 +73,7 @@ export async function checkMinterTransactions() {
   // 1) Fetch new transactions from the minter wallet
   const transactions = await tonCenter.fetchAllTransactions(minter_wallet_address, start_utime, start_lt);
   if (!transactions?.length) {
-    logger.info(`[MinterCheck] No new transactions for ${minter_wallet_address}`);
+   // logger.info(`[MinterCheck] No new transactions for ${minter_wallet_address}`);
     return;
   }
 
@@ -92,7 +104,7 @@ export async function checkMinterTransactions() {
       .where(inArray(tokenCampaignNftItems.index, indexes.map(Number)))
       .execute();
 
-    if (dbRows.length !== 3 && is_prod_env()) {
+    if (dbRows.length !== 3 ) {
       logger.warn(
         `[MinterCheck] TX ${txHash} claims indexes [${indexes.join(", ")}], but DB found ${dbRows.length}. Skipping.`
       );
@@ -112,12 +124,20 @@ export async function checkMinterTransactions() {
     // 3b) Find the corresponding "pending" row in token_campaign_merge_transactions
     // The user previously inserted a row with status="pending", walletAddress=userWallet,
     // goldNftAddress=gold.nftItem.nftAddress, etc.
+    const rawUserWallet = toRawIfPossible(userWallet);
+    const walletPredicate =
+        rawUserWallet && rawUserWallet !== userWallet
+            ? or(
+                eq(tokenCampaignMergeTransactions.walletAddress, userWallet),   // user-friendly / raw?
+                eq(tokenCampaignMergeTransactions.walletAddress, rawUserWallet) // raw form
+            )
+            : eq(tokenCampaignMergeTransactions.walletAddress, userWallet);
     const [mergeRow] = await db
       .select()
       .from(tokenCampaignMergeTransactions)
       .where(
         and(
-          eq(tokenCampaignMergeTransactions.walletAddress, userWallet),
+            walletPredicate,
           eq(tokenCampaignMergeTransactions.status, "pending"),
           eq(tokenCampaignMergeTransactions.goldNftAddress, gold.nftItem.nftAddress),
           eq(tokenCampaignMergeTransactions.silverNftAddress, silver.nftItem.nftAddress),
