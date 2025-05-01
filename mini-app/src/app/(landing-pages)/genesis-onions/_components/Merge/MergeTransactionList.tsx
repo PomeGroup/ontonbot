@@ -18,7 +18,7 @@ import { COLORS, getImageUrl } from "./constants";
  * - Success: overlays green check, centers badges, fades down, then removes.
  * - No merges: falls back to just rendering the color badges.
  */
-export function MergeTransactionsList() {
+export function MergeTransactionsList(props: { setPlatinumCount: (count: number) => void }) {
   const [openDialog, setOpenDialog] = useState(false);
 
   const walletAddress = useTonWallet();
@@ -44,12 +44,17 @@ export function MergeTransactionsList() {
     if (newStatus === "completed") {
       setOpenDialog(true);
     }
-
-    // …your callback logic here
   };
 
+  const processingCount = merges.filter((v) => ["processing", "pending"].includes(v.status ?? "")).length;
+  const platinumCount = merges.filter((v) => v.status === "completed").length;
+
+  useEffect(() => {
+    props.setPlatinumCount(platinumCount);
+  }, [platinumCount, props]);
+
   // If there are active merges, render them
-  if (merges.filter((v) => ["processing", "pending"].includes(v.status ?? "")).length > 0) {
+  if (merges.length > 0) {
     return (
       <>
         <Dialog
@@ -96,43 +101,45 @@ export function MergeTransactionsList() {
             </Button>
           </DialogContent>
         </Dialog>
-        <div className="flex flex-col gap-4">
-          {merges
-            .filter((v) => ["processing", "pending"].includes(v.status ?? ""))
-            .map((m) => (
-              <div
-                key={m.id}
-                className={cn("flex items-center justify-center gap-2 transition-all")}
-              >
-                {COLORS.map((color, idx) => (
-                  <React.Fragment key={color}>
-                    <div
-                      key={color}
-                      className="flex-1 border-2 border-dashed border-[#8E8E93] p-2 flex justify-center items-center bg-white/10 rounded-2lg relative gap-1"
-                    >
-                      <Image
-                        src={getImageUrl(color)}
-                        width={32}
-                        height={32}
-                        alt={`${color} NFT`}
-                        className="rounded-2lg aspect-square"
-                      />
-                      {/* success overlay */}
-                      {m.status === "completed" && <FaCheckCircle className="absolute top-0 right-0 text-green-320" />}
-                      {/* sending overlay */}
-                      {(m.status === "pending" || m.status === "processing") && (
-                        <div className="flex flex-col items-center justify-cente rrounded-2lg">
-                          <p className="text-xs font-semibold leading-[18px] text-center capitalize">{color}</p>
-                          <span className="text-[8px] text-white">sending...</span>
-                        </div>
-                      )}
-                    </div>
-                    {idx < COLORS.length - 1 && <span className="text-white text-2xl font-semibold">+</span>}
-                  </React.Fragment>
-                ))}
-              </div>
-            ))}
-        </div>
+        {processingCount ? (
+          <div className="flex flex-col gap-4">
+            {merges
+              .filter((v) => ["processing", "pending"].includes(v.status ?? ""))
+              .map((m) => (
+                <div
+                  key={m.id}
+                  className={cn("flex items-center justify-center gap-2 transition-all")}
+                >
+                  {COLORS.map((color, idx) => (
+                    <React.Fragment key={color}>
+                      <div
+                        key={color}
+                        className="flex-1 border-2 border-dashed border-[#8E8E93] p-2 flex justify-center items-center bg-white/10 rounded-2lg relative gap-1"
+                      >
+                        <Image
+                          src={getImageUrl(color)}
+                          width={32}
+                          height={32}
+                          alt={`${color} NFT`}
+                          className="rounded-2lg aspect-square"
+                        />
+                        {/* success overlay */}
+                        {m.status === "completed" && <FaCheckCircle className="absolute top-0 right-0 text-green-320" />}
+                        {/* sending overlay */}
+                        {(m.status === "pending" || m.status === "processing") && (
+                          <div className="flex flex-col items-center justify-cente rrounded-2lg">
+                            <p className="text-xs font-semibold leading-[18px] text-center capitalize">{color}</p>
+                            <span className="text-[8px] text-white">sending...</span>
+                          </div>
+                        )}
+                      </div>
+                      {idx < COLORS.length - 1 && <span className="text-white text-2xl font-semibold">+</span>}
+                    </React.Fragment>
+                  ))}
+                </div>
+              ))}
+          </div>
+        ) : null}
       </>
     );
   }

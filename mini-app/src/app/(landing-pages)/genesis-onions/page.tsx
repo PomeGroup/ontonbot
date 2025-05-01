@@ -18,8 +18,10 @@ import { COLORS, getFilterUrl, getImageUrl } from "./_components/Merge/constants
 import { DescriptionSection } from "./_components/Merge/DescriptionSection";
 import { MergeTransactionsList } from "./_components/Merge/MergeTransactionList";
 import { NFTCard } from "./_components/Merge/NFTCard";
+import { useState } from "react";
 
 export default function GenesisOnions() {
+  const [platinumCount, setPlatinumCount] = useState<number | null>(null);
   const webapp = useWebApp();
   const config = useConfig();
   const walletAddress = useTonWallet();
@@ -71,6 +73,7 @@ export default function GenesisOnions() {
     const goldNft = goldArr[0] as CampaignNFT;
     const silverNft = silverArr[0] as CampaignNFT;
     const bronzeNft = bronzeArr[0] as CampaignNFT;
+
     try {
       // (A) Insert "pending" row in DB
       const newTx = await addMergeTxMutation.mutateAsync({
@@ -212,6 +215,7 @@ export default function GenesisOnions() {
                   key={color}
                   color={color}
                   nftList={nfts[color] ?? []}
+                  isLoading={walletInfo.isLoading}
                 />
               ))}
             </div>
@@ -219,7 +223,7 @@ export default function GenesisOnions() {
           </div>
 
           {/* Merge Preview */}
-          <MergeTransactionsList />
+          <MergeTransactionsList setPlatinumCount={setPlatinumCount} />
           <div className="flex justify-center items-center">
             <span className="text-white text-2xl font-semibold">=</span>
           </div>
@@ -234,21 +238,22 @@ export default function GenesisOnions() {
             />
             <div className="absolute bottom-0 flex h-7.5 items-center gap-2 backdrop-blur-md bg-white/10 w-full justify-center text-center">
               <Typography className="!text-[8px] text-[#cbcbcb]">Platinum</Typography>
-              {/* <Typography */}
-              {/*   variant="title3" */}
-              {/*   weight="semibold" */}
-              {/* > */}
-              {/*   x0 */}
-              {/* </Typography> */}
+              <Typography
+                variant="title3"
+                weight="semibold"
+              >
+                x{walletAddress ? platinumCount : null}
+              </Typography>
             </div>
           </div>
           <Button
             type="button"
-            disabled={!walletAddress}
+            disabled={!walletAddress || walletInfo.isLoading}
             variant="primary-onion"
             className={cn(
               "w-full px-8 py-3 rounded-lg  isolate",
               walletAddress &&
+                walletInfo.isSuccess &&
                 "btn-gradient btn-shine transition-all transform hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden"
             )}
             onClick={hanldeMainButtonClick}
