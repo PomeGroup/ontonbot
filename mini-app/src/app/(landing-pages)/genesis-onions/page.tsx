@@ -54,7 +54,7 @@ export default function GenesisOnions() {
 
   const isAbleToMerge = Boolean(goldAbleArr && silverAbleArr && bronzeAbleArr);
 
-  const ontonAddress = config["ONTON_WALLET_ADDRESS"] as string;
+  const ontonAddress = config["ONTON_WALLET_ADDRESS_CAMPAIGN"] as string;
 
   const mergeTransactions = useUserMergeTransactionsPoll(walletAddress?.account.address as string);
 
@@ -131,6 +131,7 @@ export default function GenesisOnions() {
       payload: bodyCell.toBoc().toString("base64"),
     };
   }
+
   function createMergeFlagMessage(flagComment: string) {
     const bodyCell = beginCell().storeUint(0, 32).storeStringTail(flagComment).endCell();
 
