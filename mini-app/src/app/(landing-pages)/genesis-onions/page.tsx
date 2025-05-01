@@ -9,7 +9,9 @@ import { cn } from "@/lib/utils";
 import { CampaignNFT } from "@/types/campaign.types";
 import { Address, beginCell, toNano } from "@ton/core";
 import { toUserFriendlyAddress, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 import { FaChevronRight } from "react-icons/fa6";
 import { toast } from "sonner";
 import "./_assets/genesis-onions.css";
@@ -18,9 +20,7 @@ import { COLORS, getFilterUrl, getImageUrl } from "./_components/Merge/constants
 import { DescriptionSection } from "./_components/Merge/DescriptionSection";
 import { MergeTransactionsList } from "./_components/Merge/MergeTransactionList";
 import { NFTCard } from "./_components/Merge/NFTCard";
-import { useState } from "react";
 import { customToast } from "./GenesisOnions.utils";
-import { Loader2 } from "lucide-react";
 
 export default function GenesisOnions() {
   const [platinumCount, setPlatinumCount] = useState<number | null>(null);
@@ -219,7 +219,7 @@ export default function GenesisOnions() {
                   key={color}
                   color={color}
                   nftList={nfts[color] ?? []}
-                  isLoading={walletInfo.isLoading}
+                  isLoading={Boolean(walletInfo.isLoading && walletAddress)}
                 />
               ))}
             </div>
