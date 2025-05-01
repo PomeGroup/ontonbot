@@ -54,7 +54,7 @@ export function MergeTransactionsList(props: { setPlatinumCount: (count: number)
   }, [platinumCount, props]);
 
   // If there are active merges, render them
-  if (merges.length > 0) {
+  if (processingCount > 0) {
     return (
       <>
         <Dialog
@@ -147,6 +147,50 @@ export function MergeTransactionsList(props: { setPlatinumCount: (count: number)
   // Fallback: no active merges — just render the color badges
   return (
     <div className="flex w-full items-center gap-2">
+      <Dialog
+        open={openDialog}
+        onOpenChange={setOpenDialog}
+      >
+        <DialogContent
+          hideClose
+          className="border-none outline-none text-white p-10 flex-col flex gap-5"
+        >
+          <Confetti
+            width={window.innerWidth - 20}
+            numberOfPieces={100}
+            className="place-self-center z-[1000] absolute top-0"
+          />
+          <div className="mx-auto text-center">
+            <Typography variant="title2">🎉 Congratulations!</Typography>
+            <Typography
+              variant="subheadline1"
+              weight="medium"
+            >
+              You created a Platinum from scratch!
+            </Typography>
+          </div>
+          <Image
+            src={getImageUrl("Platinum")}
+            width={324}
+            height={324}
+            alt="square"
+            className="mx-auto"
+          />
+          <Button
+            type="button"
+            size="lg"
+            className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
+            onClick={() => setOpenDialog(false)}
+          >
+            <Typography
+              variant="headline"
+              weight="semibold"
+            >
+              Keep Merging
+            </Typography>
+          </Button>
+        </DialogContent>
+      </Dialog>
       {COLORS.map((color, idx) => (
         <React.Fragment key={color}>
           <div className="flex-1 border-2 border-dashed border-[#8E8E93] p-2 flex justify-center items-center bg-white/10 rounded-2lg gap-1">
