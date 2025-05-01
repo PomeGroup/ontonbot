@@ -234,7 +234,7 @@ export default function GenesisOnions() {
               src={getImageUrl("Platinum")}
               priority={true}
               alt="Platinum NFT"
-              className="rounded-md aspect-square"
+              className={cn("rounded-md aspect-square", !walletAddress && platinumCount === 0 && "grayscale")}
             />
             <div className="absolute bottom-0 flex h-7.5 items-center gap-2 backdrop-blur-md bg-white/10 w-full justify-center text-center">
               <Typography className="!text-[8px] text-[#cbcbcb]">Platinum</Typography>

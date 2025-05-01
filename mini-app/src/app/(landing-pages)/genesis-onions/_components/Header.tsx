@@ -4,6 +4,7 @@ import { useConfig } from "@/context/ConfigContext";
 import Image from "next/image";
 import GenesisOnionHead from "./../_assets/images/onion-genesis-merge-haed.svg";
 import { ONIONConnectWallet } from "./ONIONConnectWallet";
+import { formatPadNumber } from "@/lib/utils";
 
 export const Header = () => {
   const config = useConfig();
@@ -45,10 +46,8 @@ export const Header = () => {
           alt="Secure Your $ONION Airdrop Now"
         />
         <div className="text-white sansation-bold text-sm">
-          {timeLeft.days} <span className="text-[9px] sansation-normal">D </span>: {timeLeft.hours}{" "}
-          <span className="text-[9px] sansation-normal">H </span>: {timeLeft.minutes}{" "}
-          <span className="text-[9px] sansation-normal">M </span>: {timeLeft.seconds}{" "}
-          <span className="text-[9px] sansation-normal">S</span>
+          {formatPadNumber(timeLeft.days)} : {formatPadNumber(timeLeft.hours)} : {formatPadNumber(timeLeft.minutes)} :{" "}
+          {formatPadNumber(timeLeft.seconds)}
         </div>
       </div>
       <ONIONConnectWallet />
