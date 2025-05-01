@@ -34,6 +34,7 @@ export default function GenesisOnions() {
     { walletAddress: walletAddress?.account.address as string },
     {
       enabled: Boolean(walletAddress?.account.address),
+      queryKey: ["campaign.getWalletInfo", { walletAddress: walletAddress?.account.address as string }],
     }
   );
 
