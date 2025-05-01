@@ -8,7 +8,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { cn } from "@/lib/utils";
 import { CampaignNFT } from "@/types/campaign.types";
 import { Address, beginCell, toNano } from "@ton/core";
-import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
+import { toUserFriendlyAddress, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import Image from "next/image";
 import { FaChevronRight } from "react-icons/fa6";
 import { toast } from "sonner";
@@ -92,7 +92,7 @@ export default function GenesisOnions() {
         createNftTransferMsg(silverNft),
         createNftTransferMsg(bronzeNft),
         createMergeFlagMessage(
-          `user=${walletAddress.account.address}&indexes=[${goldNft.onChain?.index},${silverNft.onChain?.index},${bronzeNft.onChain?.index}]`
+          `user=${toUserFriendlyAddress(walletAddress.account.address)}&indexes=[${goldNft.onChain?.index},${silverNft.onChain?.index},${bronzeNft.onChain?.index}]`
         ),
       ];
 
