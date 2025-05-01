@@ -91,7 +91,7 @@ export default function GenesisOnions() {
         createNftTransferMsg(silverNft),
         createNftTransferMsg(bronzeNft),
         createMergeFlagMessage(
-          `user=${walletAddress}&indexes=[${goldNft.onChain?.index},${silverNft.onChain?.index},${bronzeNft.onChain?.index}]`
+          `user=${walletAddress.account.address}&indexes=[${goldNft.onChain?.index},${silverNft.onChain?.index},${bronzeNft.onChain?.index}]`
         ),
       ];
 
