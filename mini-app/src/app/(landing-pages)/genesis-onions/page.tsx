@@ -42,15 +42,15 @@ export default function GenesisOnions() {
   const silverArr = walletInfo.data?.itemsByType["2"] || [];
   const bronzeArr = walletInfo.data?.itemsByType["3"] || [];
 
-  const nfts = {
-    gold: goldArr,
-    silver: silverArr,
-    bronze: bronzeArr,
-  };
-
   const goldAbleArr = goldArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
   const silverAbleArr = silverArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
   const bronzeAbleArr = bronzeArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
+
+  const nfts = {
+    gold: goldAbleArr,
+    silver: silverAbleArr,
+    bronze: bronzeAbleArr,
+  };
 
   const isAbleToMerge = Boolean(goldAbleArr && silverAbleArr && bronzeAbleArr);
 
