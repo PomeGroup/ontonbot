@@ -38,13 +38,9 @@ export default function GenesisOnions() {
     }
   );
 
-  const goldArr = walletInfo.data?.itemsByType["1"] || [];
-  const silverArr = walletInfo.data?.itemsByType["2"] || [];
-  const bronzeArr = walletInfo.data?.itemsByType["3"] || [];
-
-  const goldAbleArr = goldArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
-  const silverAbleArr = silverArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
-  const bronzeAbleArr = bronzeArr.filter((item) => item.offChain.mergeStatus === "able_to_merge");
+  const [goldAbleArr, silverAbleArr, bronzeAbleArr] = ["1", "2", "3"].map((type) =>
+    (walletInfo.data?.itemsByType[type] || []).filter((item) => item.offChain.mergeStatus === "able_to_merge")
+  );
 
   const nfts = {
     gold: goldAbleArr,
@@ -70,9 +66,9 @@ export default function GenesisOnions() {
       return;
     }
 
-    const goldNft = goldArr[0] as CampaignNFT;
-    const silverNft = silverArr[0] as CampaignNFT;
-    const bronzeNft = bronzeArr[0] as CampaignNFT;
+    const goldNft = goldAbleArr[0] as CampaignNFT;
+    const silverNft = silverAbleArr[0] as CampaignNFT;
+    const bronzeNft = bronzeAbleArr[0] as CampaignNFT;
 
     try {
       // (A) Insert "pending" row in DB
