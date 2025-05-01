@@ -10,6 +10,7 @@ export function useUserMergeTransactionsPoll(walletAddress: string) {
     {
       refetchInterval: 10000, // poll every 10s
       enabled: !!walletAddress, // only run if walletAddress is truthy
+      staleTime: Infinity,
     }
   );
 

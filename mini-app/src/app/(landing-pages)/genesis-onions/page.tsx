@@ -79,14 +79,12 @@ export default function GenesisOnions() {
 
     try {
       // (A) Insert "pending" row in DB
-      const newTx = await addMergeTxMutation.mutateAsync({
+      await addMergeTxMutation.mutateAsync({
         walletAddress: address,
         goldNftAddress: goldNft.onChain?.address as string,
         silverNftAddress: silverNft.onChain?.address as string,
         bronzeNftAddress: bronzeNft.onChain?.address as string,
       });
-
-      toast.success(`Created mergeTx #${newTx.id}, status=${newTx.status}`);
 
       // (B) Then build multi-message
       const messages = [
@@ -103,8 +101,14 @@ export default function GenesisOnions() {
         validUntil: Math.floor(Date.now() / 1000) + 600,
         messages,
       });
+
+      setTimeout(
+        () => {
+          void walletInfo.refetch(); // re-check user items
+        },
+        1000 * 60 * 3
+      );
       toast.success("NFTs merge transaction submitted!");
-      await walletInfo.refetch(); // re-check user items
     } catch (err) {
       console.error("Merge transaction error:", err);
       toast.error("Failed to merge NFTs or user canceled.");
@@ -262,6 +266,7 @@ export default function GenesisOnions() {
               "w-full px-8 py-3 rounded-lg  isolate",
               walletAddress &&
                 walletInfo.isSuccess &&
+                Boolean(!hasPendingTx) &&
                 "btn-gradient btn-shine transition-all transform hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden"
             )}
             onClick={hanldeMainButtonClick}
@@ -272,7 +277,10 @@ export default function GenesisOnions() {
               weight="semibold"
             >
               {hasPendingTx ? (
-                <Loader2 className="animate-spin" />
+                <div className="flex items-center justify-center gap-1">
+                  <span>Processing Transaction</span>
+                  <Loader2 className="animate-spin" />
+                </div>
               ) : isAbleToMerge ? (
                 "Unleash the Platinum"
               ) : (

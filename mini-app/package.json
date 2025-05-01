@@ -70,7 +70,7 @@
     "@ton/core": "^0.59.0",
     "@ton/crypto": "^3.2.0",
     "@ton/ton": "^14.0.0",
-    "@tonconnect/ui-react": "^2.0.9",
+    "@tonconnect/ui-react": "^2.1.0",
     "@tonsolutions/telemetree-react": "^1.2.7",
     "@trpc/client": "^10.45.2",
     "@trpc/react-query": "^10.45.2",
