@@ -38,7 +38,7 @@ export const Banner = ({ className }: Props) => {
 
   if (endDate.getTime() <= 0) return null;
 
-  if (!configEndDate) return null;
+  if (!configEndDate || isNaN(timeLeft.days)) return null;
 
   return (
     <>
