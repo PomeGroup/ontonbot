@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray ,and } from "drizzle-orm";
 import { tokenCampaignNftItems } from "@/db/schema/tokenCampaignNftItems";
 import { tokenCampaignNftCollections } from "@/db/schema/tokenCampaignNftCollections";
 import { tokenCampaignUserSpins } from "@/db/schema/tokenCampaignUserSpins";
