@@ -20,6 +20,7 @@ import { tokenCampaignNftItemsDB } from "@/server/db/tokenCampaignNftItems.db";
 import tokenCampaignMergeTransactionsDB from "@/server/db/tokenCampaignMergeTransactions.db";
 import { affiliateClicksDB } from "../db/affiliateClicks.db";
 import { CampaignNFT } from "@/types/campaign.types";
+import {is_prod_env} from "@/server/utils/evnutils";
 
 export const campaignRouter = router({
   /**
@@ -394,7 +395,8 @@ export const campaignRouter = router({
       try {
         // 1) Fetch TON balance
         const balance = await tonCenter.getAccountBalance(walletAddress);
-        const SINGLE_COLLECTION_ADDRESS = "EQA4SQVjM6bpSiJ7uG-r7kRvbztVXMceCLFsqwQlfzCEvyax";
+
+        const SINGLE_COLLECTION_ADDRESS = is_prod_env() ? "EQCCZnimwuTKit3vcUwF7JR26iLu1f6osAXAWtYNS9c-Q-8m" : "EQA4SQVjM6bpSiJ7uG-r7kRvbztVXMceCLFsqwQlfzCEvyax";
         // 2) Fetch on-chain NFT items from the single shared collection
         //    => This call returns { nft_items, address_book }
         const chainData = await tonCenter.fetchNFTItemsWithRetry(walletAddress, SINGLE_COLLECTION_ADDRESS);
@@ -441,11 +443,15 @@ export const campaignRouter = router({
           };
           grouped[typeKey].push(item);
         }
-
+        // ➜ 3a) **Extra query** – how many *platinum* NFTs does this wallet have?
+        const platinumCount = await tokenCampaignNftItemsDB.countPlatinumByAddresses(
+            nftAddresses
+        );
         return {
           address: walletAddress,
           balance,
           itemsByType: grouped,
+          platinumCount
         };
       } catch (error) {
         logger.error("Error fetching wallet info:", error);
