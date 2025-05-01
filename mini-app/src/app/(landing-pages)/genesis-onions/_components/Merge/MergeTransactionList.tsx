@@ -18,10 +18,7 @@ import { COLORS, getImageUrl, mergeTransactionPendingStatuses } from "./constant
  * - Success: overlays green check, centers badges, fades down, then removes.
  * - No merges: falls back to just rendering the color badges.
  */
-export function MergeTransactionsList(props: {
-  setHasPendingTrx: (pending: boolean | null) => void;
-  setPlatinumCount: (count: number) => void;
-}) {
+export function MergeTransactionsList(props: { setHasPendingTrx: (pending: boolean | null) => void }) {
   const [openDialog, setOpenDialog] = useState(false);
 
   const walletAddress = useTonWallet();
@@ -53,11 +50,6 @@ export function MergeTransactionsList(props: {
   };
 
   const processingCount = merges.filter((v) => mergeTransactionPendingStatuses.includes(v.status)).length;
-  const platinumCount = merges.filter((v) => v.status === "completed").length;
-
-  useEffect(() => {
-    props.setPlatinumCount(platinumCount);
-  }, [platinumCount, props]);
 
   // If there are active merges, render them
   if (processingCount > 0) {

@@ -23,7 +23,6 @@ import { NFTCard } from "./_components/Merge/NFTCard";
 import { customToast } from "./GenesisOnions.utils";
 
 export default function GenesisOnions() {
-  const [platinumCount, setPlatinumCount] = useState<number | null>(null);
   const [hasPendingTx, setHasPendingTx] = useState<boolean | null>(null);
 
   const webapp = useWebApp();
@@ -227,10 +226,7 @@ export default function GenesisOnions() {
           </div>
 
           {/* Merge Preview */}
-          <MergeTransactionsList
-            setPlatinumCount={setPlatinumCount}
-            setHasPendingTrx={setHasPendingTx}
-          />
+          <MergeTransactionsList setHasPendingTrx={setHasPendingTx} />
 
           <div className="flex justify-center items-center">
             <span className="text-white text-2xl font-semibold">=</span>
@@ -242,7 +238,10 @@ export default function GenesisOnions() {
               src={getImageUrl("Platinum")}
               priority={true}
               alt="Platinum NFT"
-              className={cn("rounded-md aspect-square", !walletAddress && platinumCount === 0 && "grayscale")}
+              className={cn(
+                "rounded-md aspect-square",
+                !walletAddress && walletInfo.data?.platinumCount === 0 && "grayscale"
+              )}
             />
             <div className="absolute bottom-0 flex h-7.5 items-center gap-2 backdrop-blur-md bg-white/10 w-full justify-center text-center">
               <Typography className="!text-[8px] text-[#cbcbcb]">Platinum</Typography>
@@ -250,7 +249,7 @@ export default function GenesisOnions() {
                 variant="title3"
                 weight="semibold"
               >
-                x{walletAddress ? platinumCount : null}
+                x{walletAddress ? (walletInfo.data?.platinumCount ?? "?") : null}
               </Typography>
             </div>
           </div>

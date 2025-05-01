@@ -1,26 +1,26 @@
-import { router, initDataProtectedProcedure } from "../trpc";
-import { z } from "zod";
-import { campaignTypes } from "@/db/enum";
-import { tokenCampaignNftCollectionsDB } from "@/server/db/tokenCampaignNftCollections.db";
-import { tokenCampaignSpinPackagesDB } from "@/server/db/tokenCampaignSpinPackages.db";
-import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
-import { tokenCampaignUserSpinsDB } from "@/server/db/tokenCampaignUserSpins.db";
 import { db } from "@/db/db";
-import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
+import { campaignTypes } from "@/db/enum";
 import { TokenCampaignOrdersInsert, TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
-import { TRPCError } from "@trpc/server";
-import userEligibilityDB from "@/server/db/tokenCampaignEligibleUsers.db";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
-import { generateRandomHash } from "@/lib/generateRandomHash";
-import { Address } from "@ton/core";
-import { logger } from "@/server/utils/logger";
 import { checkRateLimit } from "@/lib/checkRateLimit";
-import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
-import { tokenCampaignNftItemsDB } from "@/server/db/tokenCampaignNftItems.db";
+import { generateRandomHash } from "@/lib/generateRandomHash";
+import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import userEligibilityDB from "@/server/db/tokenCampaignEligibleUsers.db";
 import tokenCampaignMergeTransactionsDB from "@/server/db/tokenCampaignMergeTransactions.db";
-import { affiliateClicksDB } from "../db/affiliateClicks.db";
+import { tokenCampaignNftCollectionsDB } from "@/server/db/tokenCampaignNftCollections.db";
+import { tokenCampaignNftItemsDB } from "@/server/db/tokenCampaignNftItems.db";
+import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
+import { tokenCampaignSpinPackagesDB } from "@/server/db/tokenCampaignSpinPackages.db";
+import { tokenCampaignUserSpinsDB } from "@/server/db/tokenCampaignUserSpins.db";
+import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
+import { is_prod_env } from "@/server/utils/evnutils";
+import { logger } from "@/server/utils/logger";
 import { CampaignNFT } from "@/types/campaign.types";
-import {is_prod_env} from "@/server/utils/evnutils";
+import { Address } from "@ton/core";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { affiliateClicksDB } from "../db/affiliateClicks.db";
+import { initDataProtectedProcedure, router } from "../trpc";
 
 export const campaignRouter = router({
   /**
@@ -396,7 +396,9 @@ export const campaignRouter = router({
         // 1) Fetch TON balance
         const balance = await tonCenter.getAccountBalance(walletAddress);
 
-        const SINGLE_COLLECTION_ADDRESS = is_prod_env() ? "EQCCZnimwuTKit3vcUwF7JR26iLu1f6osAXAWtYNS9c-Q-8m" : "EQA4SQVjM6bpSiJ7uG-r7kRvbztVXMceCLFsqwQlfzCEvyax";
+        const SINGLE_COLLECTION_ADDRESS = is_prod_env()
+          ? "EQCCZnimwuTKit3vcUwF7JR26iLu1f6osAXAWtYNS9c-Q-8m"
+          : "EQA4SQVjM6bpSiJ7uG-r7kRvbztVXMceCLFsqwQlfzCEvyax";
         // 2) Fetch on-chain NFT items from the single shared collection
         //    => This call returns { nft_items, address_book }
         const chainData = await tonCenter.fetchNFTItemsWithRetry(walletAddress, SINGLE_COLLECTION_ADDRESS);
@@ -408,6 +410,7 @@ export const campaignRouter = router({
             address: walletAddress,
             balance,
             itemsByType: {} as NFTData,
+            platinumCount: null,
           };
         }
 
@@ -444,14 +447,12 @@ export const campaignRouter = router({
           grouped[typeKey].push(item);
         }
         // ➜ 3a) **Extra query** – how many *platinum* NFTs does this wallet have?
-        const platinumCount = await tokenCampaignNftItemsDB.countPlatinumByAddresses(
-            nftAddresses
-        );
+        const platinumCount = await tokenCampaignNftItemsDB.countPlatinumByAddresses(nftAddresses);
         return {
           address: walletAddress,
           balance,
           itemsByType: grouped,
-          platinumCount
+          platinumCount,
         };
       } catch (error) {
         logger.error("Error fetching wallet info:", error);
