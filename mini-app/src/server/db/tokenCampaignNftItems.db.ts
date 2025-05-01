@@ -30,7 +30,7 @@ const getItemsByAddresses = async (nftAddresses: string[]) => {
     .from(tokenCampaignNftItems)
     .innerJoin(tokenCampaignUserSpins, eq(tokenCampaignUserSpins.id, tokenCampaignNftItems.itemId))
     .innerJoin(tokenCampaignNftCollections, eq(tokenCampaignNftCollections.id, tokenCampaignUserSpins.nftCollectionId))
-    .where(inArray(tokenCampaignNftItems.nftAddress, nftAddresses));
+    .where(and(inArray(tokenCampaignNftItems.nftAddress, nftAddresses),eq(tokenCampaignNftItems.itemType, "onion1")))
 
   return result;
   // each row looks like { nftItem: {...}, collection: {...} }
