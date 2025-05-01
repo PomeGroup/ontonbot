@@ -50,12 +50,8 @@ export const countPlatinumByAddresses = async (nftAddresses: string[]) => {
         })
         .from(tokenCampaignNftItems)
         .innerJoin(
-            tokenCampaignUserSpins,
-            eq(tokenCampaignUserSpins.id, tokenCampaignNftItems.itemId)
-        )
-        .innerJoin(
             tokenCampaignNftCollections,
-            eq(tokenCampaignNftCollections.id, tokenCampaignUserSpins.nftCollectionId)
+            eq(tokenCampaignNftCollections.id, tokenCampaignNftItems.itemId)
         )
         .where(
             and(
