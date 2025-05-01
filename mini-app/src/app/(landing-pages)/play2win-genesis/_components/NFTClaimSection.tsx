@@ -19,7 +19,7 @@ export default function NFTClaimSection() {
       <TicketSvg className="mx-auto mb-3" />
       <h2 className="text-white text-base leading-[20px] tracking-[1px] font-normal text-center mb-1">Claim the New</h2>
       <h1 className="text-[24px] leading-[32px] tracking-[1px] font-bold text-center mb-3">Play2Win NFT</h1>
-      <div className="text-whitetext-xs text-start flex flex-col gap-2">
+      <div className="text-white text-xs text-start flex flex-col gap-2">
         <ol className="flex flex-col gap-2">
           <li className="flex gap-2 items-center">
             <span className="font-bold text-base leading-[22px]">1.</span>

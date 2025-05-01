@@ -85,7 +85,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                       />
                     </div>
 
-                    <Typography variant="footnote">{participant.name}</Typography>
+                    <Typography
+                      variant="footnote"
+                      truncate
+                    >
+                      {participant.name}
+                    </Typography>
 
                     <div
                       className={cn(

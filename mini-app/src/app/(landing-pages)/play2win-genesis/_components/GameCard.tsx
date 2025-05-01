@@ -16,11 +16,11 @@ function KeyValue({ label, value, icon }: KeyValueProps) {
   return (
     <div className="flex justify-between items-center">
       <Typography
-        variant="caption2"
+        variant="footnote"
         className="flex items-center gap-1"
       >
         <span className="text-[#51AEFF]">{icon}</span>
-        <span className="text-sm">{label}</span>
+        <span className="text-[10px]">{label}</span>
       </Typography>
       <Typography
         weight="medium"
@@ -45,6 +45,7 @@ export default function GameCard() {
       <div className="flex flex-col items-center gap-1">
         <video
           src="https://storage.onton.live/ontonvideo/event/p2w_nutrino_star.webm"
+          poster="https://storage.onton.live/ontonimage/p2w-not-found-poster.jpg"
           width={98}
           height={103}
           autoPlay
@@ -70,6 +71,7 @@ export default function GameCard() {
         <div className="flex gap-3">
           <video
             src="https://storage.onton.live/ontonvideo/event/play-2-win-video.webm"
+            poster="https://storage.onton.live/ontonimage/p2w-poster.jpg"
             className="rounded-md w-25 h-25 object-cover"
             width={100}
             height={100}

@@ -29,7 +29,7 @@ export default function Home() {
         </div>
 
         <Banner className="mt-3 mb-4" />
-        <Play2WinGenesisBanner className="w-full mb-6" />
+        <Play2WinGenesisBanner className="w-full mb-4" />
 
         <div className=" flex-grow">
           <div className="flex-grow flex flex-col gap-6">
