@@ -19,6 +19,7 @@ import { DescriptionSection } from "./_components/Merge/DescriptionSection";
 import { MergeTransactionsList } from "./_components/Merge/MergeTransactionList";
 import { NFTCard } from "./_components/Merge/NFTCard";
 import { useState } from "react";
+import { customToast } from "./GenesisOnions.utils";
 
 export default function GenesisOnions() {
   const [platinumCount, setPlatinumCount] = useState<number | null>(null);
@@ -28,7 +29,11 @@ export default function GenesisOnions() {
 
   const [tonConnectUI] = useTonConnectUI();
 
-  const addMergeTxMutation = trpc.campaign.addMergeTransaction.useMutation();
+  const addMergeTxMutation = trpc.campaign.addMergeTransaction.useMutation({
+    onError(error) {
+      customToast.error(error.message);
+    },
+  });
 
   const walletInfo = trpc.campaign.getWalletInfo.useQuery(
     { walletAddress: walletAddress?.account.address as string },
