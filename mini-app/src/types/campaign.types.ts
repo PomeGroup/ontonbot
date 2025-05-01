@@ -1,3 +1,4 @@
+import { RouterOutput } from "@/server";
 import { NFTItem } from "@/server/routers/services/tonCenter";
 
 export type CampaignNFT = {
@@ -18,3 +19,5 @@ export type CampaignNFT = {
     campaignType: "onion1" | "genesis_season" | "merge_platinum";
   };
 };
+
+export type CampaignMergeTransaction = RouterOutput["campaign"]["getUserMergeTransactions"][number];

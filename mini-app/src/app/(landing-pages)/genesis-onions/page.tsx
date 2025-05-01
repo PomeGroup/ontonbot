@@ -3,23 +3,21 @@
 import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useConfig } from "@/context/ConfigContext";
 import useWebApp from "@/hooks/useWebApp";
+import { cn } from "@/lib/utils";
 import { CampaignNFT } from "@/types/campaign.types";
 import { Address, beginCell, toNano } from "@ton/core";
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import Image from "next/image";
-import React from "react";
 import { FaChevronRight } from "react-icons/fa6";
 import { toast } from "sonner";
 import "./_assets/genesis-onions.css";
 import { Header } from "./_components/Header";
-import { useUserMergeTransactionsPoll } from "@/app/(navigation)/sample/useUserMergeTransactionsPoll";
-import { cn } from "@/lib/utils";
-import { NFTCard } from "./_components/Merge/NFTCard";
 import { COLORS, getFilterUrl, getImageUrl } from "./_components/Merge/constants";
 import { DescriptionSection } from "./_components/Merge/DescriptionSection";
+import { MergeTransactionsList } from "./_components/Merge/MergeTransactionList";
+import { NFTCard } from "./_components/Merge/NFTCard";
 
 export default function GenesisOnions() {
   const webapp = useWebApp();
@@ -54,9 +52,7 @@ export default function GenesisOnions() {
 
   const isAbleToMerge = Boolean(goldAbleArr && silverAbleArr && bronzeAbleArr);
 
-  const ontonAddress = config["ONTON_WALLET_ADDRESS_CAMPAIGN"] as string;
-
-  const mergeTransactions = useUserMergeTransactionsPoll(walletAddress?.account.address as string);
+  const ontonAddress = config["ONTON_MINTER_WALLET"] as string;
 
   /**
    * Called when user clicks "Merge one set now"
@@ -157,42 +153,6 @@ export default function GenesisOnions() {
 
   return (
     <div>
-      <Dialog>
-        <DialogTrigger>Boom</DialogTrigger>
-        <DialogContent
-          hideClose
-          className="border-none outline-none text-white p-10 flex-col flex gap-5"
-        >
-          <div className="mx-auto text-center">
-            <Typography variant="title2">🎉 Congratulations!</Typography>
-            <Typography
-              variant="subheadline1"
-              weight="medium"
-            >
-              You created a Platinum from scratch!
-            </Typography>
-          </div>
-          <Image
-            src={getImageUrl("Platinum")}
-            width={324}
-            height={324}
-            alt="square"
-            className="mx-auto"
-          />
-          <Button
-            type="button"
-            size="lg"
-            className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
-          >
-            <Typography
-              variant="headline"
-              weight="semibold"
-            >
-              Keep Merging
-            </Typography>
-          </Button>
-        </DialogContent>
-      </Dialog>
       <Header />
       <main
         className="bg-navy text-white min-h-screen p-4 flex flex-col gap-5"
@@ -259,28 +219,7 @@ export default function GenesisOnions() {
           </div>
 
           {/* Merge Preview */}
-          <div className="flex w-full items-center gap-2">
-            {COLORS.map((color, idx) => (
-              <React.Fragment key={color}>
-                <div className="flex-1 border-2 border-dashed border-[#8E8E93] p-2 flex flex-wrap ms-center rounded-2lg bg-white/10 backdrop-blur-md items-center gap-2">
-                  <Image
-                    width={40}
-                    height={40}
-                    src={getImageUrl(color)}
-                    alt={color}
-                    className="rounded-2lg aspect-square mx-auto"
-                  />
-                  <p className="text-xs font-semibold leading-[18px] mx-auto flex flex-col text-center">
-                    <span className="capitalize">{color}</span>
-                    {mergeTransactions.merges.filter((v) => ["pending", "processing"].includes(v.status ?? "")).length ? (
-                      <span className="capitalize font-normal text-[8px] leading-3">sending...</span>
-                    ) : null}
-                  </p>
-                </div>
-                {idx < COLORS.length - 1 && <span className="text-white text-2xl font-semibold">+</span>}
-              </React.Fragment>
-            ))}
-          </div>
+          <MergeTransactionsList />
           <div className="flex justify-center items-center">
             <span className="text-white text-2xl font-semibold">=</span>
           </div>
@@ -289,6 +228,7 @@ export default function GenesisOnions() {
               width={100}
               height={100}
               src={getImageUrl("Platinum")}
+              priority={true}
               alt="Platinum NFT"
               className="rounded-md aspect-square"
             />
