@@ -43,7 +43,8 @@ export async function createMergeTransactionRecord(
   walletAddress: string,
   goldNftAddress: string,
   silverNftAddress: string,
-  bronzeNftAddress: string
+  bronzeNftAddress: string,
+  user_id: number
 ) {
   // 1) Rate Limit Check
   // If there's any merge transaction for this wallet created within the last 3 minutes => error
@@ -130,6 +131,7 @@ export async function createMergeTransactionRecord(
       goldNftAddress,
       silverNftAddress,
       bronzeNftAddress,
+      user_id,
       transactionHash: "",
       status: "pending",
       extraData: `User triggered merge at ${new Date().toISOString()}`,

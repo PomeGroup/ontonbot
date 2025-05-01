@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, pgEnum, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 export const tokenCampaignMergeTransactionsStatus = pgEnum("status", ["pending", "processing", "completed", "failed"]);
@@ -20,7 +20,7 @@ export const tokenCampaignMergeTransactions = pgTable("token_campaign_merge_tran
   platinumNftAddress: text("platinum_nft_address"),
   status: tokenCampaignMergeTransactionsStatus("status").default("pending"),
   extraData: text("extra_data"),
-
+  user_id: bigint("user_id", { mode: "number" }),
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

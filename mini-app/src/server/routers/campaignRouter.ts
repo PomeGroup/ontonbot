@@ -16,11 +16,15 @@ import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
 import { is_prod_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
 import { CampaignNFT } from "@/types/campaign.types";
+<<<<<<< Updated upstream
 import { Address } from "@ton/core";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { affiliateClicksDB } from "../db/affiliateClicks.db";
 import { initDataProtectedProcedure, router } from "../trpc";
+=======
+import { is_prod_env } from "@/server/utils/evnutils";
+>>>>>>> Stashed changes
 
 export const campaignRouter = router({
   /**
@@ -447,6 +451,10 @@ export const campaignRouter = router({
           grouped[typeKey].push(item);
         }
         // ➜ 3a) **Extra query** – how many *platinum* NFTs does this wallet have?
+<<<<<<< Updated upstream
+=======
+        logger.log(`check user platinum count for ${walletAddress} with nft addresses`, nftAddresses);
+>>>>>>> Stashed changes
         const platinumCount = await tokenCampaignNftItemsDB.countPlatinumByAddresses(nftAddresses);
         return {
           address: walletAddress,
@@ -497,12 +505,13 @@ export const campaignRouter = router({
         bronzeNftAddress: z.string().nonempty(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const result = await tokenCampaignMergeTransactionsDB.createMergeTransactionRecord(
         input.walletAddress,
         input.goldNftAddress,
         input.silverNftAddress,
-        input.bronzeNftAddress
+        input.bronzeNftAddress,
+        ctx.user.user_id
       );
       logger.info(`[addMergeTransaction] Inserted merge row #${result.id}, status=${result.status}`);
       return result;
