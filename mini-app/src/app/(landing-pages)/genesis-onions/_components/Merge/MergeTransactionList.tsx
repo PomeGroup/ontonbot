@@ -5,6 +5,7 @@ import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTonWallet } from "@tonconnect/ui-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
@@ -21,6 +22,7 @@ import { COLORS, getImageUrl, mergeTransactionPendingStatuses } from "./constant
 export function MergeTransactionsList(props: { setHasPendingTrx: (pending: boolean | null) => void }) {
   const [openDialog, setOpenDialog] = useState(false);
 
+  const queryClient = useQueryClient();
   const walletAddress = useTonWallet();
   const { merges } = useUserMergeTransactionsPoll(walletAddress?.account.address as string);
 
@@ -38,6 +40,10 @@ export function MergeTransactionsList(props: { setHasPendingTrx: (pending: boole
     });
 
     const hasPending = merges.some((v) => mergeTransactionPendingStatuses.includes(v.status));
+
+    queryClient.invalidateQueries({
+      queryKey: ["campaign.getWalletInfo", { walletAddress: walletAddress?.account.address as string }],
+    });
     props.setHasPendingTrx(hasPending);
   }, [merges]);
 
