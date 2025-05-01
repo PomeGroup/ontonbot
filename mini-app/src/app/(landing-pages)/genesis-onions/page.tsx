@@ -181,7 +181,7 @@ export default function GenesisOnions() {
               <Typography
                 variant="body"
                 weight="medium"
-                className="flex items-center gap-2 justify-center"
+                className="flex items-center gap-2 justify-center capitalize"
               >
                 {color} <FaChevronRight size={12} />
               </Typography>
