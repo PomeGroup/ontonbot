@@ -2,7 +2,7 @@ import { config } from "@/server/config";
 import { logger } from "@/server/utils/logger";
 import { db } from "@/db/db";
 import { walletChecks } from "@/db/schema/walletChecks";
-import {eq, inArray, and, lt, count, or} from "drizzle-orm";
+import { eq, inArray, and, lt, count, or } from "drizzle-orm";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { tokenCampaignNftItems } from "@/db/schema/tokenCampaignNftItems";
 import { tokenCampaignNftCollections } from "@/db/schema/tokenCampaignNftCollections";
@@ -17,9 +17,9 @@ import { Address } from "@ton/core";
  */
 function toRawIfPossible(addr: string): string | null {
   try {
-    return Address.parse(addr).toRawString();   // → 0:…64-hex…
+    return Address.parse(addr).toRawString(); // → 0:…64-hex…
   } catch {
-    return null;                                // malformed address
+    return null; // malformed address
   }
 }
 export async function checkMinterTransactions() {
@@ -32,31 +32,28 @@ export async function checkMinterTransactions() {
   // => 150 seconds = 150,000 ms
   const twoMinutesThirtySecsAgo = new Date(Date.now() - 150_000); // 2m30s ago
   // Do this instead:
-  const updatedRows  = await db
-      .update(tokenCampaignMergeTransactions)
-      .set({ status: "failed" })
-      .where(
-          and(
-              eq(tokenCampaignMergeTransactions.status, "pending"),
-              lt(tokenCampaignMergeTransactions.createdAt, twoMinutesThirtySecsAgo)
-          )
+  const updatedRows = await db
+    .update(tokenCampaignMergeTransactions)
+    .set({ status: "failed" })
+    .where(
+      and(
+        eq(tokenCampaignMergeTransactions.status, "pending"),
+        lt(tokenCampaignMergeTransactions.createdAt, twoMinutesThirtySecsAgo)
       )
-      .returning({ id: tokenCampaignMergeTransactions.id })
-      .execute();
+    )
+    .returning({ id: tokenCampaignMergeTransactions.id })
+    .execute();
 
   // updatedRows is an array of { id: number; } objects
-// The rowCount is simply the length of updatedRows
+  // The rowCount is simply the length of updatedRows
   const rowCount = updatedRows.length;
 
   if (rowCount > 0) {
-    logger.info(
-        `[checkMinterTransactions] Marked ${rowCount} "pending" merges as "failed" (older than 2m30s).`
-    );
+    logger.info(`[checkMinterTransactions] Marked ${rowCount} "pending" merges as "failed" (older than 2m30s).`);
   }
 
-
   // Determine the range from walletChecks
-  const three_hours_ago = Math.floor((Date.now() - 3 *  3600 * 1000) / 1000);
+  const three_hours_ago = Math.floor((Date.now() - 600 * 1000) / 1000);
   const [existingRow] = await db
     .select({ checked_lt: walletChecks.checked_lt })
     .from(walletChecks)
@@ -67,13 +64,13 @@ export async function checkMinterTransactions() {
   if (existingRow?.checked_lt) {
     start_lt = existingRow.checked_lt + BigInt(1);
   }
-  const start_utime = start_lt ? null : three_hours_ago;
-  // const start_utime =  three_hours_ago;
+  // const start_utime = start_lt ? null : three_hours_ago;
+  const start_utime = three_hours_ago;
 
   // 1) Fetch new transactions from the minter wallet
   const transactions = await tonCenter.fetchAllTransactions(minter_wallet_address, start_utime, start_lt);
   if (!transactions?.length) {
-   // logger.info(`[MinterCheck] No new transactions for ${minter_wallet_address}`);
+    // logger.info(`[MinterCheck] No new transactions for ${minter_wallet_address}`);
     return;
   }
 
@@ -96,6 +93,7 @@ export async function checkMinterTransactions() {
         collection: {
           id: tokenCampaignNftCollections.id,
           name: tokenCampaignNftCollections.name,
+          address: tokenCampaignNftCollections.address,
         },
       })
       .from(tokenCampaignNftItems)
@@ -104,7 +102,7 @@ export async function checkMinterTransactions() {
       .where(inArray(tokenCampaignNftItems.index, indexes.map(Number)))
       .execute();
 
-    if (dbRows.length !== 3 ) {
+    if (dbRows.length !== 3) {
       logger.warn(
         `[MinterCheck] TX ${txHash} claims indexes [${indexes.join(", ")}], but DB found ${dbRows.length}. Skipping.`
       );
@@ -120,24 +118,80 @@ export async function checkMinterTransactions() {
       logger.warn(`[MinterCheck] TX ${txHash} doesn't have a valid gold/silver/bronze set. Skipping.`);
       continue;
     }
+    if (!gold.collection?.address || !bronze.collection?.address || !silver.collection?.address) {
+      logger.warn(`[MinterCheck]  TX ${txHash} => Missing collection address for gold/silver/bronze. Skipping.`);
+      continue;
+    }
+    try {
+      // For each of the three items, fetch on-chain data
+      // You likely need each collection's address for the call:
+      // e.g. if gold.collection.id === 1 => we might have "SINGLE_COLLECTION_ADDRESS" or "goldCollectionAddress" somewhere.
+      // Suppose tokenCampaignNftCollections has an `address` field that stores the collection contract address.
+      // If so, do something like:
 
+      const goldChainData = await tonCenter.fetchNFTItemsWithRetry(
+        minter_wallet_address,
+        gold.collection.address, // or however you store the collection's address
+        gold.nftItem.nftAddress
+      );
+      const silverChainData = await tonCenter.fetchNFTItemsWithRetry(
+        minter_wallet_address,
+        silver.collection.address,
+        silver.nftItem.nftAddress
+      );
+      const bronzeChainData = await tonCenter.fetchNFTItemsWithRetry(
+        minter_wallet_address,
+        bronze.collection.address,
+        bronze.nftItem.nftAddress
+      );
+
+      // If the fetch result is empty or does not include the item, skip
+      const goldOnChainItems = goldChainData?.nft_items ?? [];
+      const silverOnChainItems = silverChainData?.nft_items ?? [];
+      const bronzeOnChainItems = bronzeChainData?.nft_items ?? [];
+
+      if (!goldOnChainItems.length) {
+        logger.warn(
+          `[MinterCheck] TX ${txHash} => Gold NFT ${gold.nftItem.nftAddress} not found in minter wallet. Skipping.`
+        );
+        continue;
+      }
+      if (!silverOnChainItems.length) {
+        logger.warn(
+          `[MinterCheck] TX ${txHash} => Silver NFT ${silver.nftItem.nftAddress} not found in minter wallet. Skipping.`
+        );
+        continue;
+      }
+      if (!bronzeOnChainItems.length) {
+        logger.warn(
+          `[MinterCheck] TX ${txHash} => Bronze NFT ${bronze.nftItem.nftAddress} not found in minter wallet. Skipping.`
+        );
+        continue;
+      }
+
+      logger.info(`[MinterCheck] TX ${txHash} => Confirmed gold/silver/bronze exist on-chain in minter wallet.`);
+    } catch (err) {
+      logger.error(`[MinterCheck] TX ${txHash} => On-chain NFT ownership check failed: ${err}`);
+      // Optionally skip if the check can't confirm ownership
+      continue;
+    }
     // 3b) Find the corresponding "pending" row in token_campaign_merge_transactions
     // The user previously inserted a row with status="pending", walletAddress=userWallet,
     // goldNftAddress=gold.nftItem.nftAddress, etc.
     const rawUserWallet = toRawIfPossible(userWallet);
     const walletPredicate =
-        rawUserWallet && rawUserWallet !== userWallet
-            ? or(
-                eq(tokenCampaignMergeTransactions.walletAddress, userWallet),   // user-friendly / raw?
-                eq(tokenCampaignMergeTransactions.walletAddress, rawUserWallet) // raw form
-            )
-            : eq(tokenCampaignMergeTransactions.walletAddress, userWallet);
+      rawUserWallet && rawUserWallet !== userWallet
+        ? or(
+            eq(tokenCampaignMergeTransactions.walletAddress, userWallet), // user-friendly / raw?
+            eq(tokenCampaignMergeTransactions.walletAddress, rawUserWallet) // raw form
+          )
+        : eq(tokenCampaignMergeTransactions.walletAddress, userWallet);
     const [mergeRow] = await db
       .select()
       .from(tokenCampaignMergeTransactions)
       .where(
         and(
-            walletPredicate,
+          walletPredicate,
           eq(tokenCampaignMergeTransactions.status, "pending"),
           eq(tokenCampaignMergeTransactions.goldNftAddress, gold.nftItem.nftAddress),
           eq(tokenCampaignMergeTransactions.silverNftAddress, silver.nftItem.nftAddress),
