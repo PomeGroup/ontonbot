@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { tokenCampaignNftItems } from "@/db/schema/tokenCampaignNftItems";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { Address, internal, beginCell, toNano, SendMode } from "@ton/core";
 import { waitSeqno, openWallet } from "@/lib/nft"; // adjust import path
@@ -84,7 +84,7 @@ export async function burnMergedNfts() {
   const mergedItems = await db
     .select()
     .from(tokenCampaignNftItems)
-    .where(eq(tokenCampaignNftItems.mergeStatus, "merged"))
+    .where(and(eq(tokenCampaignNftItems.mergeStatus, "merged"), isNull(tokenCampaignNftItems.burnTrxHash)))
     .execute();
 
   if (!mergedItems.length) {
