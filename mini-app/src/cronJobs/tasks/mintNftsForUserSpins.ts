@@ -29,7 +29,7 @@ export async function mintNftForUserSpins() {
   for (const spin of spinsToMint) {
     const { configProtected } = await fetchOntonSettings();
     if (!configProtected.ONTON_NFT_MINTING_ENABLED || configProtected.ONTON_NFT_MINTING_ENABLED !== "ENABLED") {
-      logger.log("mintNftForUserSpins: NFT minting is disabled. Exiting...");
+      //logger.log("mintNftForUserSpins: NFT minting is disabled. Exiting...");
       return;
     }
     // get count  of minted spins by collectionId
