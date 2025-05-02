@@ -505,6 +505,13 @@
       "when": 1745796010735,
       "tag": "0071_medical_invisible_woman",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1746132181642,
+      "tag": "0072_clear_stepford_cuckoos",
+      "breakpoints": true
     }
   ]
 }
