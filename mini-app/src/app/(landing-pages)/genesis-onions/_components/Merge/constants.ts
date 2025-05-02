@@ -1,10 +1,11 @@
 import { CampaignMergeTransaction } from "@/types/campaign.types";
+import { capitalize } from "lodash";
 
 export const COLORS = ["gold", "silver", "bronze"] as const;
 export type Color = (typeof COLORS)[number];
 
 export const getFilterUrl = (color: Color): string =>
-  `https://getgems.io/genesisonions?filter=%7B%22attributes%22%3A%7B%22color%22%3A%5B%22${color}%22%5D%7D%7D`;
+  `https://getgems.io/genesisonions?filter=%7B%22attributes%22%3A%7B%22color%22%3A%5B%22${capitalize(color)}%22%5D%7D%7D`;
 
 export const getImageUrl = (color: string): string => `https://storage.onton.live/ontonimage/on_${color.toLowerCase()}.jpg`;
 

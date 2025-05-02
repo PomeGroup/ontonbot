@@ -55,7 +55,7 @@ export default function GenesisOnions() {
     bronze: bronzeAbleArr,
   };
 
-  const isAbleToMerge = Boolean(goldAbleArr && silverAbleArr && bronzeAbleArr);
+  const isAbleToMerge = Boolean(goldAbleArr.length && silverAbleArr.length && bronzeAbleArr.length);
 
   const ontonAddress = config["ONTON_MINTER_WALLET"] as string;
 
