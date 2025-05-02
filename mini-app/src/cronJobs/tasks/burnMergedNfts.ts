@@ -88,7 +88,7 @@ export async function burnMergedNfts() {
     .execute();
 
   if (!mergedItems.length) {
-    logger.info("[burnMergedNfts] No items to burn.");
+    // logger.info("[burnMergedNfts] No items to burn.");
     return;
   }
   logger.info(`[burnMergedNfts] Found ${mergedItems.length} items to burn.`, mergedItems);
