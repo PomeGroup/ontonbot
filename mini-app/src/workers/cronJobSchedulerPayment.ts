@@ -62,7 +62,7 @@ async function MainCronJob() {
     true // waitForCompletion => true
   );
   new CronJob(
-    "*/3 * * * * *", // Every 3 seconds
+    "*/55 * * * * *", // Every 55 seconds
     cronJobs.mintPlatinumNftForMergedNFTS, // The function to run
     null, // onComplete (not needed)
     true, // start immediately
