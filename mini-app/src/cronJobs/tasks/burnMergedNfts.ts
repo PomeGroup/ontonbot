@@ -71,7 +71,7 @@ async function checkBurnSuccess(nftAddress: string): Promise<string | null> {
  *        - If fail => remains "merged", skip.
  */
 export async function burnMergedNfts() {
-  logger.info("[burnMergedNfts] Starting burn process (single TX per item)...");
+  //logger.info("[burnMergedNfts] Starting burn process (single TX per item)...");
 
   // 1) Open admin wallet
   const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
@@ -91,7 +91,7 @@ export async function burnMergedNfts() {
     logger.info("[burnMergedNfts] No items to burn.");
     return;
   }
-  logger.info(`[burnMergedNfts] Found ${mergedItems.length} items to burn.`);
+  logger.info(`[burnMergedNfts] Found ${mergedItems.length} items to burn.`, mergedItems);
 
   // 3) For each item => single message
   for (const item of mergedItems) {

@@ -11,7 +11,7 @@ import { sleep } from "@/utils";
 import { fetchOntonSettings } from "@/server/db/ontoSetting";
 
 export async function mintNftForUserSpins() {
-  logger.log("Starting mintNftForUserSpins...");
+  // logger.log("Starting mintNftForUserSpins...");
   // 1) Find user spins that require minting.
   const spinsToMint = await db
     .select()
@@ -21,7 +21,7 @@ export async function mintNftForUserSpins() {
     .execute();
 
   if (spinsToMint.length === 0) {
-    logger.log("mintNftForUserSpins: No user spins to mint right now.");
+    // logger.log("mintNftForUserSpins: No user spins to mint right now.");
     return;
   }
 
@@ -37,7 +37,7 @@ export async function mintNftForUserSpins() {
     // Wrap in a transaction
     await db.transaction(async (trx) => {
       if (!spin.createdAt) {
-         logger.error(`mintNftForUserSpins: 🔴 Spin createdAt is null for spinId=${spin.id}`);
+        logger.error(`mintNftForUserSpins: 🔴 Spin createdAt is null for spinId=${spin.id}`);
         return;
       }
       const [order] = await trx

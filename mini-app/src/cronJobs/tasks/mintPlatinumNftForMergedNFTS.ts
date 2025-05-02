@@ -17,17 +17,19 @@ import { sleep } from "@/utils";
  * The minted Platinum NFT metadata includes a new "merged_from" field with the old addresses/indices.
  */
 export async function mintPlatinumNftForMergedNFTS() {
-  logger.log("mintPlatinumNftForMergedNFTS: started...");
+  // logger.log("mintPlatinumNftForMergedNFTS: started...");
 
   // 1) Find all merges that haven't minted Platinum yet
   const mergesToMint = await db
     .select()
     .from(tokenCampaignMergeTransactions)
-    .where(and(isNull(tokenCampaignMergeTransactions.platinumNftAddress) , eq (tokenCampaignMergeTransactions.status, "completed")))
+    .where(
+      and(isNull(tokenCampaignMergeTransactions.platinumNftAddress), eq(tokenCampaignMergeTransactions.status, "completed"))
+    )
     .execute();
 
   if (!mergesToMint.length) {
-    logger.log("mintPlatinumNftForMergedNFTS: No merges waiting for platinum minting. Exiting...");
+    //logger.log("mintPlatinumNftForMergedNFTS: No merges waiting for platinum minting. Exiting...");
     return;
   }
 
@@ -47,11 +49,10 @@ export async function mintPlatinumNftForMergedNFTS() {
     return;
   }
 
-  logger.log(
-    `mintPlatinumNftForMergedNFTS: mintPlatinumNftForMergedUsers: Using platinum collection => ${platinumColl.address}`
-  );
-
   for (const mergeRow of mergesToMint) {
+    logger.log(
+      `mintPlatinumNftForMergedNFTS: mintPlatinumNftForMergedUsers: Using platinum collection => ${platinumColl.address}`
+    );
     const userWallet = mergeRow.walletAddress.trim();
     logger.log(`\n\n[mintPlatinumNftForMergedNFTS] Processing mergeRow #${mergeRow.id} => userWallet=${userWallet}`);
 
