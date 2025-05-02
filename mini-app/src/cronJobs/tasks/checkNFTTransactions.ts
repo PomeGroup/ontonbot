@@ -53,7 +53,7 @@ export async function checkMinterTransactions() {
   }
 
   // Determine the range from walletChecks
-  const three_hours_ago = Math.floor((Date.now() - 600 * 1000) / 1000);
+  const three_hours_ago = Math.floor((Date.now() - 3600 * 1000) / 1000);
   const [existingRow] = await db
     .select({ checked_lt: walletChecks.checked_lt })
     .from(walletChecks)
@@ -132,17 +132,17 @@ export async function checkMinterTransactions() {
       const goldChainData = await tonCenter.fetchNFTItemsWithRetry(
         minter_wallet_address,
         gold.collection.address, // or however you store the collection's address
-        gold.nftItem.nftAddress
+        gold.nftItem.nftAddress.toLowerCase()
       );
       const silverChainData = await tonCenter.fetchNFTItemsWithRetry(
         minter_wallet_address,
         silver.collection.address,
-        silver.nftItem.nftAddress
+        silver.nftItem.nftAddress.toLowerCase()
       );
       const bronzeChainData = await tonCenter.fetchNFTItemsWithRetry(
         minter_wallet_address,
         bronze.collection.address,
-        bronze.nftItem.nftAddress
+        bronze.nftItem.nftAddress.toLowerCase()
       );
 
       // If the fetch result is empty or does not include the item, skip
