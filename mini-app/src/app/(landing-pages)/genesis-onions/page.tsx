@@ -133,7 +133,7 @@ export default function GenesisOnions() {
 
     return {
       address: nftAddr.toString(),
-      amount: toNano("0.001").toString(),
+      amount: toNano("0.05").toString(),
       payload: bodyCell.toBoc().toString("base64"),
     };
   }
@@ -143,7 +143,7 @@ export default function GenesisOnions() {
 
     return {
       address: ontonAddress,
-      amount: toNano("0.001").toString(),
+      amount: toNano("0.005").toString(),
       payload: bodyCell.toBoc().toString("base64"),
     };
   }
