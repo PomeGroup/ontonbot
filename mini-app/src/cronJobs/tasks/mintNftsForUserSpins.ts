@@ -11,7 +11,7 @@ import { sleep } from "@/utils";
 import { fetchOntonSettings } from "@/server/db/ontoSetting";
 
 export async function mintNftForUserSpins() {
-  logger.log("Starting mintNftForUserSpins...");
+  // logger.log("Starting mintNftForUserSpins...");
   // 1) Find user spins that require minting.
   const spinsToMint = await db
     .select()
@@ -21,7 +21,7 @@ export async function mintNftForUserSpins() {
     .execute();
 
   if (spinsToMint.length === 0) {
-    logger.log("mintNftForUserSpins: No user spins to mint right now.");
+    // logger.log("mintNftForUserSpins: No user spins to mint right now.");
     return;
   }
 
@@ -29,13 +29,39 @@ export async function mintNftForUserSpins() {
   for (const spin of spinsToMint) {
     const { configProtected } = await fetchOntonSettings();
     if (!configProtected.ONTON_NFT_MINTING_ENABLED || configProtected.ONTON_NFT_MINTING_ENABLED !== "ENABLED") {
-      logger.log("mintNftForUserSpins: NFT minting is disabled. Exiting...");
+      //logger.log("mintNftForUserSpins: NFT minting is disabled. Exiting...");
       return;
     }
     // get count  of minted spins by collectionId
 
     // Wrap in a transaction
     await db.transaction(async (trx) => {
+      if (!spin.createdAt) {
+        logger.error(`mintNftForUserSpins: 🔴 Spin createdAt is null for spinId=${spin.id}`);
+        return;
+      }
+      const [order] = await trx
+        .select({
+          wallet: tokenCampaignOrders.wallet_address,
+          uuid: tokenCampaignOrders.uuid,
+        })
+        .from(tokenCampaignOrders)
+        .where(
+          and(
+            eq(tokenCampaignOrders.userId, spin.userId),
+            isNotNull(tokenCampaignOrders.wallet_address),
+            lte(tokenCampaignOrders.createdAt, spin.createdAt),
+            eq(tokenCampaignOrders.status, "completed")
+          )
+        )
+        .orderBy(desc(tokenCampaignOrders.createdAt))
+        .limit(1)
+        .execute();
+
+      if (!order?.wallet) {
+        logger.error(`mintNftForUserSpins: 🔴 No wallet address found for userId=${spin.userId}, spinId=${spin.id}`);
+        return;
+      }
       // 2a) Re-fetch spin in transaction
       const [freshSpin] = await trx
         .select()
@@ -56,6 +82,10 @@ export async function mintNftForUserSpins() {
         return;
       }
       logger.log(`mintNftForUserSpins: 🟠 Processing spinId=${spin.id} for userId=${freshSpin.userId}`, spin);
+      if (!freshSpin.createdAt) {
+        logger.error(`mintNftForUserSpins: 🔴 Fresh spin createdAt is null for spinId=${spin.id}`);
+        return;
+      }
 
       // 3) Look up the related collection
       const [collection] = await trx
@@ -99,28 +129,6 @@ export async function mintNftForUserSpins() {
         return;
       }
       // 4) Retrieve the user’s wallet address from orders
-      const [order] = await trx
-        .select({
-          wallet: tokenCampaignOrders.wallet_address,
-          uuid: tokenCampaignOrders.uuid,
-        })
-        .from(tokenCampaignOrders)
-        .where(
-          and(
-            eq(tokenCampaignOrders.userId, freshSpin.userId),
-            isNotNull(tokenCampaignOrders.wallet_address),
-            lte(tokenCampaignOrders.createdAt, freshSpin.createdAt),
-            eq(tokenCampaignOrders.status, "completed")
-          )
-        )
-        .orderBy(desc(tokenCampaignOrders.createdAt))
-        .limit(1)
-        .execute();
-
-      if (!order?.wallet) {
-        logger.error(`mintNftForUserSpins: 🔴 No wallet address found for userId=${freshSpin.userId}, spinId=${spin.id}`);
-        return;
-      }
 
       const walletAddress = order.wallet.trim();
       logger.log(

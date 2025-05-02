@@ -1,21 +1,26 @@
-import { router, initDataProtectedProcedure } from "../trpc";
-import { z } from "zod";
-import { campaignTypes } from "@/db/enum";
-import { tokenCampaignNftCollectionsDB } from "@/server/db/tokenCampaignNftCollections.db";
-import { tokenCampaignSpinPackagesDB } from "@/server/db/tokenCampaignSpinPackages.db";
-import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
-import { tokenCampaignUserSpinsDB } from "@/server/db/tokenCampaignUserSpins.db";
 import { db } from "@/db/db";
-import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
+import { campaignTypes } from "@/db/enum";
 import { TokenCampaignOrdersInsert, TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
-import { TRPCError } from "@trpc/server";
-import userEligibilityDB from "@/server/db/tokenCampaignEligibleUsers.db";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
-import { generateRandomHash } from "@/lib/generateRandomHash";
-import { Address } from "@ton/core";
-import { logger } from "@/server/utils/logger";
 import { checkRateLimit } from "@/lib/checkRateLimit";
-import { affiliateClicksDB } from "@/server/db/affiliateClicks.db";
+import { generateRandomHash } from "@/lib/generateRandomHash";
+import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import userEligibilityDB from "@/server/db/tokenCampaignEligibleUsers.db";
+import tokenCampaignMergeTransactionsDB from "@/server/db/tokenCampaignMergeTransactions.db";
+import { tokenCampaignNftCollectionsDB } from "@/server/db/tokenCampaignNftCollections.db";
+import { tokenCampaignNftItemsDB } from "@/server/db/tokenCampaignNftItems.db";
+import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
+import { tokenCampaignSpinPackagesDB } from "@/server/db/tokenCampaignSpinPackages.db";
+import { tokenCampaignUserSpinsDB } from "@/server/db/tokenCampaignUserSpins.db";
+import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
+import { is_prod_env } from "@/server/utils/evnutils";
+import { logger } from "@/server/utils/logger";
+import { CampaignNFT } from "@/types/campaign.types";
+import { Address } from "@ton/core";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { affiliateClicksDB } from "../db/affiliateClicks.db";
+import { initDataProtectedProcedure, router } from "../trpc";
 
 export const campaignRouter = router({
   /**
@@ -67,6 +72,7 @@ export const campaignRouter = router({
           message: "CAMPAIGN_LOG:Router:addOrder: Rate limit exceeded. Try again later.",
         });
       }
+
       return await db.transaction(async (tx) => {
         // 1) Find an existing *unused* spin row
         const spinRow = await tokenCampaignUserSpinsDB.getUnusedSpinForUserTx(tx, userId);
@@ -353,4 +359,171 @@ export const campaignRouter = router({
       totalSpins,
     };
   }),
+
+  /**
+   * 1) Checks the wallet's TON balance,
+   * 2) Fetches all NFT items from the single on-chain collection,
+   * 3) Looks up each NFT in your DB to find out its 'itemType' or 'campaignType',
+   * 4) Groups them by type and returns them in one response.
+   */
+  getWalletInfo: initDataProtectedProcedure
+    .input(
+      z.object({
+        walletAddress: z.string().refine((val) => {
+          try {
+            // Validate that it's a valid TON address
+            Address.parse(val);
+            return true;
+          } catch {
+            return false;
+          }
+        }, "Invalid TON address."),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      type NFTData = Record<string, CampaignNFT[]>;
+
+      const { walletAddress } = input;
+      // 1) Optional Rate Limit
+      const { allowed } = await checkRateLimit(ctx.user.user_id.toString(), "campaignRouterGetWalletInfo", 10, 60);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Rate limit exceeded. Try again later.",
+        });
+      }
+      try {
+        // 1) Fetch TON balance
+        const balance = await tonCenter.getAccountBalance(walletAddress);
+
+        const SINGLE_COLLECTION_ADDRESS = is_prod_env()
+          ? "EQCCZnimwuTKit3vcUwF7JR26iLu1f6osAXAWtYNS9c-Q-8m"
+          : "EQA4SQVjM6bpSiJ7uG-r7kRvbztVXMceCLFsqwQlfzCEvyax";
+        // 2) Fetch on-chain NFT items from the single shared collection
+        //    => This call returns { nft_items, address_book }
+        const chainData = await tonCenter.fetchNFTItemsWithRetry(walletAddress, SINGLE_COLLECTION_ADDRESS);
+        const onChainNftItems: NFTItem[] = chainData?.nft_items ?? [];
+
+        if (!onChainNftItems.length) {
+          // No items found on-chain, just return
+          return {
+            address: walletAddress,
+            balance,
+            itemsByType: {} as NFTData,
+            platinumCount: null,
+          };
+        }
+
+        // Collect all the on-chain addresses for these NFTs
+        const nftAddresses = onChainNftItems.map((item) => item.address);
+
+        // 3) Look up each NFT in your local DB to determine item type
+        const dbRows = await tokenCampaignNftItemsDB.getItemsByAddresses(nftAddresses);
+        // dbRows => Array of { nftItem: TokenCampaignNftItems, collection: TokenCampaignNftCollections }
+
+        // 4) Group them by itemType or campaignType
+        //    e.g. { gold: [...], silver: [...], bronze: [...] }
+        const grouped: NFTData = {};
+
+        for (const row of dbRows) {
+          const { nftItem, collection } = row;
+          const typeKey = collection.id.toString() || collection.id.toString(); // Use collection name or ID as the key
+
+          if (!grouped[typeKey]) {
+            grouped[typeKey] = [];
+          }
+
+          // You can merge on-chain data + DB data
+          // or store them separately, e.g.:
+          // Find the original onChain item to get metadata (uri, index, etc.)
+          const chainItem = onChainNftItems.find((c) => c.address === nftItem.nftAddress);
+
+          const item = {
+            onChain: chainItem,
+            offChain: nftItem,
+            collectionInfo: collection,
+          };
+          grouped[typeKey].push(item);
+        }
+        // ➜ 3a) **Extra query** – how many *platinum* NFTs does this wallet have?
+        logger.log(`check user platinum count for ${walletAddress} with nft addresses`, nftAddresses);
+        const platinumCount = await tokenCampaignNftItemsDB.countPlatinumByAddresses(nftAddresses);
+        return {
+          address: walletAddress,
+          balance,
+          itemsByType: grouped,
+          platinumCount,
+        };
+      } catch (error) {
+        logger.error("Error fetching wallet info:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch wallet info.",
+        });
+      }
+    }),
+
+  addTransaction: initDataProtectedProcedure
+    .input(
+      z.object({
+        orderId: z.number().optional(),
+        walletAddress: z.string(),
+        finalPrice: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const result = await tokenCampaignMergeTransactionsDB.createTransactionRecord(
+        input.orderId,
+        input.walletAddress,
+        input.finalPrice
+      );
+      logger.info(`[addTransaction] Inserted row #${result.id} for wallet ${result.walletAddress}`);
+      return result;
+    }),
+
+  addMergeTransaction: initDataProtectedProcedure
+    .input(
+      z.object({
+        walletAddress: z.string().refine((val) => {
+          try {
+            Address.parse(val);
+            return true;
+          } catch {
+            return false;
+          }
+        }, "Invalid TON address."),
+        goldNftAddress: z.string().nonempty(),
+        silverNftAddress: z.string().nonempty(),
+        bronzeNftAddress: z.string().nonempty(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const result = await tokenCampaignMergeTransactionsDB.createMergeTransactionRecord(
+        input.walletAddress,
+        input.goldNftAddress,
+        input.silverNftAddress,
+        input.bronzeNftAddress,
+        ctx.user.user_id
+      );
+      logger.info(`[addMergeTransaction] Inserted merge row #${result.id}, status=${result.status}`);
+      return result;
+    }),
+
+  getUserMergeTransactions: initDataProtectedProcedure
+    .input(
+      z.object({
+        walletAddress: z.string().refine((val) => {
+          try {
+            Address.parse(val);
+            return true;
+          } catch {
+            return false;
+          }
+        }, "Invalid TON address."),
+      })
+    )
+    .query(async ({ input }) => {
+      const merges = await tokenCampaignMergeTransactionsDB.getMergeTransactionsByWallet(input.walletAddress);
+      return merges;
+    }),
 });

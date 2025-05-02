@@ -1,6 +1,6 @@
-import { cn } from "@/utils";
-import Image from "next/image";
-import Link from "next/link";
+// import { cn } from "@/utils";
+// import Image from "next/image";
+// import Link from "next/link";
 
 export const Play2WinGenesisBanner: React.FC<React.SVGProps<SVGSVGElement>> = (props) => null;
 // <Link

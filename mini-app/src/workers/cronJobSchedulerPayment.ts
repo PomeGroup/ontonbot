@@ -6,6 +6,8 @@ import "@/lib/gracefullyShutdown";
 import cronJobs, { cronJobRunner } from "@/cronJobs";
 import { redisTools } from "@/lib/redisTools";
 import { is_prod_env, is_stage_env } from "@/server/utils/evnutils";
+import { checkMinterTransactions } from "@/cronJobs/tasks/checkNFTTransactions";
+import { mintPlatinumNftForMergedNFTS } from "@/cronJobs/tasks/mintPlatinumNftForMergedNFTS";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -48,8 +50,8 @@ async function MainCronJob() {
     true // waitForCompletion => true
   );
   new CronJob(
-    "*/10 * * * * *", // Every 10 seconds
-    cronJobs.runPendingCallbackTasks, // The function to run
+    "*/3 * * * * *", // Every 3 seconds
+    cronJobs.checkMinterTransactions, // The function to run
     null, // onComplete (not needed)
     true, // start immediately
     null, // timeZone
@@ -59,6 +61,32 @@ async function MainCronJob() {
     false, // unrefTimeout => false
     true // waitForCompletion => true
   );
+  new CronJob(
+    "*/3 * * * * *", // Every 3 seconds
+    cronJobs.mintPlatinumNftForMergedNFTS, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
+  new CronJob(
+    "*/3 * * * * *", // Every 3 seconds
+    cronJobs.burnMergedNfts, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
+
+  /** these cronjob are for minting and affiliate spins for campaigns */
   new CronJob(
     "*/2 * * * * *", // Every  2 seconds
     cronJobs.processCampaignAffiliateSpins, // The function to run
@@ -83,20 +111,6 @@ async function MainCronJob() {
     false, // unrefTimeout => false
     true // waitForCompletion => true
   );
-  if (is_prod_env()) {
-    new CronJob(
-      "* */10 * * * *", // Every 10 minutes
-      cronJobs.updateAllUserWalletBalances, // The function to run
-      null, // onComplete (not needed)
-      true, // start immediately
-      null, // timeZone
-      null, // context
-      false, // runOnInit => false (don't run on app start)
-      null, // utcOffset => null
-      false, // unrefTimeout => false
-      true // waitForCompletion => true
-    );
-  }
 }
 
 MainCronJob().then(() => logger.log("Cron Jobs Started"));

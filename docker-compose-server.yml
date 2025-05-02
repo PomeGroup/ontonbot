@@ -351,7 +351,7 @@ services:
       mode: global
       update_config:
         failure_action: rollback
-        order: start-first
+        order: stop-first
       restart_policy:
         condition: on-failure
         delay: 10s
@@ -396,7 +396,7 @@ services:
       mode: global
       update_config:
         failure_action: rollback
-        order: start-first
+        order: stop-first
       restart_policy:
         condition: on-failure
         delay: 10s
@@ -440,7 +440,7 @@ services:
       mode: global
       update_config:
         failure_action: rollback
-        order: start-first
+        order: stop-first
       restart_policy:
         condition: on-failure
         delay: 10s
@@ -484,7 +484,7 @@ services:
       mode: global
       update_config:
         failure_action: rollback
-        order: start-first
+        order: stop-first
       restart_policy:
         condition: on-failure
         delay: 10s

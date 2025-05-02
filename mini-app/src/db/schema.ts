@@ -128,7 +128,20 @@ import {
   Play2WinCampaignType,
   play2winCampaignType,
 } from "./schema/play2winCampaigns";
-import { tokenCampaignNftItems, TokenCampaignNftItems, TokenCampaignNftItemsInsert } from "./schema/tokenCampaignNftItems";
+import {
+  tokenCampaignNftItems,
+  TokenCampaignNftItems,
+  TokenCampaignNftItemsInsert,
+  MergeStatusType,
+  mergeStatusEnum,
+} from "./schema/tokenCampaignNftItems";
+import {
+  tokenCampaignMergeTransactions,
+  tokenCampaignMergeTransactionsStatus,
+  TokenCampaignMergeTransactionsStatus,
+  TokenCampaignMergeTransactions,
+  TokenCampaignMergeTransactionsInsert,
+} from "./schema/tokenCampaignMergeTransactions";
 // export all the enums
 export {
   accessRoleEnum,
@@ -155,6 +168,8 @@ export {
   user_flags,
   userRoleStatusEnum,
   affiliateItemType,
+  campaignTypes,
+  tokenCampaignMergeTransactionsStatus,
 };
 
 // export all the tables and relations
@@ -204,7 +219,6 @@ export {
   tournaments,
   games,
   gameLeaderboard,
-  campaignTypes,
   tokenCampaignUserSpins,
   tokenCampaignSpinType,
   tokenCampaignSpinPackages,
@@ -217,6 +231,8 @@ export {
   play2winCampaigns,
   play2winCampaignType,
   tokenCampaignNftItems,
+  mergeStatusEnum,
+  tokenCampaignMergeTransactions,
 };
 
 // Type Exports
@@ -283,4 +299,8 @@ export type {
   Play2WinCampaignType,
   TokenCampaignNftItems,
   TokenCampaignNftItemsInsert,
+  MergeStatusType,
+  TokenCampaignMergeTransactions,
+  TokenCampaignMergeTransactionsInsert,
+  TokenCampaignMergeTransactionsStatus,
 };

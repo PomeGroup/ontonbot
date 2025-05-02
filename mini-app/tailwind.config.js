@@ -1,3 +1,4 @@
+/* eslint-disable */
 const konstaConfig = require("konsta/config");
 
 /** @type {import('tailwindcss').Config} */
@@ -76,12 +77,16 @@ module.exports = konstaConfig({
           mid: "#31517B",
           superLight: "#24354C",
           light: "#203248",
-          dark: "#0B1D34",
+          dark: "#020B16",
+        },
+        onion: {
+          DEFAULT: "#F36A00",
+          extraLight: "#FF923D",
         },
         silverBlue: {
           1: "#77B8FE",
           2: "#4C688B",
-          3: '#4B5B71'
+          3: "#4B5B71",
         },
         silver: {
           DEFAULT: "#DFDDDD",
@@ -102,7 +107,7 @@ module.exports = konstaConfig({
         "main-button-color": "#007AFF",
         "disabled-font": "#B9B9BA",
         confirm: "#34C759",
-        "wallet-tertiary_fill_background": "#747480",
+        fill_background: "#747480",
 
         "cn-primary": {
           DEFAULT: "hsl(var(--shadcn-primary))",
@@ -116,6 +121,10 @@ module.exports = konstaConfig({
         "cn-destructive": {
           DEFAULT: "hsla(var(--shadcn-destructive))",
           foreground: "hsl(var(--shadcn-destructive-foreground))",
+        },
+        "cn-success": {
+          DEFAULT: "hsla(var(--shadcn-success))",
+          foreground: "hsl(var(--shadcn-success-foreground))",
         },
         "cn-muted": {
           DEFAULT: "hsla(var(--shadcn-muted))",

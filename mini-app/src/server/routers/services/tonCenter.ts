@@ -161,7 +161,8 @@ async function fetchNFTItemsWithRetry(
       );
       const result = await fetchNFTItems(ownerAddress, collectionAddress, nft_address, index, limit, offset);
       logger.log(
-        `fetchNFTItemsWithRetry compeleted: Attempt ${attempt + 1} successful for ownerAddress ${ownerAddress} collectionAddress ${collectionAddress} nft_address ${nft_address}`
+        `fetchNFTItemsWithRetry compeleted: Attempt ${attempt + 1} successful for ownerAddress ${ownerAddress} collectionAddress ${collectionAddress} nft_address ${nft_address} result:`,
+        result
       );
       return result; // Return the result if successful
     } catch (error) {

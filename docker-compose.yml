@@ -100,20 +100,20 @@ services:
       - expecting-mini-app
       - full
     ports:
-      - "80:80"
+#      - "80:80"
       - "443:443"
     volumes:
       - ./data/caddy_data:/data
       - ./data/caddy_config:/config
-      - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
+      - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh:delegate
       - ./devops/cert:/certs
-    #    networks:
-    #      onton-network:
-    #        ipv4_address: "${IP_CADDY}"
+    networks:
+      onton-network:
+        ipv4_address: "${IP_CADDY}"
     environment:
       <<: *common-env
     <<: *default-extra-hosts
-    network_mode: "host"
+#    network_mode: "host"
     entrypoint: /usr/bin/envsh/generate-caddyfile.sh
 
   minio:
@@ -134,7 +134,7 @@ services:
       - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
       - ./data/minio_data:/data
-      - ./devops/minio-init.sh:/usr/bin/entrypoint.sh # Mount the script into the container
+      - ./devops/minio-init.sh:/usr/bin/entrypoint.sh:delegate
     entrypoint: [ "/usr/bin/entrypoint.sh" ] # Use the custom entrypoint script
     environment:
       <<: *common-env
@@ -145,7 +145,7 @@ services:
     image: postgres:16.3-alpine3.20
     restart: unless-stopped
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "${POSTGRES_PORT}:5432"
     profiles:
       - front-end-development
       - expecting-mini-app
