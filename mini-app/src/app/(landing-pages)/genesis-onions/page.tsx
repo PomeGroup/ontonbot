@@ -133,7 +133,7 @@ export default function GenesisOnions() {
 
     return {
       address: nftAddr.toString(),
-      amount: toNano("0.05").toString(),
+      amount: toNano("0.001").toString(),
       payload: bodyCell.toBoc().toString("base64"),
     };
   }
@@ -143,12 +143,12 @@ export default function GenesisOnions() {
 
     return {
       address: ontonAddress,
-      amount: toNano("0.005").toString(),
+      amount: toNano("0.001").toString(),
       payload: bodyCell.toBoc().toString("base64"),
     };
   }
 
-  function hanldeMainButtonClick(): void {
+  function handleMainButtonClick(): void {
     if (!walletAddress) {
       return;
     }
@@ -210,8 +210,7 @@ export default function GenesisOnions() {
             weight="normal"
             className="text-center"
           >
-            Tap on &ldquo;Unleash the Platinum&rdquo; to burn and prepare 1 Gold, 1 Silver, and 1 Bronze, then &ldquo;Merge
-            to Platinum&rdquo; them to reveal an exciting new Platinum NFT!
+            Tap on &ldquo;Merge to Platinum&rdquo; to burn a set of Gold, Silver and Bronze and Receive a new Platinum NFT!
           </Typography>
 
           {/* SBT Counts */}
@@ -226,7 +225,7 @@ export default function GenesisOnions() {
                 />
               ))}
             </div>
-            {isAbleToMerge && <p className="text-[8px] leading-4 text-center">You have a sufficient quantity of ONIONs</p>}
+            {isAbleToMerge && <p className="text-[8px] leading-4 text-center">You have enough NFTs to Merge a Platinum</p>}
           </div>
 
           {/* Merge Preview */}
@@ -269,7 +268,7 @@ export default function GenesisOnions() {
                 Boolean(!hasPendingTx) &&
                 "btn-gradient btn-shine transition-all transform hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden"
             )}
-            onClick={hanldeMainButtonClick}
+            onClick={handleMainButtonClick}
             size="lg"
           >
             <Typography
@@ -282,7 +281,7 @@ export default function GenesisOnions() {
                   <Loader2 className="animate-spin" />
                 </div>
               ) : isAbleToMerge ? (
-                "Unleash the Platinum"
+                "Merge to Platinum"
               ) : (
                 "Collect Sufficient ONIONs"
               )}

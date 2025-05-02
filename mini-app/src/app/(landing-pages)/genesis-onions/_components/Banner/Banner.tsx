@@ -1,16 +1,16 @@
+import { Button } from "@/components/ui/button";
 import { useConfig } from "@/context/ConfigContext";
 import { getTimeLeft } from "@/lib/time.utils";
+import { formatPadNumber } from "@/lib/utils";
 import { cn } from "@/utils";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { GENESIS_ONIONS_PAGE_ROUTE } from "../../GenesisOnions.constants";
 import "./Banner.css";
-import { formatPadNumber } from "@/lib/utils";
 import SVGCubes from "./SVGCubes";
-import { Button } from "@/components/ui/button";
 
-import "./../../_assets/genesis-onions.css";
 import Typography from "@/components/Typography";
+import "./../../_assets/genesis-onions.css";
 
 interface Props {
   className?: string;
@@ -64,7 +64,7 @@ export const Banner = ({ className }: Props) => {
                 {formatPadNumber(timeLeft.days)}:{formatPadNumber(timeLeft.hours)}:{formatPadNumber(timeLeft.minutes)}:
                 {formatPadNumber(timeLeft.seconds)}
               </div>
-              <Typography variant="footnote">Unleash the Platinum ONION</Typography>
+              <Typography variant="footnote">Merge to Platinum ONION</Typography>
             </div>
             <Button variant="outline-onion">Start Now</Button>
           </div>
