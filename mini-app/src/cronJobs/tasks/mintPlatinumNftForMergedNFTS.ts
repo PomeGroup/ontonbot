@@ -2,11 +2,12 @@ import { db } from "@/db/db";
 import { tokenCampaignMergeTransactions } from "@/db/schema/tokenCampaignMergeTransactions";
 import { tokenCampaignNftItems } from "@/db/schema/tokenCampaignNftItems";
 import { tokenCampaignNftCollections, TokenCampaignNftItemMetaData } from "@/db/schema/tokenCampaignNftCollections";
-import { eq, inArray, isNull, count, and } from "drizzle-orm";
+import { eq, inArray, isNull, count, and, asc } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { mintNFT } from "@/lib/nft"; // your existing helper for on-chain mint
 import { uploadJsonToMinio } from "@/lib/minioTools";
 import { sleep } from "@/utils";
+import { coupon_definition } from "@/db/schema/coupon_definition";
 
 /**
  * Mints a "Platinum" NFT (collection ID=4) for each row in token_campaign_merge_transactions
@@ -26,6 +27,8 @@ export async function mintPlatinumNftForMergedNFTS() {
     .where(
       and(isNull(tokenCampaignMergeTransactions.platinumNftAddress), eq(tokenCampaignMergeTransactions.status, "completed"))
     )
+    .limit(1)
+    .orderBy(asc(tokenCampaignMergeTransactions.id))
     .execute();
 
   if (!mergesToMint.length) {
@@ -200,7 +203,7 @@ export async function mintPlatinumNftForMergedNFTS() {
     }); // end transaction
 
     // optional small sleep
-    await sleep(2000);
+    await sleep(10000);
   }
 
   logger.log("mintPlatinumNftForMergedNFTS: completed.");
