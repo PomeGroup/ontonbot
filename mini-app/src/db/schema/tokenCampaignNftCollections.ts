@@ -1,10 +1,17 @@
-import { pgTable, varchar, jsonb, bigint, serial, timestamp, text, index, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, varchar, bigint, serial, timestamp, text, index, boolean, json } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { campaignTypes } from "@/db/enum";
 
-export interface NftAttribute extends Record<string, string | number | boolean | undefined> {
+export interface mergedFrom {
+  address?: string;
+  index?: number;
+  itemId?: number;
+}
+
+export interface NftAttribute extends Record<string, string | number | boolean | undefined | mergedFrom[]> {
   trait_type?: string;
   value?: string | number | boolean;
+  merged_from?: mergedFrom[];
 }
 
 export interface TokenCampaignNftItemMetaData {

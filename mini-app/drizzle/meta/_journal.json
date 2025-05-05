@@ -463,6 +463,55 @@
       "when": 1745062640490,
       "tag": "0065_loud_master_mold",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1745611055472,
+      "tag": "0066_overjoyed_toad",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1745611095469,
+      "tag": "0067_eminent_hammerhead",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1745624274204,
+      "tag": "0068_next_zaran",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1745710085210,
+      "tag": "0069_vengeful_black_widow",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1745716716111,
+      "tag": "0070_tired_wasp",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1745796010735,
+      "tag": "0071_medical_invisible_woman",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1746132181642,
+      "tag": "0072_clear_stepford_cuckoos",
+      "breakpoints": true
     }
   ]
 }

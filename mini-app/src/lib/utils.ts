@@ -49,3 +49,5 @@ export const removeSecretKey = (changes: any) =>
   JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
 
 export type InferArrayType<T> = T extends (infer U)[] ? U : never;
+
+export const formatPadNumber = (num: number): string => num.toString().padStart(2, "0");

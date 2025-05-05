@@ -37,6 +37,8 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL(`/genesis-onions/`, req.nextUrl.origin));
           case "play2win_campaign":
             return NextResponse.redirect(new URL(`/play2win-genesis/`, req.nextUrl.origin));
+          case "sample":
+            return NextResponse.redirect(new URL(`/sample/`, req.nextUrl.origin));
           default:
             return NextResponse.redirect(new URL(`/`, req.nextUrl.origin));
         }
