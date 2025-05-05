@@ -25,12 +25,7 @@ interface LeaderboardProps {
   participants: Participant[];
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({
-  bestScore = 121,
-  timesPlayed = 2,
-  position = "1: 2",
-  participants = [],
-}) => {
+const Leaderboard: React.FC<LeaderboardProps> = ({ participants = [] }) => {
   const topThreeParticipants = participants.slice(0, 3);
   const remainingParticipants = participants.slice(3);
 
@@ -67,7 +62,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                 return (
                   <div
                     key={participant.id}
-                    className="flex flex-col items-center isolate relative"
+                    className="flex flex-col items-center isolate relative min-w-0 flex-1"
                   >
                     {isWinner && <div className="-top-4 z-10 absolute -rotate-[35deg] left-1 text-2xl">👑</div>}
 
@@ -88,8 +83,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                     <Typography
                       variant="footnote"
                       truncate
+                      className="w-full"
                     >
-                      {participant.name}
+                      {participant.name} asdflk asdlkfj asldkjf lsdk
                     </Typography>
 
                     <div
