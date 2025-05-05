@@ -440,10 +440,12 @@ const EventPassword = React.memo(() => {
   const isOnlineEvent = eventData.data?.participationType === "online";
   const isEventActive = isStarted && isNotEnded;
   const userCompletedTasks =
-    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
+    (["approved", "checkedin"].includes(eventData.data?.registrant_status as string) || !eventData.data?.has_registration) &&
     user?.wallet_address;
 
   if (!((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address)) return null;
+
+  if (eventData.data?.has_registration) return null;
 
   return (
     <CustomCard
