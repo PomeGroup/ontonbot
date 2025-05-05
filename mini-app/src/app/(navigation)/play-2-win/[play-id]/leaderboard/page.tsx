@@ -83,9 +83,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ participants = [] }) => {
                     <Typography
                       variant="footnote"
                       truncate
-                      className="w-full"
+                      className="w-full text-center"
                     >
-                      {participant.name} asdflk asdlkfj asldkjf lsdk
+                      {participant.name}
                     </Typography>
 
                     <div
@@ -112,9 +112,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ participants = [] }) => {
             {remainingParticipants.map((participant) => (
               <div
                 key={participant.id}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between gap-4"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <Typography
                     variant="footnote"
                     weight="medium"
@@ -124,7 +124,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ participants = [] }) => {
                     <sup>th</sup>
                   </Typography>
 
-                  <div className="w-8 h-8 rounded-full overflow-hidden">
+                  <div className="min-w-8 min-h-8 rounded-full overflow-hidden">
                     <Image
                       src={participant.avatar || "/template-images/user-placeholder.png"}
                       alt={participant.name}
@@ -137,6 +137,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ participants = [] }) => {
                   <Typography
                     variant="body"
                     weight="medium"
+                    truncate
                   >
                     {participant.name}
                   </Typography>
