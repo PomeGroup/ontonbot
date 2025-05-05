@@ -29,7 +29,11 @@ export default function MyHostedPage() {
   const [activeTab, setActiveTab] = useState("events");
 
   const eventsInfinite = trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
-    { filter: { organizer_user_id: userId }, search: eventsSearch, limit: 10 },
+    {
+      filter: { organizer_user_id: userId },
+      search: eventsSearch.length > 2 ? eventsSearch : "",
+      limit: 10,
+    },
     {
       enabled: Boolean(userId) && Boolean(activeTab === "events"),
       getNextPageParam(lastPage) {
@@ -43,7 +47,7 @@ export default function MyHostedPage() {
       filter: {
         organizer_user_id: userId,
       },
-      search: contestsSearch,
+      search: contestsSearch.length > 2 ? contestsSearch : "",
       limit: 10,
     },
     {
