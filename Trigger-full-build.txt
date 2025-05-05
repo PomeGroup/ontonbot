@@ -12,10 +12,12 @@ full build channels
 full build haminjoori
 full build after registery clear
 full build
-full build after clear registery2s
+full build after clear registery2see
 full build for dev
 full build for dev
 full build for dev remove server only
 add more worker services
 refine deployment flow
 worker service
+full build
+full build

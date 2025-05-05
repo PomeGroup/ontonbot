@@ -9,7 +9,9 @@ import Link from "next/link";
 import React from "react";
 
 interface TournamentCardProps {
-  tournament: RouterOutput["tournaments"]["getTournaments"]["tournaments"][number];
+  tournament:
+    | RouterOutput["tournaments"]["getTournaments"]["tournaments"][number]
+    | RouterOutput["tournaments"]["getFeaturedTournaments"][number];
 }
 
 const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
@@ -18,7 +20,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
   return (
     <Link
       href={`/play-2-win/${tournament.id}`}
-      className="block w-[160px]"
+      className="block w-full"
     >
       <CustomCard
         defaultPadding
@@ -26,12 +28,14 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
       >
         <div className="flex flex-col gap-3">
           <div className="relative isolate mx-auto">
-            <LoadableImage
-              src={tournament.imageUrl}
-              width={120}
-              height={120}
-              alt="game card"
-            />
+            {tournament.imageUrl && (
+              <LoadableImage
+                src={tournament.imageUrl}
+                width={120}
+                height={120}
+                alt="game card"
+              />
+            )}
             {tournament.endDate && (
               <TournamentTimeRemaining
                 closeOnly

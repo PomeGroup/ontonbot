@@ -106,10 +106,7 @@ export default function Search() {
                     key={event.eventId}
                     className={isNearEnd ? `last-event-card` : ""}
                   >
-                    <EventCard
-                      event={event}
-                      currentUserId={user?.user_id}
-                    />
+                    <EventCard event={event} />
                   </div>
                 );
               })}

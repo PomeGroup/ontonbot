@@ -1,11 +1,11 @@
 "use client";
 
-import { FC, ReactNode, useEffect } from "react";
-import EventSkeleton from "./molecules/skeletons/EventSkeleton";
-import { trpc } from "../_trpc/client";
 import { useUserStore } from "@/context/store/user.store";
 import useWebApp from "@/hooks/useWebApp";
+import { FC, ReactNode, useEffect } from "react";
+import { trpc } from "../_trpc/client";
 import { ErrorState } from "./ErrorState";
+import EventSkeleton from "./molecules/skeletons/EventSkeleton";
 
 const UserSaver: FC<{
   children: ReactNode;
@@ -26,7 +26,7 @@ const UserSaver: FC<{
   // Show loading state until everything is ready
   if (syncUser.isLoading) {
     return (
-      <div className="h-screen px-4">
+      <div className="h-screen p-4">
         <EventSkeleton />
       </div>
     );

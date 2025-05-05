@@ -1,7 +1,7 @@
 import Typography from "@/components/Typography";
 import { cn } from "@/lib/utils";
 import { Card } from "konsta/react";
-import React, { ReactNode } from "react";
+import React, { MouseEventHandler, ReactNode } from "react";
 
 interface CustomCardProps {
   title?: string;
@@ -15,7 +15,7 @@ interface CustomCardProps {
   /**
    * Callbacks
    */
-  onClick?: () => void;
+  onClick?: MouseEventHandler<HTMLElement>;
 }
 
 const CustomCard: React.FC<CustomCardProps> = ({
@@ -30,24 +30,24 @@ const CustomCard: React.FC<CustomCardProps> = ({
     <Card
       header={
         title || description ? (
-          <>
+          <div>
             {title && <Typography variant="title3">{title}</Typography>}
             {description && (
               <Typography
                 variant="body"
                 weight="normal"
-                className="mt-4"
+                className="mt-2"
               >
                 {description}
               </Typography>
             )}
-          </>
+          </div>
         ) : undefined
       }
       onClick={onClick}
       contentWrap={defaultPadding}
       margin="m-0"
-      className={cn(className)}
+      className={cn("[&>div]:h-full", className)}
     >
       {children}
     </Card>

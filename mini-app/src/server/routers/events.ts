@@ -77,7 +77,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   //If event is hidden or not enabled
   if (eventData.hidden || !eventData.enabled) {
     if (userId !== eventData.owner && userRole !== "admin" && !(await userHasModerationAccess(userId, userRole))) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "event is not published yet" });
+      throw new TRPCError({ code: "UNPROCESSABLE_CONTENT", message: "event is not published yet" });
     }
   }
 

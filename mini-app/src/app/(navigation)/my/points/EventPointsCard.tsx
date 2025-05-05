@@ -10,20 +10,22 @@ interface EventPointsCardProps {
 
 export default function EventPointsCard({ eventTitle, tasksCount, description, totalPoints }: EventPointsCardProps) {
   return (
-    <div className="border rounded-md p-3 mb-3">
-      <div className="flex justify-between items-center">
-        {/* Event title and tasks (e.g. "Attend paid online events x3") */}
-        <div className="text-sm font-medium">
-          {eventTitle}
-          {/* <span className="text-xs font-normal text-gray-500">x{tasksCount}</span> */}
+    <div className="border border-brand-divider-dark rounded-2lg p-3 mb-3 flex  justify-between items-center">
+      <div>
+        <div className="flex justify-between items-center">
+          {/* Event title and tasks (e.g. "Attend paid online events x3") */}
+          <div className="text-sm font-medium">
+            {eventTitle}
+            {/* <span className="text-xs font-normal text-gray-500">x{tasksCount}</span> */}
+          </div>
         </div>
 
-        {/* Black circle showing total points (right side) */}
-        <Badge variant="ontonDark">{totalPoints}</Badge>
+        {/* Secondary description line (e.g. "10 Points + 1 Point per USDT price") */}
+        <p className="text-xs text-gray-600 mt-1">{description}</p>
       </div>
 
-      {/* Secondary description line (e.g. "10 Points + 1 Point per USDT price") */}
-      <p className="text-xs text-gray-600 mt-1">{description}</p>
+      {/* Black circle showing total points (right side) */}
+      <Badge variant="outline">{totalPoints}</Badge>
     </div>
   );
 }

@@ -1,17 +1,17 @@
+import Typography from "@/components/Typography";
+import { TG_BOT_LINK, TG_SUPPORT_GROUP } from "@/constants";
+import useWebApp from "@/hooks/useWebApp";
+import { wait } from "@/lib/utils";
+import { Page } from "konsta/react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { FC } from "react";
 import CustomButton from "./Button/CustomButton";
 import CustomCard from "./atoms/cards/CustomCard";
 import DataStatus, { DataStatusProps } from "./molecules/alerts/DataStatus";
-import Typography from "@/components/Typography";
-import Image from "next/image";
-import { Page } from "konsta/react";
-import useWebApp from "@/hooks/useWebApp";
-import { TG_BOT_LINK, TG_SUPPORT_GROUP } from "@/constants";
-import { useRouter } from "next/navigation";
-import { wait } from "@/lib/utils";
 
 interface ErrorStateProps {
-  errorCode: "blocked_bot" | "banned" | "event_not_found" | "something_went_wrong";
+  errorCode: "blocked_bot" | "banned" | "event_not_found" | "something_went_wrong" | "event_not_published";
 }
 
 export const ErrorState: FC<ErrorStateProps> = ({ errorCode }) => {
@@ -64,6 +64,15 @@ export const ErrorState: FC<ErrorStateProps> = ({ errorCode }) => {
       primaryHandler: () => window.location.reload(), // Reload page as default retry
       secondaryHandler: () => webApp?.openTelegramLink(TG_SUPPORT_GROUP), // Open support channel
     },
+    event_not_published: {
+      errorMessage: "Event is not published yet.",
+      desc: "Moderation in progress—please wait.",
+      buttonTextPrimary: "Explore more Events",
+      buttonTextSecondary: "Maybe later",
+      dataStatus: "map_looking" as DataStatusProps["status"],
+      primaryHandler: () => router.push("/"), // Go to home page
+      secondaryHandler: () => webApp?.close(), // clsoe the miniapp
+    },
   };
 
   // Select config based on errorCode, fallback to ''
@@ -74,13 +83,14 @@ export const ErrorState: FC<ErrorStateProps> = ({ errorCode }) => {
   return (
     <Page className="p-4 flex flex-col gap-4">
       <CustomCard
-        className="flex-1 flex items-center"
+        className="flex-1"
         defaultPadding
       >
-        <div className="flex flex-col items-center justify-center text-center gap-9">
+        <div className="flex my-auto flex-col items-center justify-center text-center gap-9 h-full">
           <Typography
             variant="title1"
             weight="bold"
+            className="max-w-64"
           >
             {errorMessage.split(/(NTON)/).map((part, index) =>
               part === "NTON" ? (

@@ -1,6 +1,6 @@
 import { List, ListItem } from "konsta/react";
-import CustomButton from "./Button/CustomButton";
 import { FaSpinner } from "react-icons/fa6";
+import CustomButton from "./Button/CustomButton";
 
 type TaskProps = {
   title: string;
@@ -20,11 +20,10 @@ const Task = ({ title, status, onClick }: TaskProps) => {
         title={title}
         after={
           <CustomButton
-            variant={status === "not_done" ? "outline" : "link"}
+            variant={status === "not_done" ? "outline" : status === "done" ? "success-outline" : "link"}
             onClick={onClick}
             fontWeight="normal"
             size="md"
-            color={status === "done" ? "success" : undefined}
           >
             {status === "not_done" && "Go"}
             {status === "done" && "Done!"}

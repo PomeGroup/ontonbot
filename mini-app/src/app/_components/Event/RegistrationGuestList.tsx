@@ -1,7 +1,4 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-// adjust these imports as needed
-// adjust as needed
 import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
 import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
 import { trpc } from "@/app/_trpc/client";
@@ -21,6 +18,9 @@ import { useParams } from "next/navigation";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
 import DataStatus from "../molecules/alerts/DataStatus";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
+import CustomSheet from "../Sheet/CustomSheet";
+import CustomButton from "../Button/CustomButton";
+import Typography from "@/components/Typography";
 
 interface CustomListItemProps {
   name: string;
@@ -221,29 +221,32 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
         after={afterContent}
         footer={footerContent}
       />
-      {createPortal(
-        <Sheet
-          onBackdropClick={() => setShowRegistrantInfo(null)}
-          opened={Boolean(showRegistrantInfo)}
-          className={cn("!overflow-hidden min-h-screen w-full", { hidden: !Boolean(showRegistrantInfo) })}
-        >
-          <BlockTitle>Registrant Info</BlockTitle>
-          <List className="!pe-2">
+      <CustomSheet
+        title="Registrant Info"
+        onClose={() => setShowRegistrantInfo(null)}
+        opened={Boolean(showRegistrantInfo)}
+      >
+        <div className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-1">
             {registrantInfo &&
               Object.entries(registrantInfo).map(([key, value], idx) => (
-                <ListItem
-                  key={idx}
-                  title={<div className="capitalize">{key.split("_").join(" ")}</div>}
-                  subtitle={value || <p className="text-cn-muted-foreground">Not Provided</p>}
-                />
+                <li key={idx}>
+                  <div className="capitalize">
+                    <Typography variant="callout">{key.split("_").join(" ")}</Typography>
+                  </div>
+                  <div className="font-light">{value || <p className="text-cn-muted-foreground">Not Provided</p>}</div>
+                </li>
               ))}
-          </List>
-          <BlockFooter>
-            <KButton onClick={() => setShowRegistrantInfo(null)}>Close</KButton>
-          </BlockFooter>
-        </Sheet>,
-        document.body
-      )}
+          </ul>
+          <CustomButton
+            variant="secondary"
+            size="md"
+            onClick={() => setShowRegistrantInfo(null)}
+          >
+            Close
+          </CustomButton>
+        </div>
+      </CustomSheet>
     </>
   );
 };

@@ -4,7 +4,9 @@ import { Banner } from "@/app/(landing-pages)/genesis-onions/_components/Banner"
 import { Play2WinGenesisBanner } from "@/app/(landing-pages)/play2win-genesis/_components/Play2WinGenesisBanner";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
+import CustomButton from "@/app/_components/Button/CustomButton";
 import CustomSwiper from "@/app/_components/CustomSwiper";
+import FilterIcon from "@/app/_components/icons/filter-icon";
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
 import TournamentCard from "@/app/_components/Tournaments/TournamentCard";
@@ -17,10 +19,9 @@ import { RouterOutput } from "@/server";
 import { formatSortTournamentSelectOption, SortOptions, tournamentsListSortOptions } from "@/server/utils/tournaments.utils";
 import { cn } from "@/utils";
 import { Skeleton } from "@mui/material";
+import { CheckIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { BsFilterLeft } from "react-icons/bs";
-import { FiCheck } from "react-icons/fi";
 import { HiOutlineArrowNarrowUp } from "react-icons/hi";
 
 interface TournamentCardProps {
@@ -111,15 +112,15 @@ const TournamentFilter: React.FC<{
             <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
               <HiOutlineArrowNarrowUp />
               <span className="truncate">{formatSortTournamentSelectOption(selected)}</span>
-              <BsFilterLeft size={18} />
+              <FilterIcon />
             </button>
           </DropdownMenuTrigger>
         </Typography>
-        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
+        <DropdownMenuContent className="!bg-brand-light px-2 border-brand-divider-dark border-solid !border w-full">
           <Typography
             variant="body"
-            weight="normal"
-            className="px-2"
+            weight="medium"
+            className="px-2 pt-2"
           >
             Sort By
           </Typography>
@@ -133,13 +134,20 @@ const TournamentFilter: React.FC<{
               <DropdownMenuItem
                 key={o}
                 onClick={() => setSelected(o)}
-                className={cn("flex justify-between items-center", selected === o && "text-primary")}
+                className={cn("flex justify-between items-center px-0", selected === o && "text-primary")}
               >
-                <span className="flex gap-1 items-center">
+                <Typography
+                  variant="body"
+                  weight="medium"
+                  className="flex gap-1 items-center"
+                >
                   <HiOutlineArrowNarrowUp />
                   {formatSortTournamentSelectOption(o)}
-                </span>
-                <FiCheck className={cn(selected !== o && "opacity-0")} />
+                </Typography>
+                <CheckIcon
+                  strokeWidth={3}
+                  className={cn(selected !== o && "opacity-0")}
+                />
               </DropdownMenuItem>
             );
           })}
@@ -153,15 +161,20 @@ const TournamentFilter: React.FC<{
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
               <span className="truncate">{gameIds.data?.find((g) => g.id === selectedGame)?.name}</span>
-              <BsFilterLeft size={18} />
+              <FilterIcon />
             </button>
           </DropdownMenuTrigger>
         </Typography>
-        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
+        <DropdownMenuContent
+          border="dark"
+          borderRadius="md"
+          fullWidth
+          className="px-2 !bg-brand-light"
+        >
           <Typography
             variant="body"
-            weight="normal"
-            className="px-2"
+            weight="medium"
+            className="px-2 pt-2"
           >
             Contest type
           </Typography>
@@ -175,10 +188,19 @@ const TournamentFilter: React.FC<{
               <DropdownMenuItem
                 key={game.id}
                 onClick={() => setSelectedGame(game.id)}
-                className={cn("flex justify-between items-center", selectedGame === game.id && "text-primary")}
+                className={cn("flex justify-between items-center px-0", selectedGame === game.id && "text-primary")}
               >
-                <span>{game.name}</span>
-                <FiCheck className={cn(selectedGame !== game.id && "opacity-0")} />
+                <Typography
+                  variant="body"
+                  weight="medium"
+                >
+                  {game.name}
+                </Typography>
+                <CheckIcon
+                  size={12}
+                  strokeWidth={3}
+                  className={cn(selectedGame !== game.id && "opacity-0")}
+                />
               </DropdownMenuItem>
             );
           })}
@@ -209,9 +231,7 @@ const DiscoverTournaments: React.FC = () => {
   return (
     <>
       <Typography variant="title2">Discover</Typography>
-      {/* 
-      Sort dropdown
-      */}
+      {/* Sort dropdown */}
       <TournamentFilter
         selected={sortSelected}
         setSelected={(o) => {
@@ -221,28 +241,43 @@ const DiscoverTournaments: React.FC = () => {
         setSelectedGame={setSelectedGame}
       />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,_minmax(160px,_1fr))] gap-4 h-full flex-grow">
         {tournomants.isSuccess && !tournomants.data?.pages[0].tournaments.length && (
           <CustomCard
-            className="col-span-2"
             defaultPadding
+            className="col-span-full"
           >
-            <DataStatus
-              status="not_found"
-              title="No tournaments found"
-              description="No ongoing tournaments were found."
-            />
+            <div className="flex flex-col justify-center items-center gap-5 h-full">
+              <DataStatus
+                status="not_found"
+                title="No result found"
+                description="Try different keywords or filter to explore contests"
+                size="lg"
+              />
+              {(selectedGame !== -1 || sortSelected !== "timeRemaining") && (
+                <CustomButton
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedGame(-1);
+                    setSortSelected("timeRemaining");
+                  }}
+                >
+                  Clear Filters
+                </CustomButton>
+              )}
+            </div>
           </CustomCard>
         )}
         {tournomants.isError && (
           <CustomCard
-            className="col-span-2"
             defaultPadding
+            className="col-span-full"
           >
             <DataStatus
               status="searching"
               title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
-              description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading tournaments."}
+              description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading results."}
+              size="lg"
             />
           </CustomCard>
         )}
@@ -256,13 +291,13 @@ const DiscoverTournaments: React.FC = () => {
                   variant="rectangular"
                   width={120}
                   height={120}
-                  className="rounded-md"
+                  className="rounded-md w-full"
                 />
                 <Skeleton
                   variant="rectangular"
                   width={80}
                   height={36}
-                  className="rounded-md mt-2"
+                  className="rounded-md w-full mt-2"
                 />
               </div>
             ))

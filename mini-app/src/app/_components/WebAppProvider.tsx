@@ -3,7 +3,7 @@
 import useWebApp from "@/hooks/useWebApp";
 import * as Sentry from "@sentry/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import EventsSkeleton from "./molecules/skeletons/EventsSkeleton";
 
 import { useUserStore } from "@/context/store/user.store";
@@ -15,27 +15,28 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
   const pathname = usePathname();
 
   const { setInitData, initData } = useUserStore();
-  const [isInitialized, setIsInitialized] = useState(false);
+
+  const theme = webApp?.themeParams;
 
   // Access multi-level stack from the store
   const { goBack } = useSectionStore();
 
   // 1) Sentry + initialization
   useEffect(() => {
-    if (webApp?.initData && webApp?.initDataUnsafe && !isInitialized) {
+    if (webApp?.initDataUnsafe.user?.id) {
       setInitData(webApp.initData);
       Sentry.init({ environment: process.env.NEXT_PUBLIC_ENV });
       Sentry.setUser({
         id: webApp.initDataUnsafe.user?.id,
         username: webApp.initDataUnsafe.user?.username,
       });
-      setIsInitialized(true);
     }
-  }, [webApp?.initData, webApp?.initDataUnsafe, isInitialized, setInitData]);
+  }, [setInitData, webApp?.initData, webApp?.initDataUnsafe.user?.id, webApp?.initDataUnsafe.user?.username]);
 
   // 2) Track initial history length
   const initialHistoryLength = useRef<number>(0);
   const previousHistoryLength = useRef<number>(0);
+
   useEffect(() => {
     if (typeof window !== "undefined" && window.history) {
       initialHistoryLength.current = window.history.length || 0;
@@ -45,7 +46,6 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
 
   // 3) Telegram back button logic
   useEffect(() => {
-    if (!isInitialized) return;
     if (typeof window === "undefined" || !window.Telegram?.WebApp) return;
 
     const WebApp = window.Telegram.WebApp;
@@ -115,11 +115,20 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
       WebApp.offEvent("backButtonClicked", handleBackButtonClicked);
       backButton.hide();
     };
-  }, [isInitialized, pathname, router, goBack]);
+  }, [pathname, router, goBack]);
 
   // 5) If we don't have initData => show skeleton
   if (!initData) {
-    return <EventsSkeleton />;
+    return (
+      <div
+        className={"p-4"}
+        style={{
+          backgroundColor: theme?.bg_color,
+        }}
+      >
+        <EventsSkeleton />;
+      </div>
+    );
   }
 
   return <>{children}</>;

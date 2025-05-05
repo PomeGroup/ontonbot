@@ -1,5 +1,5 @@
-import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { typographyVariants } from "../Typography";
@@ -13,8 +13,8 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-cn-secondary text-cn-secondary-foreground hover:bg-secondary/80",
         destructive: "border-transparent bg-cn-destructive text-cn-destructive-foreground hover:bg-destructive/80",
         ontonDark:
-          "flex items-center shrink-0 font-light text-xs rounded-md border-none relative overflow-hidden  items-center  text-center  bg-[#2F2F2F]   text-[#f6f6f6]  whitespace-nowrap   p-1 py-0.5 text-xs leading-3.5",
-        outline: "text-cn-foreground",
+          "flex shrink-0 font-light rounded-md border-none relative overflow-hidden items-center text-center  bg-[#2F2F2F]   text-[#f6f6f6]  whitespace-nowrap p-1 py-0.5 text-xs leading-3.5",
+        outline: "text-cn-foreground border-brand-divider-dark px-2 py-1",
         ontonLight: `py-[2px] px-1 rounded bg-[#e8e8e9] ${typographyVariants({ variant: "caption2" })} text-[#575757] font-medium`,
       },
     },
