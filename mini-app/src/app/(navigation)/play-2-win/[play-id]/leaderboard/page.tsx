@@ -64,7 +64,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ participants = [] }) => {
                     key={participant.id}
                     className="flex flex-col items-center isolate relative min-w-0 flex-1"
                   >
-                    {isWinner && <div className="-top-4 z-10 absolute -rotate-[35deg] left-1 text-2xl">👑</div>}
+                    {isWinner && <div className="-top-3.5 z-10 absolute -rotate-[35deg] left-3 text-2xl">👑</div>}
 
                     <div
                       className={cn(
