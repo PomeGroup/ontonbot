@@ -78,7 +78,7 @@ export default function MyHostedPage() {
           <Section>
             <Input
               className="bg-brand-light mt-2"
-              placeholder="Search Events and Organizers"
+              placeholder="Search Events"
               prefix_icon={<SearchIcon />}
               onChange={(e) => {
                 setEventsSearch(e.target.value);

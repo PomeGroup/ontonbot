@@ -1,9 +1,11 @@
 "use client";
 
+import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import Section from "@/app/_components/atoms/section";
 import CustomButton from "@/app/_components/Button/CustomButton";
 import EventsTimeline from "@/app/_components/Event/EventsTImeline";
 import SearchIcon from "@/app/_components/icons/search-icon";
+import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import ContestsTimeline from "@/app/_components/myonton/participated/ContestsTImeline";
 import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
@@ -11,10 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useWebApp from "@/hooks/useWebApp";
 import { useDebouncedState } from "@mantine/hooks";
-import { useState, useMemo } from "react";
-import CustomCard from "@/app/_components/atoms/cards/CustomCard";
-import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 
 /**
  * MyParticipatedEventsPage displays events and contests you’ve joined. 🤝
@@ -84,7 +84,7 @@ export default function MyParticipatedEventsPage() {
           <Section>
             <Input
               className="bg-brand-light mt-2"
-              placeholder="Search Events and Organizers"
+              placeholder="Search Events"
               prefix_icon={<SearchIcon />}
               onChange={(e) => {
                 setEventsSearch(e.target.value);
