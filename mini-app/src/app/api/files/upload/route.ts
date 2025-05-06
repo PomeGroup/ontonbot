@@ -82,17 +82,21 @@ export async function POST(req: NextRequest) {
     const nodeBuffer = Buffer.isBuffer(fileDataRaw) ? fileDataRaw : Buffer.from(fileDataRaw);
 
     // 6. Optionally resize if it's an image
-    let finalBuffer = nodeBuffer; // fallback for non-images
+    let finalBuffer = nodeBuffer;
     if (formidableFile.mimetype?.startsWith("image/")) {
-      finalBuffer = (await sharp(nodeBuffer)
+      // 1) Let Sharp produce its output (which may be typed weirdly)
+      const sharpOutput = await sharp(nodeBuffer)
         .resize({
           width: 1280,
           height: 1280,
           fit: "inside",
           withoutEnlargement: true,
         })
-        .toBuffer()) as unknown as Buffer;
+        .toBuffer(); // Possibly typed as Buffer<ArrayBufferLike>
 
+      // 2) Now create a brand-new Node Buffer from the output
+      finalBuffer = Buffer.from(sharpOutput);
+    }
     // 7. Upload (possibly resized) buffer to MinIO
     const finalFilename = subfolder
       ? `${subfolder}/${filePrefix()}${formidableFile.originalFilename}`
