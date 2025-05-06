@@ -7,12 +7,13 @@ import { minioClient } from "@/lib/minioClient";
 import { filePrefix } from "@/lib/fileUtils";
 import { logger } from "@/server/utils/logger";
 import sharp from "sharp";
+import { Buffer } from "buffer"; // <-- Explicitly import Node's Buffer
 
 const { MINIO_PUBLIC_URL, ONTON_API_SECRET } = process.env;
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs"; // Needed for using Node APIs like 'fs', 'stream', etc.
 
-/** Helper to parse incoming form data using formidable. */
 async function parseFormdata(req: NextRequest): Promise<{ fields: Fields; files: Files }> {
   const nodeReq = await toNodeJsRequest(req);
   const form = formidable({ multiples: false });
@@ -69,13 +70,21 @@ export async function POST(req: NextRequest) {
   const formidableFile = file as FormidableFile;
 
   try {
-    // 4. Read file data as a Node buffer
-    const fileData = fs.readFileSync(formidableFile.filepath);
+    // 4. Read file data from the temp path
+    //    (This might come in with a generic or conflicting Buffer type)
+    const fileDataRaw = fs.readFileSync(formidableFile.filepath);
 
-    // 5. If it’s recognized as an image, resize with Sharp
-    let finalBuffer = fileData; // If not an image or fails to resize, fall back
+    // 5. Convert fileDataRaw to a standard Node Buffer or Uint8Array.
+    //    Choose one approach below:
+
+    // Approach A: Force Node buffer from raw data
+    // (If fileDataRaw is "truly" a Node Buffer, this is effectively a no-op.)
+    const nodeBuffer = Buffer.isBuffer(fileDataRaw) ? fileDataRaw : Buffer.from(fileDataRaw);
+
+    // 6. Optionally resize if it's an image
+    let finalBuffer = nodeBuffer; // fallback for non-images
     if (formidableFile.mimetype?.startsWith("image/")) {
-      finalBuffer = await sharp(Buffer.from(fileData)) // Force Node Buffer
+      finalBuffer = await sharp(nodeBuffer)
         .resize({
           width: 1280,
           height: 1280,
@@ -85,7 +94,7 @@ export async function POST(req: NextRequest) {
         .toBuffer();
     }
 
-    // 6. Upload to MinIO
+    // 7. Upload (possibly resized) buffer to MinIO
     const finalFilename = subfolder
       ? `${subfolder}/${filePrefix()}${formidableFile.originalFilename}`
       : `${filePrefix()}${formidableFile.originalFilename}`;
