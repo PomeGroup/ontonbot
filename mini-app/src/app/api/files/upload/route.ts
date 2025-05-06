@@ -6,20 +6,14 @@ import { toNodeJsRequest } from "../helpers/toNodeJsRequest";
 import { minioClient } from "@/lib/minioClient";
 import { filePrefix } from "@/lib/fileUtils";
 import { logger } from "@/server/utils/logger";
-import sharp from "sharp"; // <-- 1) Import sharp
+import sharp from "sharp";
 
 const { MINIO_PUBLIC_URL, ONTON_API_SECRET } = process.env;
 
 export const dynamic = "force-dynamic";
-/**
- * Important for Next.js App Router:
- * - Use Node.js runtime (not edge).
- * - Force dynamic if needed.
- */
-
-// 2. If you need Node.js runtime and forced dynamic:
 export const runtime = "nodejs";
 
+/** Helper to parse incoming form data using formidable. */
 async function parseFormdata(req: NextRequest): Promise<{ fields: Fields; files: Files }> {
   const nodeReq = await toNodeJsRequest(req);
   const form = formidable({ multiples: false });
@@ -76,16 +70,13 @@ export async function POST(req: NextRequest) {
   const formidableFile = file as FormidableFile;
 
   try {
-    // 4. Read file data from temp path
+    // 4. Read file data as a Node buffer
     const fileData = fs.readFileSync(formidableFile.filepath);
 
-    // 5. If it’s recognized as an image, resize with sharp
-    //    (If you want to handle only certain image MIME types, check them first)
-    let finalBuffer = fileData; // fallback if not an image or resizing fails
+    // 5. If it’s recognized as an image, resize with Sharp
+    let finalBuffer = fileData; // If not an image or fails to resize, fall back
     if (formidableFile.mimetype?.startsWith("image/")) {
-      // We "fit: 'inside'" to ensure neither width nor height goes past 1280
-      // withoutEnlargement: true means if the image is smaller, don’t upscale.
-      finalBuffer = await sharp(fileData)
+      finalBuffer = await sharp(Buffer.from(fileData)) // Force Node Buffer
         .resize({
           width: 1280,
           height: 1280,
@@ -95,7 +86,7 @@ export async function POST(req: NextRequest) {
         .toBuffer();
     }
 
-    // 6. Upload (now possibly resized) buffer to MinIO
+    // 6. Upload to MinIO
     const finalFilename = subfolder
       ? `${subfolder}/${filePrefix()}${formidableFile.originalFilename}`
       : `${filePrefix()}${formidableFile.originalFilename}`;
@@ -105,7 +96,6 @@ export async function POST(req: NextRequest) {
     });
 
     const imageUrl = `${MINIO_PUBLIC_URL}/${bucketName}/${finalFilename}`;
-
     return NextResponse.json({ imageUrl });
   } catch (error) {
     logger.error(`An error occurred while uploading: ${error}`);
