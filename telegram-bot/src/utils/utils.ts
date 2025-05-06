@@ -1,8 +1,8 @@
-import { validateWebAppData } from "@grammyjs/validator";
-import * as fs from "fs";
-import { Context, InputFile } from "grammy";
-import { InlineKeyboardMarkup } from "grammy/types";
-import sharp from "sharp";
+import { validateWebAppData } from "@grammyjs/validator"
+import * as fs from "fs"
+import { Context, InputFile } from "grammy"
+import { InlineKeyboardMarkup } from "grammy/types"
+import sharp from "sharp"
 
 export const validateMiniAppData = (rawInitData: any): boolean => {
   const initData = new URLSearchParams(rawInitData as string);
@@ -112,8 +112,21 @@ const editOrSend = async (
   return messageId;
 };
 
-export { editOrSend };
+export { editOrSend }
 
 export function sleep(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+export function isUrlValid(url: string) {
+  var pattern = new RegExp(
+    "^(https?:\\/\\/)?" + // protocol
+      "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
+      "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+      "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+      "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+      "(\\#[-a-z\\d_]*)?$",
+    "i"
+  ); 
+  return !!pattern.test(url);
 }

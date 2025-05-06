@@ -1,3 +1,4 @@
+import Typography from "@/components/Typography";
 import { cn } from "@/utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { ReactNode } from "react";
@@ -8,10 +9,10 @@ export type DataStatusProps = {
   description?: ReactNode;
   size?: keyof typeof ANIMATION_SIZES;
   className?: string;
-  canvasWrapperClassName?: string
+  canvasWrapperClassName?: string;
 };
 
-const DATA_STATUS_ANIMATIONS = {
+export const DATA_STATUS_ANIMATIONS = {
   not_found: "https://storage.onton.live/ontonimage/looking_duck.lottie",
   approved: "https://storage.onton.live/ontonimage/approved.lottie",
   rejected: "https://storage.onton.live/ontonimage/rejected.lottie",
@@ -21,9 +22,11 @@ const DATA_STATUS_ANIMATIONS = {
   sent: "https://storage.onton.live/ontonimage/send-flying-paper-dart.lottie",
   searching: "https://storage.onton.live/ontonimage/duck-searching.json",
   blocked: "https://storage.onton.live/ontonimage/tea_drinking_green_frog.json",
+  map_looking: "https://storage.onton.live/ontonimage/duck_looking_at_map.json",
+  archive_duck: "https://storage.onton.live/ontonimage/archive_duck.json",
 } as const;
 
-const ANIMATION_SIZES = {
+export const ANIMATION_SIZES = {
   lg: 188,
   md: 120,
   sm: 60,
@@ -48,8 +51,8 @@ export default function DataStatus(props: DataStatusProps) {
         width={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.md}
         className={cn("mx-auto mb-3", props.canvasWrapperClassName)}
       />
-      <h4 className="block text-[20px] font-semibold mb-1">{props.title}</h4>
-      <p className="text-center text-cn-muted-foreground">{props.description}</p>
+      <h4 className="block text-[20px] font-semibold mb-3">{props.title}</h4>
+      <Typography className="w-[248px] text-center">{props.description}</Typography>
     </div>
   );
 }

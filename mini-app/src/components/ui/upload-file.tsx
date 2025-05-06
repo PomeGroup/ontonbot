@@ -2,12 +2,12 @@ import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { getErrorMessages } from "@/lib/error";
 import { cn, fileToBase64 } from "@/lib/utils";
+import { Block, BlockTitle, Sheet } from "konsta/react";
 import { CircleArrowUp } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Button, KButton } from "./button";
-import { Block, BlockTitle, Sheet } from "konsta/react";
 import { createPortal } from "react-dom";
+import { Button, KButton } from "./button";
 
 /**
  * Props for the UploadImageFile component.
@@ -108,7 +108,7 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
     <>
       <Button
         className={cn(
-          "w-full h-auto flex flex-col border border-cn-primary gap-3.5 border-dashed rounded-xl p-3",
+          "w-full h-auto bg-primary/10 flex flex-col border border-cn-primary gap-3.5 border-dashed rounded-xl p-3",
           props.isError ? "border-red-300 bg-red-400/10" : "border-cn-primary",
           props.disabled && "cursor-not-allowed opacity-50"
         )}

@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Sheet } from "konsta/react";
 import { IoCloseCircleOutline } from "react-icons/io5";
 import Typography from "@/components/Typography";
 import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
+import useWebApp from "@/hooks/useWebApp";
 
 interface ReusableSheetProps {
   title: string;
@@ -14,8 +15,34 @@ interface ReusableSheetProps {
   defaultPadding?: boolean;
 }
 
-const CustomSheet: React.FC<ReusableSheetProps> = ({ title, opened, children, className, defaultPadding = true, onClose }) =>
-  createPortal(
+const CustomSheet: React.FC<ReusableSheetProps> = ({
+  title,
+  opened,
+  children,
+  className,
+  defaultPadding = true,
+  onClose,
+}) => {
+  const webApp = useWebApp();
+  const [firstState, setsFirstState] = useState<null | boolean>(null);
+
+  useEffect(() => {
+    if (opened && firstState === null && webApp?.MainButton.isVisible !== undefined) {
+      setsFirstState(webApp.MainButton.isVisible);
+    }
+
+    if (opened && firstState) {
+      webApp?.MainButton.hide();
+    }
+
+    return () => {
+      if (firstState) {
+        webApp?.MainButton.show();
+      }
+    };
+  }, [opened, firstState, webApp?.MainButton]);
+
+  return createPortal(
     <Sheet
       opened={opened}
       className={cn("w-full rounded-t-2xl max-h-screen", className)}
@@ -42,5 +69,5 @@ const CustomSheet: React.FC<ReusableSheetProps> = ({ title, opened, children, cl
     </Sheet>,
     document.getElementById("modals-sheet")!
   );
-
+};
 export default CustomSheet;

@@ -101,6 +101,7 @@ const EventCardStory = ({ org_name, title, endDate, startDate }: EventCardProps)
 };
 
 const meta: Meta<typeof EventCardStory> = {
+  title: "Events/Card",
   component: EventCardStory,
   args: {
     org_name: "Sample Organization",

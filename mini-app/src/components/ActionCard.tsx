@@ -1,9 +1,9 @@
-import { Card } from "konsta/react";
 import { MouseEventHandler } from "react";
 import { ArrowRight } from "lucide-react";
 import Typography from "./Typography";
 import Image from "next/image";
 import { cn } from "@/utils";
+import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 
 interface Props {
   onClick: MouseEventHandler<HTMLElement>;
@@ -19,11 +19,11 @@ interface Props {
 }
 
 export default function ActionCard({ onClick, iconSrc, title, subtitle, className, footerTexts }: Props) {
-
   return (
-    <Card
+    <CustomCard
       onClick={onClick}
       className={cn(className, !!onClick && "cursor-pointer")}
+      defaultPadding
     >
       <div className="flex gap-3 align-stretch">
         <div className="bg-[#efeff4] p-4 rounded-[10px]">
@@ -58,6 +58,7 @@ export default function ActionCard({ onClick, iconSrc, title, subtitle, classNam
           <ArrowRight className="text-main-button-color" />
         </div>
       </div>
-    </Card>
+    </CustomCard>
   );
 }
+

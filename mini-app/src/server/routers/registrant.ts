@@ -1,19 +1,19 @@
-import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedProcedure, router } from "@/server/trpc";
-import { z } from "zod";
-import eventDB from "@/server/db/events";
-import { TRPCError } from "@trpc/server";
 import { db, dbLower } from "@/db/db";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
-import { and, desc, eq, like, lt, ne, or } from "drizzle-orm";
-import telegramService from "@/server/routers/services/telegramService";
-import { CombinedEventRegisterSchema } from "@/types";
-import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
-import visitorsDB, { addVisitor } from "@/server/db/visitors";
 import { users } from "@/db/schema/users";
 import { redisTools } from "@/lib/redisTools";
-import { getUserCacheKey } from "@/server/db/users";
-import { logger } from "@/server/utils/logger";
+import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
+import eventDB from "@/server/db/events";
 import rewardDB from "@/server/db/rewards.db";
+import { getUserCacheKey } from "@/server/db/users";
+import visitorsDB, { addVisitor } from "@/server/db/visitors";
+import telegramService from "@/server/routers/services/telegramService";
+import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedProcedure, router } from "@/server/trpc";
+import { logger } from "@/server/utils/logger";
+import { CombinedEventRegisterSchema } from "@/types";
+import { TRPCError } from "@trpc/server";
+import { and, desc, eq, like, lt, ne, or } from "drizzle-orm";
+import { z } from "zod";
 
 const checkinRegistrantRequest = evntManagerPP
   .input(
@@ -238,11 +238,8 @@ const getEventRegistrants = evntManagerPP
       condition = and(
         condition,
         or(
-          // @ts-expect-error
           like(dbLower(users.username), dbLower(searchStr)),
-          // @ts-expect-error
           like(dbLower(users.first_name), dbLower(searchStr)),
-          // @ts-expect-error
           like(dbLower(users.last_name), dbLower(searchStr))
         )
       );

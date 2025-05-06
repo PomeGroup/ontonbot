@@ -13,17 +13,18 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type,
     <div>
       <div
         className={cn(
-          "dark:text-white text-black flex h-11 bn b w-full rounded-2lg bg-cn-muted p-1 xxs:px-3 xxs:py-2 text-sm ring-offset-cn-background items-center space-x-2",
+          "dark:text-white text-black flex h-10 bn b w-full rounded-2lg bg-cn-muted p-1 xxs:px-3 xxs:py-2 text-sm ring-offset-cn-background items-center space-x-2",
           className,
           {
             "ring-red-400 ring-1": props.errors?.length,
           }
         )}
       >
-        {props.prefix_icon}
+        <label htmlFor="input">{props.prefix_icon}</label>
         <input
           type={type}
-          className="bg-transparent file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-cn-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 border-none w-full h-full"
+          name="input"
+          className="bg-transparent file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-brand-muted placeholder:font-medium focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 border-none w-full h-full"
           ref={ref}
           {...props}
         />
