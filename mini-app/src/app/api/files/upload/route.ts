@@ -11,7 +11,6 @@ import sharp from "sharp";
 const { MINIO_PUBLIC_URL, ONTON_API_SECRET } = process.env;
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
 /** Helper to parse incoming form data using formidable. */
 async function parseFormdata(req: NextRequest): Promise<{ fields: Fields; files: Files }> {
