@@ -84,15 +84,14 @@ export async function POST(req: NextRequest) {
     // 6. Optionally resize if it's an image
     let finalBuffer = nodeBuffer; // fallback for non-images
     if (formidableFile.mimetype?.startsWith("image/")) {
-      finalBuffer = await sharp(nodeBuffer)
+      finalBuffer = (await sharp(nodeBuffer)
         .resize({
           width: 1280,
           height: 1280,
           fit: "inside",
           withoutEnlargement: true,
         })
-        .toBuffer();
-    }
+        .toBuffer()) as unknown as Buffer;
 
     // 7. Upload (possibly resized) buffer to MinIO
     const finalFilename = subfolder
