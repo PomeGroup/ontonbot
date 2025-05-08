@@ -17,6 +17,7 @@ const buttonVariants = cva(
         destructive: "bg-cn-destructive text-cn-destructive-foreground",
         outline: "border-2 border-cn-primary text-cn-primary hover:border-cn-primary/80",
         secondary: "bg-cn-secondary text-cn-secondary-foreground hover:bg-cn-secondary/30",
+        info: "bg-info text-black",
         ghost: "hover:bg-cn-accent hover:text-accent-foreground bg-cn-accent",
         success: "bg-cn-success text-cn-success-foreground",
         "success-outline": "border-2 border-cn-success text-cn-success hover:border-cn-success/80",
@@ -34,7 +35,7 @@ const buttonVariants = cva(
       size: {
         default: "min-h-10 px-4 py-2",
         sm: "rounded-md px-3 py-2",
-        lg: "min-h-11 rounded-md px-8",
+        lg: "min-h-11 rounded-2lg px-8 text-[17px] leading-[22px] tracking-[-0.43] font-semibold",
         icon: "min-h-10 w-10",
       },
     },
