@@ -13,8 +13,9 @@ interface CustomButtonProps {
   icon?: ReactNode;
   fontSize?: TypographyProps["variant"];
   fontWeight?: TypographyProps["weight"];
-  className?: string;
   onClick?: (_e: React.MouseEvent<HTMLButtonElement>) => void;
+  className?: string;
+  buttonClassName?: string;
 }
 
 const customButtonVariants = cva("p-4 w-full min-w-20 disabled:opacity-70", {
@@ -39,12 +40,13 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   isLoading = false,
   className,
   onClick,
+  buttonClassName,
 }) => (
   <Button
     itemType="button"
     disabled={isLoading}
     onClick={onClick}
-    className={customButtonVariants({ size })}
+    className={cn(customButtonVariants({ size }), buttonClassName)}
     type="button"
     variant={variant}
   >

@@ -1,10 +1,10 @@
 "use client";
 
+import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { Button } from "@/components/ui/button";
 import { useConfig } from "@/context/ConfigContext";
-import { AlertTriangle, HelpCircle, Mail } from "lucide-react"; // Using lucide-react for icons
-import Image from "next/image";
 import React from "react";
+import Typography from "./Typography";
 
 interface FeatureGateProps {
   featureName: string;
@@ -17,58 +17,55 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({ featureName, children 
 
   if (isFeatureDisabled) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-4 text-center bg-white dark:bg-gray-900 rounded-lg shadow-md">
-        {/* Placeholder for the image, you can replace with an actual <Image /> component if you have the asset */}
-        <div className="mb-6">
-          <Image
-            src="/placeholder-image.svg" // Replace with your actual image path
-            alt="Temporarily Unavailable"
-            width={200}
-            height={150}
-            className="opacity-75"
+      <div className="flex flex-col gap-6 items-center justify-center max-w-md p-4 text-center bg-white">
+        <div className="">
+          <DataStatus
+            status="temp_unavailable"
+            size="lg"
           />
         </div>
 
-        <h1 className="text-2xl font-semibold text-gray-800 dark:text-white mb-3 flex items-center">
-          <AlertTriangle className="w-7 h-7 mr-2 text-yellow-500" />
-          Temporarily Unavailable
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300 mb-2 max-w-md">
-          Looks like this part isn&apos;t working right now. We&apos;re on it and things should be back to normal soon!
-        </p>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
-          Thanks for your patience{" "}
-          <span
-            role="img"
-            aria-label="blue heart"
+        <div className="flex flex-col gap-1">
+          <Typography variant="title2">🚧 Temporarily Unavailable</Typography>
+          <Typography
+            variant="callout"
+            className="text-balance font-normal"
           >
-            💙
-          </span>
-        </p>
+            Looks like this part isn&apos;t working right now. We&apos;re on it and things should be back to normal soon!
+          </Typography>
 
-        <div className="space-y-3 w-full max-w-xs">
+          <Typography
+            variant="callout"
+            className="text-balance font-normal"
+          >
+            Thanks for your patience 💙
+          </Typography>
+        </div>
+
+        <div className="flex flex-col gap-3 w-full max-w-xs">
           <Button
             variant="primary"
             size="lg"
             className="w-full"
-            onClick={() => console.log("Get Updates clicked")} // Replace with actual handler
+            onClick={() => console.log("Get Updates clicked")}
           >
-            <Mail className="w-5 h-5 mr-2" />
             Get Updates
           </Button>
           <Button
-            variant="ghost"
+            variant="info"
             size="lg"
-            className="w-full text-primary hover:bg-primary/10"
-            onClick={() => console.log("Need Help? clicked")} // Replace with actual handler
+            onClick={() => console.log("Need Help? clicked")}
+            className="w-full"
           >
-            <HelpCircle className="w-5 h-5 mr-2" />
             Need Help?
           </Button>
+          <Typography
+            variant="footnote"
+            className="font-normal text-balance max-w-md"
+          >
+            You will receive a notification when this page becomes available, provided you opt to get updates.
+          </Typography>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-6 max-w-md">
-          You will receive a notification when this page becomes available, provided you opt to get updates.
-        </p>
       </div>
     );
   }
