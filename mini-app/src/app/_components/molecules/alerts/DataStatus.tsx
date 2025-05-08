@@ -24,6 +24,7 @@ export const DATA_STATUS_ANIMATIONS = {
   blocked: "https://storage.onton.live/ontonimage/tea_drinking_green_frog.json",
   map_looking: "https://storage.onton.live/ontonimage/duck_looking_at_map.json",
   archive_duck: "https://storage.onton.live/ontonimage/archive_duck.json",
+  temp_unavailable: "https://storage.onton.live/ontonimage/constructin.json",
 } as const;
 
 export const ANIMATION_SIZES = {
