@@ -5,7 +5,7 @@
   "scripts": {
     "init:minio:local": "dotenv -e ../.env -- cross-var tsx ./src/scripts/initMinio.ts",
     "init:minio:server": "tsx ./src/scripts/initMinio.ts",
-    "dev": "pnpm run init:minio:local && NODE_OPTIONS='--inspect' dotenv -e ../.env -- cross-var node --inspect ./node_modules/next/dist/bin/next dev --port %MINI_APP_PORT%",
+    "dev": "yarn run init:minio:local && NODE_OPTIONS='--inspect' dotenv -e ../.env -- cross-var node --inspect ./node_modules/next/dist/bin/next dev --port %MINI_APP_PORT%",
     "test-env": "dotenv -e ../.env -- cross-var  echo %MINI_APP_PORT%",
     "dev:local": "next dev",
     "dev:local:moderation": "dotenv -e ../.env -- cross-var tsx  src/moderationBot/startBot.ts",
@@ -218,5 +218,6 @@
     "entrypoints": [
       "src/app/"
     ]
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
