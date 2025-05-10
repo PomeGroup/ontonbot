@@ -50,7 +50,7 @@ import { visitors } from "./schema/visitors";
 import { walletChecks } from "./schema/walletChecks";
 import { affiliateLinks, AffiliateLinksRow, AffiliateItemTypeEnum, affiliateItemType } from "./schema/affiliateLinks";
 import { affiliateClick, AffiliateClickRow } from "./schema/affiliateClick";
-import { tasks, TasksInsert, TaskPeriodType, taskPeriodEnum, Tasks } from "./schema/tasks";
+import { tasks, TasksInsert, TaskPeriodType, taskPeriodEnum, TaskTypeType, Tasks } from "./schema/tasks";
 import {
   tournaments,
   TournamentsRow,
@@ -321,6 +321,7 @@ export type {
   TokenCampaignMergeTransactionsStatus,
   TasksInsert,
   TaskPeriodType,
+  TaskTypeType,
   Tasks,
   TaskSBTInsert,
   TaskSBT,

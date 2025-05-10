@@ -4,6 +4,17 @@ import { taskSBT } from "@/db/schema/taskSbt";
 import { taskGroups } from "./taskGroups";
 
 export const taskPeriodEnum = pgEnum("task_period", ["none", "daily", "weekly", "monthly", "yearly", "custom"]);
+export const taskTypeEnum = pgEnum("task_type", [
+  "affiliation",
+  "join_channel",
+  "join_group",
+  "x_follow",
+  "become_organizer",
+  "watch_video",
+  "buy_ticket",
+  "play_a_tournament",
+  "buy_token",
+]);
 
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
@@ -26,7 +37,7 @@ export const tasks = pgTable("tasks", {
   period: taskPeriodEnum("period").notNull().default("none"),
   periodInterval: integer("period_interval").notNull().default(1),
 
-  taskType: varchar("task_type", { length: 100 }).notNull(),
+  taskType: taskTypeEnum("task_type").notNull().default("affiliation"),
   rewardPoint: integer("reward_point").notNull().default(0),
 
   hasSbt: boolean("has_sbt").notNull().default(false),
@@ -57,3 +68,4 @@ export const tasks = pgTable("tasks", {
 export type Tasks = InferSelectModel<typeof tasks>;
 export type TasksInsert = Omit<Tasks, "id" | "createdAt" | "updatedAt">;
 export type TaskPeriodType = (typeof taskPeriodEnum.enumValues)[number];
+export type TaskTypeType = (typeof taskTypeEnum.enumValues)[number];

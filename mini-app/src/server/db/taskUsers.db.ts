@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { logger } from "@/server/utils/logger";
 import { redisTools } from "@/lib/redisTools";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { PgTransaction } from "drizzle-orm/pg-core/session";
 import type { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 
@@ -149,6 +149,24 @@ async function revalidateCache(row: TaskUsers) {
   await redisTools.setCache(userTaskKey, JSON.stringify(row), redisTools.cacheLvl.long);
 }
 
+export async function getUserTasksByUserAndTaskIds(userId: number, taskIds: number[]): Promise<TaskUsers[]> {
+  if (taskIds.length === 0) return [];
+
+  try {
+    // Simple no-cache approach, or you can do caching similarly
+    const rows = await db
+      .select()
+      .from(taskUsers)
+      .where(and(eq(taskUsers.userId, userId), inArray(taskUsers.taskId, taskIds)))
+      .execute();
+
+    return rows;
+  } catch (error) {
+    // handle error
+    throw error;
+  }
+}
+
 /* ------------------------------------------------------------------
    Export
 ------------------------------------------------------------------ */
@@ -159,4 +177,5 @@ export const taskUsersDB = {
   addUserTaskTx,
   updateUserTaskById,
   updateUserTaskByUserAndTask,
+  getUserTasksByUserAndTaskIds,
 };
