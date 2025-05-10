@@ -5,7 +5,7 @@ import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
-const OnionAirdropPage = () => {
+const OnionSnapshotPage = () => {
   return (
     <div className="bg-brand-bg p-4 flex flex-col gap-4 min-h-screen">
       <CustomCard
@@ -117,4 +117,4 @@ const OnionAirdropPage = () => {
   );
 };
 
-export default OnionAirdropPage;
+export default OnionSnapshotPage;

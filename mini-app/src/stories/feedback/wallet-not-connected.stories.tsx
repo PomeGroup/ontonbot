@@ -1,4 +1,4 @@
-import WalletNotConnected from "@/app/(landing-pages)/onion-airdrop/_components/WalletNotConnected";
+import WalletNotConnected from "@/app/(landing-pages)/onion-snapshot/_components/WalletNotConnected";
 import type { Meta, StoryObj } from "@storybook/react";
 import { TonConnectButton, TonConnectUIProvider } from "@tonconnect/ui-react";
 
