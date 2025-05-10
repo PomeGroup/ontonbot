@@ -4,13 +4,13 @@ import { users } from "./users";
 import { tasks } from "@/db/schema/tasks";
 
 /** High-level user→task relationship: e.g., 'in_progress', 'done', etc. */
-export const taskUserStatusEnum = pgEnum("user_task_status", ["need_to_check", "in_progress", "done", "failed"]);
+export const taskUserStatusEnum = pgEnum("task_user_status", ["need_to_check", "in_progress", "done", "failed"]);
 
 /** Whether points are allocated to the user for the task */
-export const taskUserPointStatusEnum = pgEnum("point_status", ["not_allocated", "allocated"]);
+export const taskUserPointStatusEnum = pgEnum("task_user_point_status", ["not_allocated", "allocated"]);
 
 /** Whether the user has been given an SBT for a task or group */
-export const taskSBTStatusEnum = pgEnum("sbt_status", [
+export const taskSBTStatusEnum = pgEnum("task_user_sbt_status", [
   "has_not_sbt",
   "pending_creation",
   "failed",

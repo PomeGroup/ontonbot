@@ -3,7 +3,7 @@ import { InferSelectModel } from "drizzle-orm";
 import { taskSBT } from "@/db/schema/taskSbt";
 import { taskGroups } from "./taskGroups";
 
-export const taskPeriodEnum = pgEnum("period", ["none", "daily", "weekly", "monthly", "yearly", "custom"]);
+export const taskPeriodEnum = pgEnum("task_period", ["none", "daily", "weekly", "monthly", "yearly", "custom"]);
 
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
