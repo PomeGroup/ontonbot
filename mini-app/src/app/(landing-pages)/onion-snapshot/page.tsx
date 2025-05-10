@@ -78,20 +78,25 @@ const OnionSnapshotPage = () => {
           <div className="flex flex-col gap-2">
             <Typography variant="callout">Check:</Typography>
 
-            <Button
-              variant="info"
-              size="lg"
+            <Link
+              href="/onion-snapshot/important-dates"
               className="w-full"
             >
-              <span
-                role="img"
-                aria-label="calendar"
-                className="mr-2 text-xl"
+              <Button
+                variant="info"
+                size="lg"
+                className="w-full"
               >
-                🗓️
-              </span>
-              Important Dates
-            </Button>
+                <span
+                  role="img"
+                  aria-label="calendar"
+                  className="mr-2 text-xl"
+                >
+                  🗓️
+                </span>
+                Important Dates
+              </Button>
+            </Link>
           </div>
 
           <div className="flex flex-col gap-2">
