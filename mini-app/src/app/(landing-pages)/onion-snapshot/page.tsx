@@ -4,6 +4,7 @@ import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
 
 const OnionSnapshotPage = () => {
   return (
@@ -96,20 +97,25 @@ const OnionSnapshotPage = () => {
           <div className="flex flex-col gap-2">
             <Typography variant="callout">And know:</Typography>
 
-            <Button
-              variant="info"
-              size="lg"
+            <Link
+              href="/onion-snapshot/what-is-onion"
               className="w-full"
             >
-              <span
-                role="img"
-                aria-label="onion"
-                className="mr-2 text-xl"
+              <Button
+                variant="info"
+                size="lg"
+                className="w-full"
               >
-                🧅
-              </span>
-              What is ONION?
-            </Button>
+                <span
+                  role="img"
+                  aria-label="onion"
+                  className="mr-2 text-xl"
+                >
+                  🧅
+                </span>
+                What is ONION?
+              </Button>
+            </Link>
           </div>
         </div>
       </CustomCard>
