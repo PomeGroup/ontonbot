@@ -50,6 +50,7 @@ import { visitors } from "./schema/visitors";
 import { walletChecks } from "./schema/walletChecks";
 import { affiliateLinks, AffiliateLinksRow, AffiliateItemTypeEnum, affiliateItemType } from "./schema/affiliateLinks";
 import { affiliateClick, AffiliateClickRow } from "./schema/affiliateClick";
+import { tasks, TasksInsert, TaskPeriodType, taskPeriodEnum, Tasks } from "./schema/tasks";
 import {
   tournaments,
   TournamentsRow,
@@ -142,7 +143,17 @@ import {
   TokenCampaignMergeTransactions,
   TokenCampaignMergeTransactionsInsert,
 } from "./schema/tokenCampaignMergeTransactions";
-// export all the enums
+
+import { taskSBT, TaskSBT, TaskSBTInsert } from "@/db/schema/taskSbt";
+import { taskGroups, TaskGroups, TaskGroupsInsert } from "@/db/schema/taskGroups";
+import {
+  taskUsers,
+  TaskUsers,
+  TaskUsersInsert,
+  TaskUsersStatusType,
+  TaskSbtStatusType,
+  TaskUsersPointStatusType,
+} from "@/db/schema/taskUsers";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -170,6 +181,11 @@ export {
   affiliateItemType,
   campaignTypes,
   tokenCampaignMergeTransactionsStatus,
+  tasks,
+  taskPeriodEnum,
+  taskSBT,
+  taskGroups,
+  taskUsers,
 };
 
 // export all the tables and relations
@@ -303,4 +319,16 @@ export type {
   TokenCampaignMergeTransactions,
   TokenCampaignMergeTransactionsInsert,
   TokenCampaignMergeTransactionsStatus,
+  TasksInsert,
+  TaskPeriodType,
+  Tasks,
+  TaskSBTInsert,
+  TaskSBT,
+  TaskGroups,
+  TaskGroupsInsert,
+  TaskUsers,
+  TaskUsersInsert,
+  TaskUsersStatusType,
+  TaskSbtStatusType,
+  TaskUsersPointStatusType,
 };
