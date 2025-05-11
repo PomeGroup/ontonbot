@@ -18,6 +18,7 @@ export async function middleware(req: NextRequest) {
       const isTournament = tgAppStartParam.startsWith("tournaments_");
       const isTab = tgAppStartParam.startsWith("tab_");
       const isCampaign = tgAppStartParam.startsWith("campaign");
+      const isOntonJoinAffiliate = tgAppStartParam.startsWith("join-");
 
       if (isOrganizerProfile) {
         console.log("redirecting to organizer profile");
@@ -39,6 +40,8 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL(`/play2win-genesis/`, req.nextUrl.origin));
           case "sample":
             return NextResponse.redirect(new URL(`/sample/`, req.nextUrl.origin));
+          case "task_sample":
+            return NextResponse.redirect(new URL(`/task-sample/`, req.nextUrl.origin));
           default:
             return NextResponse.redirect(new URL(`/`, req.nextUrl.origin));
         }
@@ -59,6 +62,10 @@ export async function middleware(req: NextRequest) {
         url.searchParams.set("affiliate", affiliateId);
         console.log("redirecting to affiliate", url.searchParams);
 
+        return NextResponse.redirect(url);
+      }
+      if (isOntonJoinAffiliate) {
+        const url = new URL(`/`, req.nextUrl.origin);
         return NextResponse.redirect(url);
       }
       if (isEdit) {

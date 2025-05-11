@@ -30,6 +30,7 @@ import { logger } from "./utils/logger";
 import { handleShareTournament } from "./handlers/handleShareTournament";
 import { parse } from "csv-parse/sync";
 import { handleShareAffiliateLink } from "./handlers/handleShareAffiliateLink";
+import {handleShareJoinOntonLink} from "./controllers/handleShareJoinOntonLink";
 
 (async function bootstrap() {
   try {
@@ -128,6 +129,7 @@ import { handleShareAffiliateLink } from "./handlers/handleShareAffiliateLink";
     app.post("/create-invite", createInviteLinkHandler);
     app.post("/delete-invite", deleteInviteLinkHandler);
     app.post("/share-affiliate-link", handleShareAffiliateLink);
+    app.post("/share-join-onton-link-affiliate", handleShareJoinOntonLink);
     // 7) Start listening, store the server instance
     const server = app.listen(port, () =>
       logger.log(`Telegram Bot API service on port ${port}`),

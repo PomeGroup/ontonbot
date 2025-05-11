@@ -50,7 +50,7 @@ import { visitors } from "./schema/visitors";
 import { walletChecks } from "./schema/walletChecks";
 import { affiliateLinks, AffiliateLinksRow, AffiliateItemTypeEnum, affiliateItemType } from "./schema/affiliateLinks";
 import { affiliateClick, AffiliateClickRow } from "./schema/affiliateClick";
-import { tasks, TasksInsert, TaskPeriodType, taskPeriodEnum, TaskTypeType, Tasks } from "./schema/tasks";
+import { tasks, TasksInsert, TaskPeriodType, taskPeriodEnum, taskTypeEnum, TaskTypeType, Tasks } from "./schema/tasks";
 import {
   tournaments,
   TournamentsRow,
@@ -148,6 +148,9 @@ import { taskSBT, TaskSBT, TaskSBTInsert } from "@/db/schema/taskSbt";
 import { taskGroups, TaskGroups, TaskGroupsInsert } from "@/db/schema/taskGroups";
 import {
   taskUsers,
+  taskSBTStatusEnum,
+  taskUserPointStatusEnum,
+  taskUserStatusEnum,
   TaskUsers,
   TaskUsersInsert,
   TaskUsersStatusType,
@@ -183,9 +186,13 @@ export {
   tokenCampaignMergeTransactionsStatus,
   tasks,
   taskPeriodEnum,
+  taskTypeEnum,
   taskSBT,
   taskGroups,
   taskUsers,
+  taskSBTStatusEnum,
+  taskUserPointStatusEnum,
+  taskUserStatusEnum,
 };
 
 // export all the tables and relations

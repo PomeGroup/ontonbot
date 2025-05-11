@@ -1,8 +1,12 @@
-import { integer, pgEnum, pgTable, serial, timestamp } from "drizzle-orm/pg-core";
+import { integer, json, pgEnum, pgTable, serial, timestamp } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { users } from "./users";
 import { tasks } from "@/db/schema/tasks";
 
+export interface AffiliationCustomDataForJoinTasks {
+  joinedUsers?: number[]; // optional property
+  [key: string]: number[] | undefined; // optionally allow other unknown keys
+}
 /** High-level user→task relationship: e.g., 'in_progress', 'done', etc. */
 export const taskUserStatusEnum = pgEnum("task_user_status", ["need_to_check", "in_progress", "done", "failed"]);
 
@@ -41,7 +45,7 @@ export const taskUsers = pgTable("users_task", {
 
   taskSbt: taskSBTStatusEnum("task_sbt").notNull().default("has_not_sbt"),
   groupSbt: taskSBTStatusEnum("group_sbt").notNull().default("has_not_sbt"),
-
+  customData: json("custom_data"),
   createdAt: timestamp("created_at", {
     withTimezone: false,
     precision: 3,

@@ -137,6 +137,26 @@ export const getAffiliateLinkForOnionCampaign = async (userId: number): Promise<
   return link;
 };
 
+export const getAffiliateLinkForType = async (
+  userId: number,
+  type: AffiliateItemTypeEnum
+): Promise<AffiliateLinksRow | undefined> => {
+  const [link] = await db
+    .select()
+    .from(affiliateLinks)
+    .where(
+      and(
+        eq(affiliateLinks.itemType, type),
+        eq(affiliateLinks.creatorUserId, userId),
+        eq(affiliateLinks.affiliatorUserId, userId)
+      )
+    )
+    .limit(1)
+    .execute();
+
+  return link;
+};
+
 export const getAffiliateLinkByType = async (itemType: AffiliateItemTypeEnum): Promise<AffiliateLinksRow[] | undefined> => {
   const link = await db.select().from(affiliateLinks).where(eq(affiliateLinks.itemType, itemType)).execute();
 
@@ -171,6 +191,36 @@ export const createOnionCampaignLink = async (userId: number, linkHash: string):
   logger.log(`Created onion1-campaign affiliate link for user #${userId}`, inserted);
   return inserted;
 };
+
+export const createAffiliateLinkByType = async (
+  title: string,
+  groupTitle: string,
+  userId: number,
+  linkHash: string,
+  type: AffiliateItemTypeEnum
+): Promise<AffiliateLinksRow> => {
+  const [inserted] = await db
+    .insert(affiliateLinks)
+    .values({
+      itemId: 0,
+      itemType: type,
+      creatorUserId: userId,
+      affiliatorUserId: userId,
+      linkHash,
+      groupTitle: groupTitle || type,
+      title,
+    })
+    .returning()
+    .execute();
+
+  if (!inserted) {
+    throw new Error(`Failed to create ${type} link ${title} for userId=${userId}`);
+  }
+
+  logger.log(`Created onion1-campaign affiliate link ${type} link ${title}  for user #${userId}`, inserted);
+  return inserted;
+};
+
 export const affiliateLinksDB = {
   getAffiliateLinkByHash,
   incrementAffiliateClicks,
@@ -179,4 +229,6 @@ export const affiliateLinksDB = {
   getAffiliateLinkForOnionCampaign,
   createOnionCampaignLink,
   getAffiliateLinkByType,
+  getAffiliateLinkForType,
+  createAffiliateLinkByType,
 };

@@ -14,6 +14,7 @@ export const taskTypeEnum = pgEnum("task_type", [
   "buy_ticket",
   "play_a_tournament",
   "buy_token",
+  "join_onton",
 ]);
 
 export const tasks = pgTable("tasks", {
@@ -30,8 +31,8 @@ export const tasks = pgTable("tasks", {
   closeDate: date("close_date"),
 
   // Time range
-  openTime: time("open_time", { precision: 0 }),
-  closeTime: time("close_time", { precision: 0 }),
+  openTime: time("open_time", { precision: 0, withTimezone: false }),
+  closeTime: time("close_time", { precision: 0, withTimezone: false }),
 
   // Period / repetition
   period: taskPeriodEnum("period").notNull().default("none"),

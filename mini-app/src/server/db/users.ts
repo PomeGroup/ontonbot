@@ -7,6 +7,11 @@ import xss from "xss";
 import { logSQLQuery } from "@/lib/logSQLQuery";
 import { userRolesDB } from "@/server/db/userRoles.db";
 import { ExtendedUser, InitUserData, MinimalOrganizerData } from "@/types/extendedUserTypes";
+import { usersScoreDB } from "./usersScore.db";
+import { taskUsersDB } from "./taskUsers.db";
+import { tasksDB } from "@/server/db/tasks.db";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { AffiliationCustomDataForJoinTasks } from "@/db/schema/taskUsers";
 // User data from the init data
 
 // Cache key prefix
@@ -93,7 +98,7 @@ export const updateOrganizerFieldsByUserId = async (
       data: updatedUser,
       error: null,
     };
-  } catch (err: any) {
+  } catch (err) {
     logger.error(`Error updating org fields for user ID=${userId}:`, err);
     return {
       success: false,
@@ -251,14 +256,16 @@ export const selectUserById = async (
   }
 };
 
-export const insertUser = async (initDataJson: InitUserData): Promise<ExtendedUser | null> => {
+export const insertUser = async (initDataJson: InitUserData, joinAffiliateHash?: string): Promise<ExtendedUser | null> => {
   const { id, username, first_name, last_name, language_code } = initDataJson.user;
 
   const user = await selectUserById(id);
-
+  logger.log("joinAffiliateHash-------------", joinAffiliateHash);
   // 1) If user does NOT exist, insert:
   if (!user) {
+    // brand-new user flow
     try {
+      // 2) Insert new user row
       await db
         .insert(users)
         .values({
@@ -275,9 +282,88 @@ export const insertUser = async (initDataJson: InitUserData): Promise<ExtendedUs
         .onConflictDoNothing()
         .execute();
 
-      return await selectUserById(id);
-    } catch (e) {
-      logger.error("Error adding new user:", e);
+      // Re-fetch the newly inserted user
+      const newUser = await selectUserById(id);
+      if (!newUser) {
+        logger.error("Failed to retrieve newly inserted user after insertion");
+        return null;
+      }
+
+      // 3) If an affiliate hash is provided, handle the affiliate logic
+      if (joinAffiliateHash) {
+        const link = await affiliateLinksDB.getAffiliateLinkByHash(joinAffiliateHash);
+        if (link && link.itemType === "onton-join-task") {
+          // a) Set the new user's affiliator_user_id to the creatorUserId of the link
+          await db
+            .update(users)
+            .set({ affiliatorUserId: link.creatorUserId })
+            .where(eq(users.user_id, newUser.user_id))
+            .execute();
+
+          // b) Increment affiliate link totalPurchase
+          await affiliateLinksDB.incrementAffiliatePurchase(joinAffiliateHash, 1);
+
+          // c) Next, find the actual Task for "onton-join-task"
+          //    i.e. the affiliation task with task_type='affiliation' & item_type='join_onton'
+          //    or you might do a dedicated function to find that single "join_onton" task
+          const possibleTasks = await tasksDB.getTasksByType("affiliation", false);
+          const joinOntonTasks = possibleTasks.filter((t) => t.taskConnectedItemTypes === "join_onton");
+          if (joinOntonTasks.length !== 1) {
+            logger.error("Expected exactly 1 'join_onton' affiliation task, found ", joinOntonTasks.length);
+          } else {
+            const affiliationTask = joinOntonTasks[0];
+
+            // d) Update the userTask for the affiliator
+            const affiliatorId = link.creatorUserId;
+            const userTask = await taskUsersDB.getUserTaskByUserAndTask(affiliatorId, affiliationTask.id);
+            if (!userTask) {
+              logger.error(`Affiliator #${affiliatorId} has no userTask for task #${affiliationTask.id}`);
+            } else {
+              // parse joinedUsers array from customData
+
+              const customData = (userTask.customData as AffiliationCustomDataForJoinTasks) || {};
+              const joinedUsers = customData.joinedUsers || [];
+              if (!joinedUsers.includes(newUser.user_id)) {
+                joinedUsers.push(newUser.user_id);
+              }
+              customData.joinedUsers = joinedUsers;
+
+              // e) Save updated custom data
+              await taskUsersDB.updateUserTaskById(userTask.id, { customData });
+            }
+
+            // f) parse points_per_join from affiliationTask.jsonForChecker => e.g. {"points_per_join": "0.2"}
+            let pointsPerJoin = 0;
+            const rawCheckerData = affiliationTask.jsonForChecker;
+
+            if (rawCheckerData && typeof rawCheckerData === "object") {
+              const checkerData = rawCheckerData as { points_per_join?: string };
+              if (checkerData.points_per_join) {
+                pointsPerJoin = parseFloat(checkerData.points_per_join);
+              }
+            }
+
+            // g) If we have >0 points, create a userScore for the affiliator
+            if (pointsPerJoin > 0) {
+              await usersScoreDB.createUserScore({
+                userId: link.creatorUserId, // the affiliator
+                activityType: "join_onton_affiliate", // define a new activity type if needed
+                point: Math.floor(pointsPerJoin * 100) / 100, // or store as int
+                active: true,
+                itemId: newUser.user_id, // the new user is the "item"
+                itemType: "task", // or "join_onton_affiliate", if you have a new item type
+              });
+              logger.log(`Awarded ${pointsPerJoin} points to user #${link.creatorUserId} for referring #${newUser.user_id}`);
+            }
+          }
+        } else {
+          logger.log(`No valid 'onton-join-task' link found for hash=${joinAffiliateHash}; skipping affiliate increment.`);
+        }
+      }
+
+      return newUser;
+    } catch (err) {
+      logger.error("Error adding new user:", err);
       return null;
     }
   } else {
@@ -469,7 +555,7 @@ export const getOrganizerById = async (
       data,
       error: null,
     };
-  } catch (err: any) {
+  } catch (err) {
     // Catch any unexpected errors
     return {
       success: false,
