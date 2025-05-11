@@ -92,6 +92,9 @@ module.exports = konstaConfig({
           DEFAULT: "#DFDDDD",
           base: "#A4B3C7",
         },
+        info: {
+          DEFAULT: "#E5F2FF",
+        },
         bronze: "#D3766A",
         gold: {
           DEFAULT: "#F5DA8A",
