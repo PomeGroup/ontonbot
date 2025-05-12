@@ -40,20 +40,25 @@ const OnionSnapshotPage = () => {
           <div className="flex flex-col gap-2">
             <Typography variant="callout">Let&apos;s find out how much you&apos;ve earned</Typography>
 
-            <Button
-              variant="primary"
-              size="lg"
+            <Link
+              href="/onion-snapshot/check-status"
               className="w-full"
             >
-              <span
-                role="img"
-                aria-label="magnifying glass"
-                className="mr-2 text-xl"
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
               >
-                🔍
-              </span>
-              Check My Status
-            </Button>
+                <span
+                  role="img"
+                  aria-label="magnifying glass"
+                  className="mr-2 text-xl"
+                >
+                  🔍
+                </span>
+                Check My Status
+              </Button>
+            </Link>
           </div>
 
           <div className="flex flex-col gap-2">
