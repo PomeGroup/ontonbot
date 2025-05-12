@@ -3,8 +3,11 @@
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
+import useWebApp from "@/hooks/useWebApp";
 
 const WhatIsOnion = () => {
+  const webapp = useWebApp();
+
   return (
     <div className="bg-brand-bg p-4 flex flex-col gap-4 min-h-screen">
       {/* Header Section */}
@@ -72,30 +75,33 @@ const WhatIsOnion = () => {
         className="w-full"
       >
         <div className="flex flex-col gap-1">
-          <Typography
-            variant="title3"
-            className="text-[20px]"
-          >
-            🔐 Use Cases
-          </Typography>
-          <Typography
-            variant="subheadline1"
-            className="font-semibold text-[14px]"
-          >
-            Stake ONION → Earn yield + voting power
-          </Typography>
-          <Typography
-            variant="subheadline1"
-            className="font-semibold text-[14px]"
-          >
-            Hold ONION → Access partner events, drops, and sales
-          </Typography>
-          <Typography
-            variant="subheadline1"
-            className="font-semibold text-[14px]"
-          >
-            Boost Points → Earn more ONION each season
-          </Typography>
+          <Typography variant="title3">🔐 Use Cases</Typography>
+          <ul className="list-disc ms-4">
+            <li>
+              <Typography
+                variant="subheadline1"
+                className="font-medium"
+              >
+                Stake ONION → Earn yield + voting power
+              </Typography>
+            </li>
+            <li>
+              <Typography
+                variant="subheadline1"
+                className="font-medium"
+              >
+                Hold ONION → Access partner events, drops, and sales
+              </Typography>
+            </li>
+            <li>
+              <Typography
+                variant="subheadline1"
+                className="font-medium"
+              >
+                Boost Points → Earn more ONION each season
+              </Typography>
+            </li>
+          </ul>
         </div>
       </CustomCard>
 
@@ -138,19 +144,20 @@ const WhatIsOnion = () => {
           >
             Know More
           </Typography>
-
           <Button
             variant="info"
             size="lg"
             className="w-full bg-[#E5F2FF] h-[50px] text-[17px] font-semibold"
+            onClick={() => webapp?.openLink("https://Onion.tg/lightpaper")}
           >
-            📄 Read Litepaper
+            📄 Read LightPaper
           </Button>
 
           <Button
             variant="info"
             size="lg"
             className="w-full bg-[#E5F2FF] h-[50px] text-[17px] font-semibold"
+            onClick={() => webapp?.openLink("https://Onion.tg/docs")}
           >
             📚 Visit Docs
           </Button>
@@ -159,6 +166,7 @@ const WhatIsOnion = () => {
             variant="info"
             size="lg"
             className="w-full bg-[#E5F2FF] h-[50px] text-[17px] font-semibold"
+            onClick={() => webapp?.openLink("https://Onion.tg/explainer")}
           >
             🎥 Watch Explainer Video
           </Button>

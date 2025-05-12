@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import useWebApp from "@/hooks/useWebApp";
 import { useTonWallet } from "@tonconnect/ui-react";
 import Image from "next/image";
+import Link from "next/link";
 import { FaAngleRight } from "react-icons/fa6";
 import { getImageUrl } from "../../genesis-onions/_components/Merge/constants";
 
@@ -78,14 +79,18 @@ const CheckStatusPage = () => {
                 <FaAngleRight className="text-brand-muted" />
               </div>
             </div>
-
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full bg-[#007AFF] text-white"
+            <Link
+              href="/onion-snapshot/check-status/boost-your-score"
+              className="w-full"
             >
-              Boost Your Score
-            </Button>
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full bg-[#007AFF] text-white"
+              >
+                Boost Your Score
+              </Button>
+            </Link>
           </div>
         </CustomCard>
 

@@ -64,20 +64,25 @@ const OnionSnapshotPage = () => {
           <div className="flex flex-col gap-2">
             <Typography variant="callout">You can also:</Typography>
 
-            <Button
-              variant="info"
-              size="lg"
+            <Link
+              href="/onion-snapshot/check-status/boost-your-score"
               className="w-full"
             >
-              <span
-                role="img"
-                aria-label="rocket"
-                className="mr-2 text-xl"
+              <Button
+                variant="info"
+                size="lg"
+                className="w-full"
               >
-                🚀
-              </span>
-              Boost Your Score
-            </Button>
+                <span
+                  role="img"
+                  aria-label="rocket"
+                  className="mr-2 text-xl"
+                >
+                  🚀
+                </span>
+                Boost Your Score
+              </Button>
+            </Link>
           </div>
 
           <div className="flex flex-col gap-2">
