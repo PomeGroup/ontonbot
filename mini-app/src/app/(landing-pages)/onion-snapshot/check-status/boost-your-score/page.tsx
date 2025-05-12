@@ -2,10 +2,8 @@
 
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import OntonIcon from "@/app/_components/icons/onton-icon";
-import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 const BoostYourScorePage = () => {
   return (
@@ -21,117 +19,141 @@ const BoostYourScorePage = () => {
           variant="footnote"
           className="text-center px-4"
         >
-          Maximize your ONION airdrop by completing actions below. Each action increases your points and airdrop share!
+          Earn more ONIONs by growing your ONTON points
         </Typography>
       </div>
 
-      {/* Example: Action Card 1 */}
+      {/* Points card */}
+      <div className="flex flex-col items-center justify-center bg-white rounded-lg p-3 gap-2">
+        <div className="flex items-center gap-6 bg-white p-2 rounded-lg">
+          <div className="flex items-center gap-2">
+            <OntonIcon />
+            <div className="flex flex-col">
+              <Typography variant="headline">580</Typography>
+              <Typography variant="caption1">ONTON points</Typography>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col w-full border-t border-[#C8C7CB] pt-2">
+          <div className="flex items-center gap-1 justify-center">
+            <Typography
+              variant="footnote"
+              weight="semibold"
+            >
+              Top 10%
+            </Typography>
+            <Typography variant="caption1">of community</Typography>
+          </div>
+        </div>
+      </div>
+
+      {/* Join Events Card */}
       <CustomCard
         defaultPadding
         className="flex flex-col gap-4"
       >
-        <div className="flex items-center gap-3">
-          <OntonIcon />
-          <div className="flex flex-col">
-            <Typography
-              variant="title3"
-              weight="bold"
-            >
-              Join Events
-            </Typography>
-            <Typography variant="footnote">Participate in ONTON events to earn more points.</Typography>
-          </div>
-        </div>
-        <Button
-          variant="primary"
-          size="lg"
-          className="w-full bg-[#007AFF] text-white"
-        >
-          View Events
-        </Button>
-      </CustomCard>
-
-      {/* Example: Action Card 2 */}
-      <CustomCard
-        defaultPadding
-        className="flex flex-col gap-4"
-      >
-        <div className="flex items-center gap-3">
-          <OntonIcon />
-          <div className="flex flex-col">
-            <Typography
-              variant="title3"
-              weight="bold"
-            >
-              Refer Friends
-            </Typography>
-            <Typography variant="footnote">Invite friends to ONTON and boost your score together.</Typography>
-          </div>
-        </div>
-        <Button
-          variant="primary"
-          size="lg"
-          className="w-full bg-[#007AFF] text-white"
-        >
-          Get Referral Link
-        </Button>
-      </CustomCard>
-
-      {/* Example: Action Card 3 */}
-      <CustomCard
-        defaultPadding
-        className="flex flex-col gap-4"
-      >
-        <div className="flex items-center gap-3">
-          <OntonIcon />
-          <div className="flex flex-col">
-            <Typography
-              variant="title3"
-              weight="bold"
-            >
-              Merge NFTs
-            </Typography>
-            <Typography variant="footnote">Merge your NFTs for platinum and increase your multiplier.</Typography>
-          </div>
-        </div>
-        <Button
-          variant="primary"
-          size="lg"
-          className="w-full bg-[#007AFF] text-white"
-        >
-          Merge Now
-        </Button>
-      </CustomCard>
-
-      {/* Example: DataStatus sticker for motivation */}
-      <DataStatus
-        status="success"
-        title={
+        <div className="flex flex-col gap-1 w-full">
           <Typography
             variant="headline"
-            weight="bold"
+            weight="regular"
           >
-            Keep Boosting!
+            Join Events
           </Typography>
-        }
-        description={<Typography variant="footnote">The more you participate, the bigger your ONION drop!</Typography>}
-        size="md"
-        className="mt-6"
-      />
-
-      {/* Back to status page */}
-      <Link
-        href="/onion-snapshot/check-status"
-        className="w-full mt-4"
-      >
+          <Typography
+            variant="footnote"
+            weight="semibold"
+          >
+            Attend online or offline events to collect SBTs and earn points
+          </Typography>
+        </div>
         <Button
-          variant="outline"
+          variant="primary"
           size="lg"
-          className="w-full"
+          className="w-full bg-[#007AFF] text-white"
         >
-          ← Back to Status
+          Explore Events
         </Button>
-      </Link>
+      </CustomCard>
+
+      {/* Organize Events Card */}
+      <CustomCard
+        defaultPadding
+        className="flex flex-col gap-4"
+      >
+        <div className="flex flex-col gap-1 w-full">
+          <Typography
+            variant="headline"
+            weight="regular"
+          >
+            Organize Events
+          </Typography>
+          <Typography
+            variant="footnote"
+            weight="semibold"
+          >
+            Get extra points when others claim your event's SBT.
+          </Typography>
+        </div>
+        <Button
+          variant="primary"
+          size="lg"
+          className="w-full bg-[#007AFF] text-white"
+        >
+          Create an Event
+        </Button>
+      </CustomCard>
+
+      {/* Invite Friends Card */}
+      <CustomCard
+        defaultPadding
+        className="flex flex-col gap-4"
+      >
+        <div className="flex flex-col gap-1 w-full">
+          <Typography
+            variant="headline"
+            weight="normal"
+          >
+            Invite Friends
+          </Typography>
+          <Typography
+            variant="footnote"
+            weight="semibold"
+          >
+            Earn +0.2 points for every friend you incite who starts ONTON.
+          </Typography>
+        </div>
+
+        {/* Referral link box */}
+        <div className="w-full bg-[#EEEEF0] rounded-lg">
+          <div className="flex justify-between items-center p-4 border-b border-[rgba(84,84,86,0.34)]">
+            <Typography
+              variant="body"
+              weight="normal"
+              className="opacity-40"
+            >
+              https://t.me/ontonbot/jd7w9h
+            </Typography>
+          </div>
+        </div>
+
+        {/* Button group */}
+        <div className="flex gap-2 w-full">
+          <Button
+            variant="primary"
+            size="lg"
+            className="bg-[#007AFF] text-white"
+          >
+            Copy Link
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full bg-[#007AFF] text-white"
+          >
+            Share to Telegram
+          </Button>
+        </div>
+      </CustomCard>
     </div>
   );
 };
