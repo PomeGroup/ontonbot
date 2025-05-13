@@ -20,6 +20,8 @@ const CheckStatusPage = () => {
     walletAddress: walletAddress?.account.address ?? "",
   });
 
+  const totalPointsQuery = trpc.usersScore.getTotalScoreByUserId.useQuery();
+
   return (
     <div>
       {/* Your ONION Snapshot Section */}
@@ -60,7 +62,11 @@ const CheckStatusPage = () => {
                   variant="title3"
                   weight="bold"
                 >
-                  580
+                  {totalPointsQuery.isLoading
+                    ? "Loading..."
+                    : totalPointsQuery.error
+                      ? "Error loading points"
+                      : (totalPointsQuery.data ?? 0)}
                 </Typography>
                 <Typography variant="footnote">ONTON points</Typography>
               </div>

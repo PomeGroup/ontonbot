@@ -2,10 +2,13 @@
 
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import OntonIcon from "@/app/_components/icons/onton-icon";
+import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 
 const BoostYourScorePage = () => {
+  const totalPointsQuery = trpc.usersScore.getTotalScoreByUserId.useQuery();
+
   return (
     <div className="bg-[#EFEFF4] min-h-screen p-4 flex flex-col gap-4">
       <div className="flex flex-col items-center gap-2 text-center mb-2">
@@ -29,7 +32,13 @@ const BoostYourScorePage = () => {
           <div className="flex items-center gap-2">
             <OntonIcon />
             <div className="flex flex-col">
-              <Typography variant="headline">580</Typography>
+              <Typography variant="headline">
+                {totalPointsQuery.isLoading
+                  ? "Loading..."
+                  : totalPointsQuery.error
+                    ? "Error loading points"
+                    : (totalPointsQuery.data ?? 0)}
+              </Typography>
               <Typography variant="caption1">ONTON points</Typography>
             </div>
           </div>
@@ -55,7 +64,7 @@ const BoostYourScorePage = () => {
         <div className="flex flex-col gap-1 w-full">
           <Typography
             variant="headline"
-            weight="regular"
+            weight="normal"
           >
             Join Events
           </Typography>
