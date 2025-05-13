@@ -1,11 +1,11 @@
 "use client";
-import React, { useEffect, useState } from "react";
 import { trpc } from "@/app/_trpc/client"; // your TRPC client
-import { taskTypeEnum, TaskTypeType } from "@/db/schema/tasks";
-import { toast } from "sonner";
-import { useUserStore } from "@/context/store/user.store";
 import Typography from "@/components/Typography";
+import { useUserStore } from "@/context/store/user.store";
+import { taskTypeEnum, TaskTypeType } from "@/db/schema/tasks";
 import { TRPCClientError } from "@trpc/client";
+import React, { useState } from "react";
+import { toast } from "sonner";
 
 /**
  * Example "TasksTestPage" for demonstrating:

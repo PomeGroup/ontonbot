@@ -5,9 +5,16 @@ import OntonIcon from "@/app/_components/icons/onton-icon";
 import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
+import useWebApp from "@/hooks/useWebApp";
+import { telegramShareLink } from "@/utils";
+import Link from "next/link";
+import { toast } from "sonner";
 
 const BoostYourScorePage = () => {
   const totalPointsQuery = trpc.usersScore.getTotalScoreByUserId.useQuery();
+  const ontonJoinAffiliateDataQuery = trpc.task.getOntonJoinAffiliateData.useQuery();
+
+  const webapp = useWebApp();
 
   return (
     <div className="bg-[#EFEFF4] min-h-screen p-4 flex flex-col gap-4">
@@ -43,17 +50,6 @@ const BoostYourScorePage = () => {
             </div>
           </div>
         </div>
-        <div className="flex flex-col w-full border-t border-[#C8C7CB] pt-2">
-          <div className="flex items-center gap-1 justify-center">
-            <Typography
-              variant="footnote"
-              weight="semibold"
-            >
-              Top 10%
-            </Typography>
-            <Typography variant="caption1">of community</Typography>
-          </div>
-        </div>
       </div>
 
       {/* Join Events Card */}
@@ -75,13 +71,15 @@ const BoostYourScorePage = () => {
             Attend online or offline events to collect SBTs and earn points
           </Typography>
         </div>
-        <Button
-          variant="primary"
-          size="lg"
-          className="w-full bg-[#007AFF] text-white"
-        >
-          Explore Events
-        </Button>
+        <Link href="/">
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full bg-[#007AFF] text-white"
+          >
+            Explore Events
+          </Button>
+        </Link>
       </CustomCard>
 
       {/* Organize Events Card */}
@@ -92,7 +90,7 @@ const BoostYourScorePage = () => {
         <div className="flex flex-col gap-1 w-full">
           <Typography
             variant="headline"
-            weight="regular"
+            weight="normal"
           >
             Organize Events
           </Typography>
@@ -100,16 +98,18 @@ const BoostYourScorePage = () => {
             variant="footnote"
             weight="semibold"
           >
-            Get extra points when others claim your event's SBT.
+            Get extra points when others claim your event&apos;s SBT.
           </Typography>
         </div>
-        <Button
-          variant="primary"
-          size="lg"
-          className="w-full bg-[#007AFF] text-white"
-        >
-          Create an Event
-        </Button>
+        <Link href="/my">
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full bg-[#007AFF] text-white"
+          >
+            Create an Event
+          </Button>
+        </Link>
       </CustomCard>
 
       {/* Invite Friends Card */}
@@ -134,13 +134,19 @@ const BoostYourScorePage = () => {
 
         {/* Referral link box */}
         <div className="w-full bg-[#EEEEF0] rounded-lg">
-          <div className="flex justify-between items-center p-4 border-b border-[rgba(84,84,86,0.34)]">
+          <div className="flex justify-between items-center p-4">
             <Typography
               variant="body"
               weight="normal"
               className="opacity-40"
             >
-              https://t.me/ontonbot/jd7w9h
+              {ontonJoinAffiliateDataQuery.isLoading ? (
+                "Loading..."
+              ) : ontonJoinAffiliateDataQuery.error ? (
+                <span className="text-red-500">Error: {ontonJoinAffiliateDataQuery.error.message}</span>
+              ) : (
+                ontonJoinAffiliateDataQuery.data?.linkHash
+              )}
             </Typography>
           </div>
         </div>
@@ -151,13 +157,32 @@ const BoostYourScorePage = () => {
             variant="primary"
             size="lg"
             className="bg-[#007AFF] text-white"
+            onClick={async () => {
+              if (ontonJoinAffiliateDataQuery.data?.linkHash) {
+                await navigator.clipboard.writeText(ontonJoinAffiliateDataQuery.data?.linkHash);
+                toast.success("Link copied to clipboard");
+              } else {
+                toast.error("No link hash found");
+              }
+            }}
+            disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
           >
             Copy Link
           </Button>
           <Button
             variant="primary"
             size="lg"
+            disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
             className="w-full bg-[#007AFF] text-white"
+            onClick={() => {
+              if (ontonJoinAffiliateDataQuery.data?.linkHash) {
+                webapp?.openTelegramLink(
+                  telegramShareLink(ontonJoinAffiliateDataQuery.data?.linkHash, "Share ONTON referral link")
+                );
+              } else {
+                toast.error("No link hash found");
+              }
+            }}
           >
             Share to Telegram
           </Button>
