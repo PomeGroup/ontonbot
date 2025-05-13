@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 const ImportantDates = () => {
-  const timeLeft = useConfigDate("campeign_merge_date");
+  const timeLeft = useConfigDate("snapshot_date");
 
   return (
     <div className="bg-brand-bg p-4 flex flex-col gap-4 min-h-screen">
