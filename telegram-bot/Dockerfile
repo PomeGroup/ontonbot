@@ -17,7 +17,7 @@ RUN apk update && apk add --no-cache \
     nano
 
 # Install Yarn globally
-RUN npm install -g yarn
+#RUN npm install -g yarn
 
 # Set the working directory
 WORKDIR /app
