@@ -9,7 +9,6 @@ import useWebApp from "@/hooks/useWebApp";
 import { useTonWallet } from "@tonconnect/ui-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FaAngleRight } from "react-icons/fa6";
 import { getImageUrl } from "../../genesis-onions/_components/Merge/constants";
 
 const CheckStatusPage = () => {
@@ -72,19 +71,6 @@ const CheckStatusPage = () => {
               </div>
             </div>
 
-            {/* Estimated Share */}
-            <div className="flex items-center justify-between bg-[#EFEFF4] p-2 rounded">
-              <Typography variant="footnote">Estimated ONION share</Typography>
-              <div className="flex items-center gap-2">
-                <Typography
-                  variant="callout"
-                  weight="normal"
-                >
-                  TBA
-                </Typography>
-                <FaAngleRight className="text-brand-muted" />
-              </div>
-            </div>
             <Link
               href="/onion-snapshot/check-status/boost-your-score"
               className="w-full"
@@ -227,20 +213,6 @@ const CheckStatusPage = () => {
                     </Typography>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Estimated Share */}
-            <div className="flex items-center justify-between bg-[#EFEFF4] p-2 rounded">
-              <Typography variant="footnote">Estimated ONION share</Typography>
-              <div className="flex items-center gap-2">
-                <Typography
-                  variant="callout"
-                  weight="medium"
-                >
-                  128.3
-                </Typography>
-                <FaAngleRight className="text-brand-muted" />
               </div>
             </div>
 

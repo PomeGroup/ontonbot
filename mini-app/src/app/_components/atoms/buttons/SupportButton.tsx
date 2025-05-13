@@ -27,7 +27,7 @@ const SupportButtons: React.FC<SupportButtonsProps> = ({ orgSupportTelegramUserN
       <Typography
         variant="body"
         weight="normal"
-        className="!-mt-6 mb-2"
+        className="mb-2"
       >
         Do you have issues with SBT or payment?
       </Typography>

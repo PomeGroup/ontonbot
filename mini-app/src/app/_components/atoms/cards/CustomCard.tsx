@@ -31,7 +31,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
       className={cn("h-full bg-white rounded-2lg", defaultPadding && "p-4", className)}
     >
       {title || description ? (
-        <div className={cn("p-4", defaultPadding && "p-0 mb-10")}>
+        <div className={cn("p-4", defaultPadding && "p-0")}>
           {title && <Typography variant="title3">{title}</Typography>}
           {description && (
             <Typography

@@ -5,6 +5,7 @@ import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import { useConfigDate } from "@/hooks/useConfigDate";
 import Image from "next/image";
+import Link from "next/link";
 
 const ImportantDates = () => {
   const timeLeft = useConfigDate("campeign_merge_date");
@@ -72,13 +73,15 @@ const ImportantDates = () => {
               Days Left
             </Typography>
           </div>
-          <Button
-            variant="primary"
-            size="lg"
-            className="w-full"
-          >
-            Check Status
-          </Button>
+          <Link href="/onion-snapshot/check-status">
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+            >
+              Check Status
+            </Button>
+          </Link>
         </div>
       </CustomCard>
 
