@@ -28,7 +28,7 @@ WORKDIR /app
 FROM base AS dependencies
 
 # Copy only the files needed to install dependencies
-COPY package.json yarn.lock ./
+COPY package.json  ./
 
 # Install dependencies using Yarn
 RUN yarn install --frozen-lockfile
