@@ -39,7 +39,7 @@ export const createUserScore = async (scoreData: {
       .values({
         userId: scoreData.userId,
         activityType: scoreData.activityType,
-        point: scoreData.point,
+        point: scoreData.point.toString(),
         active: scoreData.active,
         itemId: scoreData.itemId,
         itemType: scoreData.itemType,
@@ -84,7 +84,7 @@ export const updateUserScore = async (id: bigint, newPoint: number, userId: numb
   try {
     await db
       .update(usersScore)
-      .set({ point: newPoint })
+      .set({ point: newPoint.toString() })
       .where(and(eq(usersScore.id, id), eq(usersScore.userId, userId)))
       .execute();
     // Invalidate cache

@@ -28,8 +28,12 @@ import { checkRateLimit } from "./utils/checkRateLimit";
 import { logger } from "./utils/logger";
 import { handleShareTournament } from "./handlers/handleShareTournament";
 import { handleShareAffiliateLink } from "./handlers/handleShareAffiliateLink";
+
+import {handleShareJoinOntonLink} from "./controllers/handleShareJoinOntonLink";
+
 import {startPollSenderCron} from "./cronJobs/initializer";
 export const bot = new Bot<MyContext>(process.env.BOT_TOKEN || "");
+
 (async function bootstrap() {
   try {
     // 1) Connect to Redis
@@ -127,6 +131,7 @@ export const bot = new Bot<MyContext>(process.env.BOT_TOKEN || "");
     app.post("/create-invite", createInviteLinkHandler);
     app.post("/delete-invite", deleteInviteLinkHandler);
     app.post("/share-affiliate-link", handleShareAffiliateLink);
+    app.post("/share-join-onton-link-affiliate", handleShareJoinOntonLink);
     // 7) Start listening, store the server instance
     const server = app.listen(port, () =>
       logger.log(`Telegram Bot API service on port ${port}`),
