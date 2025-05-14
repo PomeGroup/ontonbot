@@ -23,6 +23,7 @@ const CheckStatusLayout = ({ children }: { children: React.ReactNode }) => {
                 variant="title2"
                 weight="bold"
                 className="tracking-wider whitespace-nowrap font-bold"
+                truncate
               >
                 NION Airdrop
               </Typography>

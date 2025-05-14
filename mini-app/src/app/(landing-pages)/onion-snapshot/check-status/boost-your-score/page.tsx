@@ -115,11 +115,11 @@ const BoostYourScorePage = () => {
           </div>
 
           {/* Button group */}
-          <div className="flex gap-2 w-full">
+          <div className="flex gap-2 w-full flex-wrap">
             <Button
               variant="primary"
               size="lg"
-              className="bg-[#007AFF] text-white"
+              className="flex-1 bg-[#007AFF] text-white"
               onClick={async () => {
                 if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                   await navigator.clipboard.writeText(ontonJoinAffiliateDataQuery.data?.linkHash);
@@ -136,7 +136,7 @@ const BoostYourScorePage = () => {
               variant="primary"
               size="lg"
               disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
-              className="w-full bg-[#007AFF] text-white"
+              className="flex-1 bg-[#007AFF] text-white"
               onClick={() => {
                 if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                   webapp?.openTelegramLink(

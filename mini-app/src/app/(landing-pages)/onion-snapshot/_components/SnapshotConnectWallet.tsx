@@ -33,7 +33,7 @@ export const SnapshotConnectWallet = () => {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex gap-5 font-medium p-3"
+          className="flex gap-1 font-medium p-2"
         >
           {`${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`}
           <FaAngleDown size={16} />
