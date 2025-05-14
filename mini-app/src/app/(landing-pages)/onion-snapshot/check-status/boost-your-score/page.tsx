@@ -140,7 +140,15 @@ const BoostYourScorePage = () => {
               onClick={() => {
                 if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                   webapp?.openTelegramLink(
-                    telegramShareLink(ontonJoinAffiliateDataQuery.data?.linkHash, "Share ONTON referral link")
+                    telegramShareLink(
+                      ontonJoinAffiliateDataQuery.data?.linkHash,
+                      `
+Join ONTON Affiliate
+
+Check out this exclusive ONTON referral link for special tasks and bonuses:
+
+Good luck and see you in the ONTON world! 🏆`
+                    )
                   );
                 } else {
                   toast.error("No link hash found");
