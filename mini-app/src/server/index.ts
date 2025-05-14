@@ -22,6 +22,7 @@ import { usersRouter } from "./routers/users";
 import { visitorsRouter } from "./routers/visitors";
 import { router } from "./trpc";
 import { campaignRouter } from "@/server/routers/campaignRouter";
+import { tasksRouter } from "@/server/routers/tasksRouter";
 
 export const appRouter = router({
   users: usersRouter,
@@ -45,6 +46,7 @@ export const appRouter = router({
   usersScore: UsersScoreRouter,
   tournaments: tournamentsRouter,
   campaign: campaignRouter,
+  task: tasksRouter,
 });
 
 export type AppRouter = typeof appRouter;

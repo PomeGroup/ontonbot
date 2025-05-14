@@ -64,12 +64,6 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({ featureName, children 
           >
             Need Help?
           </Button>
-          <Typography
-            variant="footnote"
-            className="font-normal text-balance max-w-md"
-          >
-            You will receive a notification when this page becomes available, provided you opt to get updates.
-          </Typography>
         </div>
       </div>
     );

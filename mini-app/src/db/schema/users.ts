@@ -4,6 +4,8 @@ import { airdropRoutines } from "@/db/schema/airdropRoutines";
 import { tickets } from "@/db/schema/tickets";
 import { userEventFields } from "@/db/schema/userEventFields";
 
+// @ts-ignore
+// @ts-ignore
 export const users = pgTable(
   "users",
   {
@@ -38,6 +40,7 @@ export const users = pgTable(
     /*                                   Points                                   */
     /* -------------------------------------------------------------------------- */
     user_point: integer("user_point").notNull().default(0),
+    affiliatorUserId: bigint("affiliator_user_id", { mode: "number" }),
   },
   (table) => ({
     usernameIdx: index("users_username_idx").on(table.username),

@@ -7,6 +7,7 @@ export const affiliateItemType = pgEnum("affiliate_item_type", [
   "HOME",
   "onion1-campaign",
   "onion1-special-affiliations",
+  "onton-join-task",
 ]);
 
 export const affiliateLinks = pgTable(
