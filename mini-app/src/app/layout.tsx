@@ -3,16 +3,16 @@ import NotificationHandler from "@/app/_components/NotificationHandler";
 import { cn } from "@/lib/utils";
 import { GoogleTagManager } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
-import { Roboto } from "next/font/google";
+import { Baloo_Bhaijaan_2 } from "next/font/google";
 import Script from "next/script";
 import React from "react";
 import ModalsContainer from "./_components/ModalsContainer";
 import "./globals.css";
 import Providers from "./providers";
 
-const mainFont = Roboto({
+const mainFont = Baloo_Bhaijaan_2({
   subsets: ["latin"],
-  weight: ["100", "300", "400", "500", "700", "900"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -36,6 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
             <script
               src="https://dvq1zz1g273yl.cloudfront.net/buyer_v1.0.3.min.js"
+              // eslint-disable-next-line react/no-unknown-property
               traffy-key="851"
             ></script>
           </>
