@@ -326,10 +326,10 @@ const DiscoverTournaments: React.FC = () => {
  */
 const PlayToWin: React.FC = () => {
   return (
-    <>
+    <div className="flex flex-col gap-2">
       <Play2WinFeatured />
       <DiscoverTournaments />
-    </>
+    </div>
   );
 };
 
