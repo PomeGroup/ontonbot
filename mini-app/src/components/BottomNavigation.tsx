@@ -58,7 +58,7 @@ export default function BottomNavigation(props: { children: ReactNode }) {
   }
 
   // Calculate navigation height including safe area
-  const navHeight = "calc(68px + var(--tg-safe-area-inset-bottom, 0px))";
+  const navHeight = "68px";
 
   return (
     <div className="flex flex-col min-h-screen bg-ios-light-surface dark:bg-ios-dark-surface">
