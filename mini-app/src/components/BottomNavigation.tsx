@@ -65,7 +65,7 @@ export default function BottomNavigation(props: { children: ReactNode }) {
       <div
         className="flex-1 p-4 overflow-y-auto"
         style={{
-          paddingBottom: `calc(${navHeight} + 16px)`,
+          paddingBottom: `calc(${navHeight} + 1rem)`,
         }}
       >
         {props.children}
