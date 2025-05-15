@@ -71,7 +71,7 @@ export default function BottomNavigation(props: { children: ReactNode }) {
         {props.children}
       </div>
       <div
-        className="fixed left-0 bottom-0 w-full flex bg-white"
+        className="fixed left-0 bottom-0 w-full flex bg-white items-center justify-between px-4 gap-4"
         style={{ height: navHeight }}
       >
         {tabs.map((tab) => (
@@ -87,6 +87,7 @@ export default function BottomNavigation(props: { children: ReactNode }) {
             <Typography
               weight="normal"
               variant="footnote"
+              truncate
             >
               {tab.title}
             </Typography>
