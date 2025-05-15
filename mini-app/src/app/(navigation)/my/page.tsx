@@ -81,7 +81,7 @@ export default function ProfilePage() {
         iconSrc={solarCupOutline}
         title="My Points"
         subtitle="You Acheived"
-        footerTexts={[{ items: "Points", count: totalPoints || 0 }]}
+        footerTexts={[{ items: "Points", count: Number(totalPoints) || 0 }]}
       />
 
       <ConnectWalletCard />
@@ -89,7 +89,7 @@ export default function ProfilePage() {
 
       {hasEventOrganizer && (
         <div
-          className="fixed text-primary drop-shadow rounded-full right-8 bottom-16 z-50 cursor-pointer"
+          className="fixed text-primary drop-shadow rounded-full right-4 pt-1  bottom-24 z-50 cursor-pointer"
           onClick={() => {
             setSection("event_setup_form_general_step");
             router.push("/events/create");
