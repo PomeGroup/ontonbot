@@ -17,6 +17,7 @@ interface Props {
 }
 
 export const Banner = ({ className }: Props) => {
+  return null
   const router = useRouter();
   const config = useConfig();
   const configEndDate = config["campeign_merge_date"];
