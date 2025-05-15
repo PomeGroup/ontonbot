@@ -261,6 +261,8 @@ export const insertUser = async (initDataJson: InitUserData, joinAffiliateHash?:
 
   const user = await selectUserById(id);
   // logger.log("joinAffiliateHash-------------", joinAffiliateHash);
+  //  so we can use it in the affiliate logic
+  //  so we can use it in the affiliate logic
   // 1) If user does NOT exist, insert:
   if (!user) {
     // brand-new user flow
