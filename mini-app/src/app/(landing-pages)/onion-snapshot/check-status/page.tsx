@@ -151,7 +151,7 @@ const CheckStatusPage = () => {
                       variant="headline"
                       weight="bold"
                     >
-                      {onionCampaignOnionQuery.data?.itemsByType["0"]?.length ?? 0}
+                      {onionCampaignOnionQuery.data?.itemsByType["1"]?.length ?? 0}
                     </Typography>
                     <Typography
                       variant="footnote"
@@ -177,7 +177,7 @@ const CheckStatusPage = () => {
                       variant="headline"
                       weight="bold"
                     >
-                      {onionCampaignOnionQuery.data?.itemsByType["1"]?.length ?? 0}
+                      {onionCampaignOnionQuery.data?.itemsByType["2"]?.length ?? 0}
                     </Typography>
                     <Typography
                       variant="footnote"
@@ -203,7 +203,7 @@ const CheckStatusPage = () => {
                       variant="headline"
                       weight="bold"
                     >
-                      {onionCampaignOnionQuery.data?.itemsByType["2"]?.length ?? 0}
+                      {onionCampaignOnionQuery.data?.itemsByType["3"]?.length ?? 0}
                     </Typography>
                     <Typography
                       variant="footnote"
