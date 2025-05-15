@@ -65,34 +65,42 @@ export default function BottomNavigation(props: { children: ReactNode }) {
       <div
         className="flex-1 p-4 overflow-y-auto"
         style={{
-          paddingBottom: `calc(${navHeight} + 1rem)`,
+          paddingBottom: `calc(${navHeight} + 1rem + var(--tg-safe-area-inset-bottom))`,
         }}
       >
         {props.children}
       </div>
-      <div
-        className="fixed left-0 bottom-0 w-full flex bg-white items-center justify-between px-4 gap-4 z-[1000]"
-        style={{ height: navHeight }}
-      >
-        {tabs.map((tab) => (
-          <div
-            key={tab.title}
-            className={cn(
-              "flex-1 flex flex-col gap-0.5 items-center justify-center cursor-pointer text-[#6D6D72]",
-              tab.urls.includes(pathname) && "text-primary"
-            )}
-            onClick={() => router.push(tab.urls[0])}
-          >
-            {tab.icon}
-            <Typography
-              weight="normal"
-              variant="footnote"
-              truncate
+      <div className="fixed left-0 bottom-0 w-full">
+        <div
+          className="flex-1 w-full flex bg-white items-center justify-between px-4 gap-4 z-[1000]"
+          style={{ height: navHeight }}
+        >
+          {tabs.map((tab) => (
+            <div
+              key={tab.title}
+              className={cn(
+                "flex-1 flex flex-col gap-0.5 items-center justify-center cursor-pointer text-[#6D6D72]",
+                tab.urls.includes(pathname) && "text-primary"
+              )}
+              onClick={() => router.push(tab.urls[0])}
             >
-              {tab.title}
-            </Typography>
-          </div>
-        ))}
+              {tab.icon}
+              <Typography
+                weight="normal"
+                variant="footnote"
+                truncate
+              >
+                {tab.title}
+              </Typography>
+            </div>
+          ))}
+        </div>
+        <div
+          className="h-[var(--tg-safe-area-inset-bottom)] bg-white/75"
+          style={{
+            backdropFilter: "blur(50px)",
+          }}
+        />
       </div>
     </div>
   );
