@@ -89,7 +89,7 @@ export default function ProfilePage() {
 
       {hasEventOrganizer && (
         <div
-          className="fixed text-primary drop-shadow rounded-full right-8 bottom-16 z-50 cursor-pointer"
+          className="fixed text-primary drop-shadow rounded-full right-4 pt-1  bottom-20 z-50 cursor-pointer"
           onClick={() => {
             setSection("event_setup_form_general_step");
             router.push("/events/create");
