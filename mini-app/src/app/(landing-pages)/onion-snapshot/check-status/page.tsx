@@ -21,6 +21,10 @@ const CheckStatusPage = () => {
 
   const totalPointsQuery = trpc.usersScore.getTotalScoreByUserId.useQuery();
 
+  const [goldAbleArr, silverAbleArr, bronzeAbleArr] = ["1", "2", "3"].map((type) =>
+    (onionCampaignOnionQuery.data?.itemsByType[type] || []).filter((item) => item.offChain.mergeStatus === "able_to_merge")
+  );
+
   return (
     <div>
       {/* Your ONION Snapshot Section */}
@@ -65,7 +69,7 @@ const CheckStatusPage = () => {
                     ? "Loading..."
                     : totalPointsQuery.error
                       ? "Error loading points"
-                      : (totalPointsQuery.data ?? 0)}
+                      : Number(totalPointsQuery.data ?? 0)}
                 </Typography>
                 <Typography variant="footnote">ONTON points</Typography>
               </div>
@@ -151,7 +155,7 @@ const CheckStatusPage = () => {
                       variant="headline"
                       weight="bold"
                     >
-                      {onionCampaignOnionQuery.data?.itemsByType["0"]?.length ?? 0}
+                      {goldAbleArr.length}
                     </Typography>
                     <Typography
                       variant="footnote"
@@ -177,7 +181,7 @@ const CheckStatusPage = () => {
                       variant="headline"
                       weight="bold"
                     >
-                      {onionCampaignOnionQuery.data?.itemsByType["1"]?.length ?? 0}
+                      {silverAbleArr.length}
                     </Typography>
                     <Typography
                       variant="footnote"
@@ -203,7 +207,7 @@ const CheckStatusPage = () => {
                       variant="headline"
                       weight="bold"
                     >
-                      {onionCampaignOnionQuery.data?.itemsByType["2"]?.length ?? 0}
+                      {bronzeAbleArr.length}
                     </Typography>
                     <Typography
                       variant="footnote"
