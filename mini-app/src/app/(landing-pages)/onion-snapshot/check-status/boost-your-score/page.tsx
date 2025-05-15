@@ -44,7 +44,7 @@ const BoostYourScorePage = () => {
                   ? "Loading..."
                   : totalPointsQuery.error
                     ? "Error loading points"
-                    : (totalPointsQuery.data ?? 0)}
+                    : Number(totalPointsQuery.data ?? 0)}
               </Typography>
               <Typography variant="caption1">ONTON points</Typography>
             </div>
