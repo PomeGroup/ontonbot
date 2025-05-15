@@ -47,7 +47,7 @@ const ImportantDates = () => {
                   variant="footnote"
                   weight="medium"
                 >
-                  May 15, 2025
+                  June 10, 2025
                 </Typography>
               </div>
             </div>

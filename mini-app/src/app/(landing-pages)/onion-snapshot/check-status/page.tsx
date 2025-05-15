@@ -40,7 +40,7 @@ const CheckStatusPage = () => {
             variant="footnote"
             className="text-center px-4"
           >
-            This is not a live estimator - final numbers will be calculated after snapshot at May 15. Claim opens July 10
+            This is not a live estimator - final numbers will be calculated after snapshot at June 10. Claim opens July 10
           </Typography>
         </div>
 
