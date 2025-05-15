@@ -127,7 +127,7 @@ const WhatIsOnion = () => {
             variant="subheadline1"
             className="font-semibold text-[14px]"
           >
-            Points = ONIONs (snapshot on May 15, Claim begins at July 10)
+            Points = ONIONs (snapshot on June 10, Claim begins at July 10)
           </Typography>
         </div>
       </CustomCard>
