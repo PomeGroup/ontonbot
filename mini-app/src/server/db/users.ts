@@ -260,7 +260,7 @@ export const insertUser = async (initDataJson: InitUserData, joinAffiliateHash?:
   const { id, username, first_name, last_name, language_code } = initDataJson.user;
 
   const user = await selectUserById(id);
-  logger.log("joinAffiliateHash-------------", joinAffiliateHash);
+  // logger.log("joinAffiliateHash-------------", joinAffiliateHash);
   // 1) If user does NOT exist, insert:
   if (!user) {
     // brand-new user flow
