@@ -22,3 +22,15 @@ export const additionalRecipients = [
   91896720, //elbabix
   548648769, // Radiophp
 ];
+
+/**
+ * Regex to detect invite placeholders: {invite:-100XXXX}
+ * capturing -?\d+ as group #1
+ */
+export const INVITE_PLACEHOLDER_REGEX = /\{invite:(-?\d+)\}/g;
+
+/** Existing affiliate placeholders: {onion1-campaign}, etc. */
+export const AFFILIATE_PLACEHOLDERS = [
+  "{onion1-special-affiliations}",
+  "{onion1-campaign}",
+];

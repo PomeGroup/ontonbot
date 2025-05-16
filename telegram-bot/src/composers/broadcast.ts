@@ -4,156 +4,69 @@ import {
   isUserAdmin,
   getEvent,
   getEventTickets,
-  createAffiliateLinks,
 } from "../db/db";
 import { parse } from "csv-parse/sync";
 import axios from "axios";
 import { isNewCommand } from "../helpers/isNewCommand";
 import { logger } from "../utils/logger";
-import { sleep } from "../utils/utils";
-import { additionalRecipients } from "../constants";
+import {
+  checkBotIsAdmin,
+  escapeCsv,
+  extractInviteChatIds,
+  generateBroadcastGroupTitle,
+  normalizeDashes,
+  sleep
+} from "../utils/utils";
+import {additionalRecipients, AFFILIATE_PLACEHOLDERS, INVITE_PLACEHOLDER_REGEX} from "../constants";
 import { Readable } from "stream";
-import { pool } from "../db/pool"; // for manual queries
+import {getOrCreateSingleAffiliateLink} from "../db/affiliateLinks";
 
 export const broadcastComposer = new Composer<MyContext>();
 
-// Placeholders you want to handle
-const PLACEHOLDERS = [
-  "{onion1-special-affiliations}",
-  "{onion1-campaign}",
-];
-
-/* -------------------------------------------------------------------------- */
-/*    1) generateBroadcastGroupTitle => used to set a common group_title      */
-
-/* -------------------------------------------------------------------------- */
-function generateBroadcastGroupTitle(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  const hh = String(now.getHours()).padStart(2, "0");
-  const mm = String(now.getMinutes()).padStart(2, "0");
-  const ss = String(now.getSeconds()).padStart(2, "0");
-  return `broad-cast-${y}${m}${d}${hh}${mm}${ss}`;
-}
-
-/* -------------------------------------------------------------------------- */
-/*  2) getOrCreateSingleAffiliateLink => checks if link exists; if not, make  */
-
-/* -------------------------------------------------------------------------- */
-async function getOrCreateSingleAffiliateLink(
-  userId: number,
-  itemType: string,
-  baseTitle: string,
-  groupTitle: string,
-) {
-  const client = await pool.connect();
-  try {
-    // 1) Check if a link already exists for this user & itemType with item_id=0
-    const sqlCheck = `
-        SELECT id, link_hash, title, group_title
-        FROM affiliate_links
-        WHERE "item_type" = $1
-          AND "Item_id" = 0
-          AND "affiliator_user_id" = $2
-        LIMIT 1
-    `;
-    const resCheck = await client.query(sqlCheck, [itemType, userId]);
-    if (resCheck.rowCount > 0) {
-      // Found an existing link => optionally update group_title
-      const existingLink = resCheck.rows[0];
-      // If you always want to override group_title with the current broadcast groupTitle, do:
-      if (existingLink.group_title !== groupTitle) {
-        await client.query(
-          "UPDATE affiliate_links SET \"group_title\"=$1 WHERE \"id\"=$2",
-          [groupTitle, existingLink.id],
-        );
-      }
-      return {
-        id: existingLink.id,
-        link_hash: existingLink.link_hash,
-        title: existingLink.title,
-        group_title: groupTitle,
-      };
-    }
-
-    // 2) If not found => create a new link via createAffiliateLinks (count=1)
-    // But we can't do that inside the same client query easily. We'll just do it outside:
-  } finally {
-    client.release();
-  }
-
-  // 3) Create a new link (with eventId=0, itemType, userId, baseTitle)
-  const creation = await createAffiliateLinks({
-    eventId: 0,        // dummy event
-    userId: userId,
-    itemType,
-    baseTitle,
-    count: 1,          // just one link
+async function createOneTimeInviteLink(api: MyContext["api"], chatId: number): Promise<string> {
+  const link = await api.createChatInviteLink(chatId, {
+    member_limit: 1,
+    name: "One-time link",
   });
-  const newLink = creation.links[0];
-
-  // 4) Update group_title
-  const client2 = await pool.connect();
-  try {
-    await client2.query(
-      "UPDATE affiliate_links SET \"group_title\"=$1 WHERE \"id\"=$2",
-      [groupTitle, newLink.id],
-    );
-  } finally {
-    client2.release();
-  }
-
-  // Return updated link
-  return {
-    id: newLink.id,
-    link_hash: newLink.link_hash,
-    title: newLink.title,
-    group_title: groupTitle,
-  };
+  logger.info(`Created invite link for chatId=${chatId}: ${link.invite_link}`);
+  return link.invite_link;
 }
 
 /* -------------------------------------------------------------------------- */
-/*                 /broadcast Command => choose event or csv                 */
+/* /broadcast Command => user picks event or CSV                              */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.command("broadcast", async (ctx) => {
   const { isAdmin } = await isUserAdmin(ctx.from?.id.toString() || "");
   if (!isAdmin) return;
 
-  // Reset session
   ctx.session.broadcastStep = "chooseTarget";
   ctx.session.broadcastType = undefined;
   ctx.session.broadcastEventUuid = undefined;
   ctx.session.broadcastEventTitle = undefined;
   ctx.session.broadcastUserIds = [];
-  ctx.session.broadcastCsvUserIds = [];
 
   const kb = new InlineKeyboard()
-    .text("Event Participants", "bc_event")
-    .text("Custom CSV", "bc_csv");
+      .text("Event Participants", "bc_event")
+      .text("Custom CSV", "bc_csv");
 
   await ctx.reply("Who do you want to broadcast to?", { reply_markup: kb });
 });
 
 /* -------------------------------------------------------------------------- */
-/*             3) Inline buttons => "event" or "csv"                         */
+/* Step => user picks event or CSV                                            */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.on("callback_query:data", async (ctx, next) => {
-  if (ctx.session.broadcastStep !== "chooseTarget") {
-    return next();
-  }
-  await ctx.answerCallbackQuery();
+  if (ctx.session.broadcastStep !== "chooseTarget") return next();
 
+  await ctx.answerCallbackQuery();
   const choice = ctx.callbackQuery.data;
+
   if (choice === "bc_event") {
     ctx.session.broadcastType = "event";
     ctx.session.broadcastStep = "askEventUuid";
     await ctx.reply("Please send the Event UUID (36 characters).");
     return;
-  }
-
-  if (choice === "bc_csv") {
+  } else if (choice === "bc_csv") {
     ctx.session.broadcastType = "csv";
     ctx.session.broadcastStep = "askCsv";
     await ctx.reply("Please upload your CSV file now (one user_id per line).");
@@ -162,7 +75,7 @@ broadcastComposer.on("callback_query:data", async (ctx, next) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/*        4) Next message => event UUID or CSV => then askBroadcast          */
+/* Step => handle event UUID or CSV => then askBroadcast                     */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.on("message", async (ctx, next) => {
   if (isNewCommand(ctx)) {
@@ -174,14 +87,9 @@ broadcastComposer.on("message", async (ctx, next) => {
 
   if (step === "askEventUuid" && ctx.message?.text) {
     return handleEventUuid(ctx);
-  }
-
-  if (step === "askCsv" && ctx.message?.document) {
+  } else if (step === "askCsv" && ctx.message?.document) {
     return handleCsvUpload(ctx);
-  }
-
-  // step=askBroadcast => next message is the broadcast content
-  if (step === "askBroadcast") {
+  } else if (step === "askBroadcast") {
     return handleBroadcastMessage(ctx);
   }
 
@@ -189,8 +97,7 @@ broadcastComposer.on("message", async (ctx, next) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/*     handleEventUuid => fetch participants, store user IDs, askBroadcast   */
-
+/* handleEventUuid => fetch participants => store user IDs => askBroadcast   */
 /* -------------------------------------------------------------------------- */
 async function handleEventUuid(ctx: MyContext) {
   const uuidCandidate = ctx.message?.text?.trim();
@@ -209,9 +116,7 @@ async function handleEventUuid(ctx: MyContext) {
 
   const tickets = await getEventTickets(uuidCandidate);
   if (!tickets?.length) {
-    await ctx.reply(
-      `No participants found for event "${eventRow.title}". Nothing to broadcast.`,
-    );
+    await ctx.reply(`No participants found for event "${eventRow.title}". Nothing to broadcast.`);
     ctx.session.broadcastStep = "done";
     return;
   }
@@ -222,14 +127,13 @@ async function handleEventUuid(ctx: MyContext) {
 
   ctx.session.broadcastStep = "askBroadcast";
   await ctx.reply(
-    `✅ Event "${eventRow.title}" found with ${tickets.length} participant(s).\n` +
-    "Now send any message (text, photo, video, etc.) you want to broadcast (no placeholder replacements).",
+      `✅ Event "${eventRow.title}" found with ${tickets.length} participant(s).\n` +
+      "Now send any message (text, photo, video, etc.) you want to broadcast.",
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*                handleCsvUpload => parse CSV into user IDs                 */
-
+/* handleCsvUpload => parse CSV => store user IDs => askBroadcast            */
 /* -------------------------------------------------------------------------- */
 async function handleCsvUpload(ctx: MyContext) {
   const doc = ctx.message?.document;
@@ -242,6 +146,7 @@ async function handleCsvUpload(ctx: MyContext) {
     return;
   }
 
+  // Download CSV
   const fileInfo = await ctx.api.getFile(doc.file_id);
   if (!fileInfo.file_path) {
     await ctx.reply("Unable to retrieve file path from Telegram.");
@@ -252,10 +157,8 @@ async function handleCsvUpload(ctx: MyContext) {
   try {
     const res = await axios.get<ArrayBuffer>(url, { responseType: "arraybuffer" });
     const buffer = Buffer.from(res.data);
-
-    // Each line => user_id
     const rows = parse(buffer.toString("utf-8"), { skip_empty_lines: true });
-    const userIds: string[] = rows.map((r: string[]) => r[0]?.trim()).filter(Boolean);
+    const userIds = rows.map((r: string[]) => r[0]?.trim()).filter(Boolean);
 
     if (!userIds.length) {
       await ctx.reply("No user IDs found in the CSV. Flow canceled.");
@@ -266,19 +169,18 @@ async function handleCsvUpload(ctx: MyContext) {
     ctx.session.broadcastUserIds = userIds;
     ctx.session.broadcastStep = "askBroadcast";
     await ctx.reply(
-      `✅ CSV parsed. Found ${userIds.length} user(s).\n` +
-      "Now send any message (text, photo, video, etc.) you want to broadcast.\n" +
-      "Placeholders {onion1-special-affiliations} and {onion1-campaign} will be replaced with existing or new custom links (unique per user).",
+        `✅ CSV parsed. Found ${userIds.length} user(s).\n` +
+        "Now send any message (text, photo, video, etc.) you want to broadcast.\n" +
+        "Placeholders {invite:<chatID>} for single-use links; {onion1-campaign}, etc. for affiliate links.",
     );
   } catch (err) {
-    await ctx.reply(`Error parsing CSV: ${err}`);
+    await ctx.reply(`Error parsing CSV: ${String(err)}`);
     ctx.session.broadcastStep = "done";
   }
 }
 
 /* -------------------------------------------------------------------------- */
-/*     handleBroadcastMessage => final step => send to user IDs, track errors */
-
+/* handleBroadcastMessage => final step => pre-check invite placeholders, or send */
 /* -------------------------------------------------------------------------- */
 async function handleBroadcastMessage(ctx: MyContext) {
   const userIds = ctx.session.broadcastUserIds;
@@ -298,14 +200,13 @@ async function handleBroadcastMessage(ctx: MyContext) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*              handleEventBroadcast => copyMessage no placeholders          */
-
+/* handleEventBroadcast => copyMessage no placeholders                       */
 /* -------------------------------------------------------------------------- */
 async function handleEventBroadcast(ctx: MyContext, userIds: string[]) {
   const sourceChatId = ctx.chat?.id;
   const sourceMessageId = ctx.message?.message_id;
   if (!sourceChatId || !sourceMessageId) {
-    await ctx.reply("Unable to read the message ID or chat ID. Flow ended.");
+    await ctx.reply("Unable to read the message or chat ID. Flow ended.");
     return;
   }
 
@@ -318,7 +219,7 @@ async function handleEventBroadcast(ctx: MyContext, userIds: string[]) {
     try {
       await ctx.api.copyMessage(userId, sourceChatId, sourceMessageId);
       successCount++;
-    } catch (err: any) {
+    } catch (err) {
       logger.warn(`Failed to send to user ${userId}: ${err}`);
       errors.push({ user_id: userId, error: String(err) });
     }
@@ -329,40 +230,54 @@ async function handleEventBroadcast(ctx: MyContext, userIds: string[]) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*        handleCsvBroadcastWithPlaceholders => parse text/caption           */
-
+/* handleCsvBroadcastWithPlaceholders => pre-check for all invites => if any fail => abort */
 /* -------------------------------------------------------------------------- */
 async function handleCsvBroadcastWithPlaceholders(ctx: MyContext, userIds: string[]) {
   const msg = ctx.message;
-  const sourceChatId = msg.chat?.id;
+  const sourceChatId = msg.chat?.id!;
   const sourceMessageId = msg.message_id;
-  if (!sourceChatId || !sourceMessageId) {
-    await ctx.reply("Unable to read the message or chat ID. Flow ended.");
-    return;
-  }
 
-  await ctx.reply(`Broadcasting (with placeholder checks) to ${userIds.length} users...`);
-
-  const errors: { user_id: string; error: string }[] = [];
-  let successCount = 0;
-
-  // Determine message type
+  // 1) Extract text or caption
   const isText = Boolean(msg.text);
-  const isPhoto = Boolean(msg.photo);
-  const isVideo = Boolean(msg.video);
   const caption = msg.caption || "";
   const baseText = isText ? msg.text! : caption;
 
-  // Single groupTitle for entire broadcast
+  // 2) Gather all chat IDs from {invite:<chatId>}
+  const chatIds = extractInviteChatIds(baseText);
+
+  // 3) Check if bot is admin for each chat. If any fail => abort entire broadcast
+  for (const chatId of chatIds) {
+    const isAdmin = await checkBotIsAdmin(ctx.api, chatId);
+    if (!isAdmin) {
+      // Abort the entire flow
+      await ctx.reply(
+          `❌ The bot is NOT an admin in chatId=${chatId}.\n` +
+          "Please make the bot admin and restart the process."
+      );
+      // Clear session
+      ctx.session = {};
+      await ctx.reply("Operation canceled. Your active flow(s) have been cleared.");
+      return;
+    }
+  }
+
+  // 4) If we reach here => all placeholders are valid => proceed
+  await ctx.reply(`All placeholders are valid. Now sending to ${userIds.length} users...`);
+
+  const errors: { user_id: string; error: string }[] = [];
+  let successCount = 0;
   const broadcastGroupTitle = generateBroadcastGroupTitle();
 
+  // 5) Send to each user
+  const isPhoto = Boolean(msg.photo);
+  const isVideo = Boolean(msg.video);
   for (const userId of userIds) {
-    let replacedText = await replacePlaceholdersAndReuseLink(
-      baseText,
-      userId,
-      broadcastGroupTitle,
+    const replacedText = await replacePlaceholdersAndLinks(
+        baseText,
+        parseInt(userId, 10),
+        broadcastGroupTitle,
+        ctx
     );
-
     try {
       if (isText) {
         await ctx.api.sendMessage(userId, replacedText, { parse_mode: "HTML" });
@@ -382,26 +297,26 @@ async function handleCsvBroadcastWithPlaceholders(ctx: MyContext, userIds: strin
         await ctx.api.copyMessage(userId, sourceChatId, sourceMessageId);
       }
       successCount++;
-    } catch (err: any) {
+    } catch (err) {
       logger.warn(`Failed to send to user ${userId}: ${err}`);
       errors.push({ user_id: userId, error: String(err) });
     }
     await sleep(100);
   }
 
+  // 6) Finalize
   await finalizeBroadcast(ctx, sourceChatId, sourceMessageId, errors, successCount);
 }
 
 /* -------------------------------------------------------------------------- */
-/*           finalizeBroadcast => handle summary, CSV, notify admins         */
-
+/* finalizeBroadcast => handle summary, CSV, notify admins                   */
 /* -------------------------------------------------------------------------- */
 async function finalizeBroadcast(
-  ctx: MyContext,
-  sourceChatId: number,
-  sourceMsgId: number,
-  errors: { user_id: string; error: string }[],
-  successCount: number,
+    ctx: MyContext,
+    sourceChatId: number,
+    sourceMsgId: number,
+    errors: { user_id: string; error: string }[],
+    successCount: number,
 ) {
   await ctx.reply(`✅ Broadcast complete. Sent to ${successCount} user(s).`);
   if (errors.length === 0) {
@@ -425,15 +340,14 @@ async function finalizeBroadcast(
 }
 
 /* -------------------------------------------------------------------------- */
-/*     notifyAdmins => forward the original broadcast + any error CSV        */
-
+/* notifyAdmins => forward the original broadcast + any error CSV            */
 /* -------------------------------------------------------------------------- */
 async function notifyAdmins(
-  ctx: MyContext,
-  broadcastSourceChatId: number,
-  broadcastSourceMsgId: number,
-  errorCsvFileId: string | null | undefined,
-  successCount: number,
+    ctx: MyContext,
+    broadcastSourceChatId: number,
+    broadcastSourceMsgId: number,
+    errorCsvFileId: string | null | undefined,
+    successCount: number,
 ) {
   const summaryText = `Broadcast summary:\n- Success count: ${successCount}\n`;
 
@@ -446,14 +360,12 @@ async function notifyAdmins(
       logger.warn(`Could not forward broadcast to admin ${adminId}: ${err}`);
     }
 
-    // summary
     try {
       await ctx.api.sendMessage(adminId, summaryText);
     } catch (err) {
       logger.warn(`Could not send summary to admin ${adminId}: ${err}`);
     }
 
-    // CSV if any
     if (errorCsvFileId) {
       try {
         await ctx.api.sendDocument(adminId, errorCsvFileId, {
@@ -467,55 +379,57 @@ async function notifyAdmins(
 }
 
 /* -------------------------------------------------------------------------- */
-/* replacePlaceholdersAndReuseLink => for each placeholder, get existing link */
-/* or create new if not found. Then replace text with that link.             */
-
+/* replacePlaceholdersAndLinks => merges existing placeholders + single-use links*/
 /* -------------------------------------------------------------------------- */
-async function replacePlaceholdersAndReuseLink(
-  baseText: string,
-  userIdStr: string,
-  broadcastGroupTitle: string,
+async function replacePlaceholdersAndLinks(
+    baseText: string,
+    userId: number,
+    broadcastGroupTitle: string,
+    ctx: MyContext
 ): Promise<string> {
-  let newText = baseText;
-  for (const ph of PLACEHOLDERS) {
-    if (!newText.includes(ph)) continue; // skip if placeholder not present
+  let newText = normalizeDashes(baseText);
 
+  // affiliate placeholders
+  for (const ph of AFFILIATE_PLACEHOLDERS) {
+    if (!newText.includes(ph)) continue;
     const itemType = ph.replace(/[{}]/g, "");
-    const userIdNum = parseInt(userIdStr, 10) || 0;
-    const baseTitle = `broadcast-${itemType}-${userIdStr}`;
+    const baseTitle = `broadcast-${itemType}-${userId}`;
 
     try {
-      // 1) Check if link exists => else create
       const linkRow = await getOrCreateSingleAffiliateLink(
-        userIdNum,
-        itemType,
-        baseTitle,
-        broadcastGroupTitle,
+          userId,
+          itemType,
+          baseTitle,
+          broadcastGroupTitle
       );
-
-      // 2) Build final URL
       const finalLinkUrl = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=campaign-aff-${linkRow.link_hash}`;
-
-      // 3) Replace
       newText = newText.replace(ph, finalLinkUrl);
     } catch (err) {
-      logger.error(`Error reusing/creating link for user ${userIdStr} & ph=${ph}: ${err}`);
+      logger.error(`Error creating affiliate link for user ${userId}, ph=${ph}: ${err}`);
       newText = newText.replace(ph, "[LINK_ERROR]");
+    }
+  }
+
+  // invite placeholders => we already pre-verified admin status, so no need to abort broadcast
+  // but if link creation fails, we mark [LINK_ERROR]
+  const invites = Array.from(newText.matchAll(INVITE_PLACEHOLDER_REGEX));
+  for (const match of invites) {
+    const fullPlaceholder = match[0]; // e.g. "{invite:-1001234567890}"
+    const chatIdStr = match[1];
+    const chatId = parseInt(chatIdStr, 10);
+
+    try {
+      const inviteLink = await createOneTimeInviteLink(ctx.api, chatId);
+      newText = newText.replace(fullPlaceholder, inviteLink);
+    } catch (err) {
+      logger.warn(`createOneTimeInviteLink error for chatId=${chatId}: ${err}`);
+      newText = newText.replace(fullPlaceholder, "[LINK_ERROR]");
     }
   }
 
   return newText;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                     Utility => escape CSV fields                          */
 
-/* -------------------------------------------------------------------------- */
-function escapeCsv(str: string): string {
-  if (!str) return "";
-  let s = str.replace(/"/g, "\"\"");
-  if (/[,"]/.test(s)) {
-    s = `"${s}"`;
-  }
-  return s;
-}
+
+
