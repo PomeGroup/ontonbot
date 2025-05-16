@@ -18,11 +18,11 @@ import {
  *                  else increment retry or final fail after 10 tries
  */
 export async function pollSenderCron(bot: Bot) {
-    logger.info("pollSenderCron: started");
+
 
     const rows = await fetchPendingPollSends(50);
     if (!rows.length) {
-        logger.info("pollSenderCron: no rows to process. Exiting.");
+        //logger.info("pollSenderCron: no rows to process. Exiting.");
         return;
     }
 
