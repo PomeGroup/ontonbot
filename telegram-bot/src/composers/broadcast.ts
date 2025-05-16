@@ -4,6 +4,7 @@ import {
   isUserAdmin,
   getEvent,
   getEventTickets,
+  getOrCreateSingleInviteLinkForUserAndChat
 } from "../db/db";
 import { parse } from "csv-parse/sync";
 import axios from "axios";
@@ -17,20 +18,14 @@ import {
   normalizeDashes,
   sleep
 } from "../utils/utils";
-import {additionalRecipients, AFFILIATE_PLACEHOLDERS, INVITE_PLACEHOLDER_REGEX} from "../constants";
+import { additionalRecipients, AFFILIATE_PLACEHOLDERS, INVITE_PLACEHOLDER_REGEX } from "../constants";
 import { Readable } from "stream";
-import {getOrCreateSingleAffiliateLink} from "../db/affiliateLinks";
+import { getOrCreateSingleAffiliateLink } from "../db/affiliateLinks";
+
 
 export const broadcastComposer = new Composer<MyContext>();
 
-async function createOneTimeInviteLink(api: MyContext["api"], chatId: number): Promise<string> {
-  const link = await api.createChatInviteLink(chatId, {
-    member_limit: 1,
-    name: "One-time link",
-  });
-  logger.info(`Created invite link for chatId=${chatId}: ${link.invite_link}`);
-  return link.invite_link;
-}
+
 
 /* -------------------------------------------------------------------------- */
 /* /broadcast Command => user picks event or CSV                              */
@@ -39,6 +34,7 @@ broadcastComposer.command("broadcast", async (ctx) => {
   const { isAdmin } = await isUserAdmin(ctx.from?.id.toString() || "");
   if (!isAdmin) return;
 
+  // Reset session
   ctx.session.broadcastStep = "chooseTarget";
   ctx.session.broadcastType = undefined;
   ctx.session.broadcastEventUuid = undefined;
@@ -57,10 +53,9 @@ broadcastComposer.command("broadcast", async (ctx) => {
 /* -------------------------------------------------------------------------- */
 broadcastComposer.on("callback_query:data", async (ctx, next) => {
   if (ctx.session.broadcastStep !== "chooseTarget") return next();
-
   await ctx.answerCallbackQuery();
-  const choice = ctx.callbackQuery.data;
 
+  const choice = ctx.callbackQuery.data;
   if (choice === "bc_event") {
     ctx.session.broadcastType = "event";
     ctx.session.broadcastStep = "askEventUuid";
@@ -116,7 +111,9 @@ async function handleEventUuid(ctx: MyContext) {
 
   const tickets = await getEventTickets(uuidCandidate);
   if (!tickets?.length) {
-    await ctx.reply(`No participants found for event "${eventRow.title}". Nothing to broadcast.`);
+    await ctx.reply(
+        `No participants found for event "${eventRow.title}". Nothing to broadcast.`
+    );
     ctx.session.broadcastStep = "done";
     return;
   }
@@ -146,7 +143,7 @@ async function handleCsvUpload(ctx: MyContext) {
     return;
   }
 
-  // Download CSV
+  // Download CSV from Telegram
   const fileInfo = await ctx.api.getFile(doc.file_id);
   if (!fileInfo.file_path) {
     await ctx.reply("Unable to retrieve file path from Telegram.");
@@ -158,7 +155,7 @@ async function handleCsvUpload(ctx: MyContext) {
     const res = await axios.get<ArrayBuffer>(url, { responseType: "arraybuffer" });
     const buffer = Buffer.from(res.data);
     const rows = parse(buffer.toString("utf-8"), { skip_empty_lines: true });
-    const userIds = rows.map((r: string[]) => r[0]?.trim()).filter(Boolean);
+    const userIds: string[] = rows.map((r: string[]) => r[0]?.trim()).filter(Boolean);
 
     if (!userIds.length) {
       await ctx.reply("No user IDs found in the CSV. Flow canceled.");
@@ -171,7 +168,7 @@ async function handleCsvUpload(ctx: MyContext) {
     await ctx.reply(
         `✅ CSV parsed. Found ${userIds.length} user(s).\n` +
         "Now send any message (text, photo, video, etc.) you want to broadcast.\n" +
-        "Placeholders {invite:<chatID>} for single-use links; {onion1-campaign}, etc. for affiliate links.",
+        "Placeholders {invite:<chatID>} for single-use links; {onion1-campaign} etc. for affiliates.",
     );
   } catch (err) {
     await ctx.reply(`Error parsing CSV: ${String(err)}`);
@@ -180,7 +177,7 @@ async function handleCsvUpload(ctx: MyContext) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* handleBroadcastMessage => final step => pre-check invite placeholders, or send */
+/* handleBroadcastMessage => final => send to user IDs, track errors         */
 /* -------------------------------------------------------------------------- */
 async function handleBroadcastMessage(ctx: MyContext) {
   const userIds = ctx.session.broadcastUserIds;
@@ -195,18 +192,17 @@ async function handleBroadcastMessage(ctx: MyContext) {
   } else {
     await handleCsvBroadcastWithPlaceholders(ctx, userIds);
   }
-
   ctx.session.broadcastStep = "done";
 }
 
 /* -------------------------------------------------------------------------- */
-/* handleEventBroadcast => copyMessage no placeholders                       */
+/* handleEventBroadcast => copyMessage, no placeholders                      */
 /* -------------------------------------------------------------------------- */
 async function handleEventBroadcast(ctx: MyContext, userIds: string[]) {
   const sourceChatId = ctx.chat?.id;
   const sourceMessageId = ctx.message?.message_id;
   if (!sourceChatId || !sourceMessageId) {
-    await ctx.reply("Unable to read the message or chat ID. Flow ended.");
+    await ctx.reply("Unable to read the message ID or chat ID. Flow ended.");
     return;
   }
 
@@ -230,7 +226,7 @@ async function handleEventBroadcast(ctx: MyContext, userIds: string[]) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* handleCsvBroadcastWithPlaceholders => pre-check for all invites => if any fail => abort */
+/* handleCsvBroadcastWithPlaceholders => pre-check => if all ok => broadcast */
 /* -------------------------------------------------------------------------- */
 async function handleCsvBroadcastWithPlaceholders(ctx: MyContext, userIds: string[]) {
   const msg = ctx.message;
@@ -245,11 +241,10 @@ async function handleCsvBroadcastWithPlaceholders(ctx: MyContext, userIds: strin
   // 2) Gather all chat IDs from {invite:<chatId>}
   const chatIds = extractInviteChatIds(baseText);
 
-  // 3) Check if bot is admin for each chat. If any fail => abort entire broadcast
+  // 3) Check if bot is admin for each chat. If any fail => abort
   for (const chatId of chatIds) {
     const isAdmin = await checkBotIsAdmin(ctx.api, chatId);
     if (!isAdmin) {
-      // Abort the entire flow
       await ctx.reply(
           `❌ The bot is NOT an admin in chatId=${chatId}.\n` +
           "Please make the bot admin and restart the process."
@@ -261,40 +256,40 @@ async function handleCsvBroadcastWithPlaceholders(ctx: MyContext, userIds: strin
     }
   }
 
-  // 4) If we reach here => all placeholders are valid => proceed
+  // 4) All placeholders valid => proceed
   await ctx.reply(`All placeholders are valid. Now sending to ${userIds.length} users...`);
-
   const errors: { user_id: string; error: string }[] = [];
   let successCount = 0;
   const broadcastGroupTitle = generateBroadcastGroupTitle();
 
-  // 5) Send to each user
   const isPhoto = Boolean(msg.photo);
   const isVideo = Boolean(msg.video);
+
   for (const userId of userIds) {
+    const userIdNum = parseInt(userId, 10);
     const replacedText = await replacePlaceholdersAndLinks(
         baseText,
-        parseInt(userId, 10),
+        userIdNum,
         broadcastGroupTitle,
         ctx
     );
     try {
       if (isText) {
-        await ctx.api.sendMessage(userId, replacedText, { parse_mode: "HTML" });
+        await ctx.api.sendMessage(userIdNum, replacedText, { parse_mode: "HTML" });
       } else if (isPhoto && msg.photo) {
         const largest = msg.photo[msg.photo.length - 1];
-        await ctx.api.sendPhoto(userId, largest.file_id, {
+        await ctx.api.sendPhoto(userIdNum, largest.file_id, {
           caption: replacedText,
           parse_mode: "HTML",
         });
       } else if (isVideo && msg.video) {
-        await ctx.api.sendVideo(userId, msg.video.file_id, {
+        await ctx.api.sendVideo(userIdNum, msg.video.file_id, {
           caption: replacedText,
           parse_mode: "HTML",
         });
       } else {
         // fallback for other media
-        await ctx.api.copyMessage(userId, sourceChatId, sourceMessageId);
+        await ctx.api.copyMessage(userIdNum, sourceChatId, sourceMessageId);
       }
       successCount++;
     } catch (err) {
@@ -304,7 +299,6 @@ async function handleCsvBroadcastWithPlaceholders(ctx: MyContext, userIds: strin
     await sleep(100);
   }
 
-  // 6) Finalize
   await finalizeBroadcast(ctx, sourceChatId, sourceMessageId, errors, successCount);
 }
 
@@ -379,7 +373,7 @@ async function notifyAdmins(
 }
 
 /* -------------------------------------------------------------------------- */
-/* replacePlaceholdersAndLinks => merges existing placeholders + single-use links*/
+/* replacePlaceholdersAndLinks => merges affiliate placeholders + single-use link from DB */
 /* -------------------------------------------------------------------------- */
 async function replacePlaceholdersAndLinks(
     baseText: string,
@@ -387,9 +381,10 @@ async function replacePlaceholdersAndLinks(
     broadcastGroupTitle: string,
     ctx: MyContext
 ): Promise<string> {
+  // Normalize fancy dashes
   let newText = normalizeDashes(baseText);
 
-  // affiliate placeholders
+  // 1) handle affiliate placeholders
   for (const ph of AFFILIATE_PLACEHOLDERS) {
     if (!newText.includes(ph)) continue;
     const itemType = ph.replace(/[{}]/g, "");
@@ -410,8 +405,7 @@ async function replacePlaceholdersAndLinks(
     }
   }
 
-  // invite placeholders => we already pre-verified admin status, so no need to abort broadcast
-  // but if link creation fails, we mark [LINK_ERROR]
+  // 2) handle invite placeholders => we create or reuse single invite link from DB
   const invites = Array.from(newText.matchAll(INVITE_PLACEHOLDER_REGEX));
   for (const match of invites) {
     const fullPlaceholder = match[0]; // e.g. "{invite:-1001234567890}"
@@ -419,17 +413,20 @@ async function replacePlaceholdersAndLinks(
     const chatId = parseInt(chatIdStr, 10);
 
     try {
-      const inviteLink = await createOneTimeInviteLink(ctx.api, chatId);
-      newText = newText.replace(fullPlaceholder, inviteLink);
+      // We do not call createChatInviteLink directly. Instead:
+      const userInviteLink = await getOrCreateSingleInviteLinkForUserAndChat(
+          ctx.api,
+          userId,
+          chatId
+      );
+      newText = newText.replace(fullPlaceholder, userInviteLink);
     } catch (err) {
-      logger.warn(`createOneTimeInviteLink error for chatId=${chatId}: ${err}`);
+      logger.warn(`getOrCreateSingleInviteLinkForUserAndChat error userId=${userId} chatId=${chatId}: ${err}`);
       newText = newText.replace(fullPlaceholder, "[LINK_ERROR]");
     }
   }
 
   return newText;
 }
-
-
 
 
