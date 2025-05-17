@@ -4,6 +4,7 @@
 import {MyContext} from "../types/MyContext";
 import {pool} from "./db";
 import {logger} from "../utils/logger";
+import {sleep} from "src/utils/utils";
 
 export async function getOrCreateSingleInviteLinkForUserAndChat(
     api: MyContext["api"],
@@ -33,7 +34,7 @@ export async function getOrCreateSingleInviteLinkForUserAndChat(
     if (existingLink) {
         return existingLink;
     }
-
+    await  sleep( 300); // Wait 1 second before creating a new link
     // 2) If not found => create new single-use link
     const linkObj = await api.createChatInviteLink(chatId, {
         member_limit: 1,
