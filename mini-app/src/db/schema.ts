@@ -20,6 +20,8 @@ import {
   ticketStatus,
   CampaignType,
   campaignTypes,
+  nftStatusEnum,
+  NftStatusEnum,
 } from "@/db/enum";
 
 import { specialGuests } from "@/db/schema/specialGuest";
@@ -157,6 +159,12 @@ import {
   TaskSbtStatusType,
   TaskUsersPointStatusType,
 } from "@/db/schema/taskUsers";
+
+import { nftApiKeys, NftApiKeys, NftApiKeysInsert } from "./schema/nftApiKeys";
+import { nftApiMinterWallets, NftApiMinterWallets, NftApiMinterWalletsInsert } from "./schema/nftApiMinterWallets";
+import { nftApiCollections, NftApiCollections, NftApiCollectionsInsert } from "./schema/nftApiCollections";
+import { nftApiItems, NftApiItems, NftApiItemsInsert } from "./schema/nftApiItems";
+
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -256,6 +264,11 @@ export {
   tokenCampaignNftItems,
   mergeStatusEnum,
   tokenCampaignMergeTransactions,
+  nftApiKeys,
+  nftApiMinterWallets,
+  nftApiCollections,
+  nftApiItems,
+  nftStatusEnum,
 };
 
 // Type Exports
@@ -339,4 +352,17 @@ export type {
   TaskUsersStatusType,
   TaskSbtStatusType,
   TaskUsersPointStatusType,
+  // NFT API keys
+  NftApiKeys,
+  NftApiKeysInsert,
+  // Minter wallets
+  NftApiMinterWallets,
+  NftApiMinterWalletsInsert,
+  // Collections
+  NftApiCollections,
+  NftApiCollectionsInsert,
+  // Items
+  NftApiItems,
+  NftApiItemsInsert,
+  NftStatusEnum,
 };
