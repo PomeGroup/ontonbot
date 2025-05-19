@@ -3,7 +3,7 @@ import { TRPCError, initTRPC } from "@trpc/server";
 import { z } from "zod";
 import { createContext } from "./context";
 import { accessRolesPathConfig } from "./accessRolesPathConfig";
-import { userRolesDB } from "@/server/db/userRoles.db";
+import { userRolesDB } from "@/db/modules/userRoles.db";
 import { accessRoleEnumType, accessRoleItemType } from "@/db/schema/userRoles";
 
 export const trpcApiInstance = initTRPC.context<typeof createContext>().create();

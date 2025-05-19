@@ -1,26 +1,26 @@
-import rewardDB from "@/server/db/rewards.db";
+import rewardDB from "@/db/modules/rewards.db";
 
 import { createUserRewardLink } from "@/lib/ton-society-api";
-import { getAndValidateVisitor } from "@/server/routers/services/visitorService";
+import { getAndValidateVisitor } from "@/services/visitorService";
 
 import { db } from "@/db/db";
 import { eventRegistrants, rewards } from "@/db/schema";
-import eventPaymentDB from "@/server/db/eventPayment.db";
-import eventDB, { selectEventByUuid } from "@/server/db/events";
-import rewardsDb from "@/server/db/rewards.db";
-import visitorsDB, { addVisitor, findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/server/db/visitors";
-import { validateEventData, validateEventDates } from "@/server/routers/services/eventService";
+import eventPaymentDB from "@/db/modules/eventPayment.db";
+import eventDB, { selectEventByUuid } from "@/db/modules/events";
+import rewardsDb from "@/db/modules/rewards.db";
+import visitorsDB, { addVisitor, findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/db/modules/visitors";
+import { validateEventData, validateEventDates } from "@/services/eventService";
 import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { RewardDataTyepe } from "@/db/schema/rewards";
-import { usersDB } from "@/server/db/users";
+import { usersDB } from "@/db/modules/users";
 import { rewardLinkZod } from "@/types/user.types";
 import { EventRow } from "@/db/schema/events";
 import { ExtendedUser } from "@/types/extendedUserTypes";
-import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
-import userEventFieldsDB from "@/server/db/userEventFields.db";
+import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
+import userEventFieldsDB from "@/db/modules/userEventFields.db";
 
 // --- Helper Validation Functions ----------------------------------
 
@@ -85,7 +85,7 @@ async function validateTaskCompletionIfNeeded(eventData: EventRow, user_id: numb
   }
 }
 
-//TODO - Put this in db functions files
+//TODO - Put this in modules functions files
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
   const result = (
     await db

@@ -1,5 +1,5 @@
 import { sendLogNotification, sendToEventsTgChannel } from "@/lib/tgBot";
-import { is_mainnet } from "@/server/routers/services/tonCenter";
+import { is_mainnet } from "@/services/tonCenter";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { EventRow } from "@/db/schema/events";
 

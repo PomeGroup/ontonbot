@@ -1,5 +1,5 @@
 import { gameLeaderboard, tournamentPrizeType, users } from "@/db/schema";
-import { GamerData } from "@/server/db/games.db";
+import { GamerData } from "@/db/modules/games.db";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { db } from "@/db/db";
 import { logger } from "@/server/utils/logger";

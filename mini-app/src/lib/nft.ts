@@ -1,4 +1,4 @@
-import tonCenter, { v2_client } from "@/server/routers/services/tonCenter";
+import tonCenter, { v2_client } from "@/services/tonCenter";
 import { Address, Cell, internal, beginCell, contractAddress, StateInit, SendMode, OpenedContract, toNano } from "@ton/core";
 
 import { KeyPair, mnemonicToPrivateKey } from "@ton/crypto";

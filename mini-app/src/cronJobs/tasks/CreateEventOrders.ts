@@ -4,14 +4,14 @@ import { eventPayment } from "@/db/schema/eventPayment";
 import { events } from "@/db/schema/events";
 import { eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
-import eventDB from "@/server/db/events";
+import eventDB from "@/db/modules/events";
 import { registerActivity } from "@/lib/ton-society-api";
 import type { OrderRow } from "@/db/schema/orders";
 import type { EventRow } from "@/db/schema/events";
 import type { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { buildEventDraft } from "@/cronJobs/helper/buildEventDraft";
-import ordersDB from "@/server/db/orders.db";
-import eventPaymentDB from "@/server/db/eventPayment.db";
+import ordersDB from "@/db/modules/orders.db";
+import eventPaymentDB from "@/db/modules/eventPayment.db";
 import { handleTicketType } from "@/cronJobs/helper/handleTicketType";
 
 /**

@@ -3,14 +3,14 @@ import { initDataProtectedProcedure, router } from "../trpc";
 import { z } from "zod";
 import { logger } from "@/server/utils/logger";
 
-import { tasksDB } from "@/server/db/tasks.db";
-import { taskUsersDB } from "@/server/db/taskUsers.db";
+import { tasksDB } from "@/db/modules/tasks.db";
+import { taskUsersDB } from "@/db/modules/taskUsers.db";
 import { Tasks, TaskUsers } from "@/db/schema";
 import { taskTypeEnum } from "@/db/schema/tasks";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { generateRandomHash } from "@/lib/generateRandomHash";
 import { TRPCError } from "@trpc/server";
-import telegramService from "./services/telegramService";
+import telegramService from "@/services/telegramService";
 
 /**
  * Merge user status via a single "WHERE taskId IN (..)" DB query

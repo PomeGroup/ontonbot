@@ -8,7 +8,7 @@ import { logger } from "@/server/utils/logger";
 import { mintNFT } from "@/lib/nft"; // your existing helper
 import { uploadJsonToMinio } from "@/lib/minioTools";
 import { sleep } from "@/utils";
-import { fetchOntonSettings } from "@/server/db/ontoSetting";
+import { fetchOntonSettings } from "@/db/modules/ontoSetting";
 
 export async function mintNftForUserSpins() {
   // logger.log("Starting mintNftForUserSpins...");

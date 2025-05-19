@@ -5,15 +5,15 @@ import { logger } from "@/server/utils/logger";
 import { Address } from "@ton/core";
 import { eventPayment } from "@/db/schema/eventPayment";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
-import { CsbtTicket } from "@/server/routers/services/rewardsService";
-import { selectUserById } from "@/server/db/users";
+import { CsbtTicket } from "@/services/rewardsService";
+import { selectUserById } from "@/db/modules/users";
 import { sendLogNotification } from "@/lib/tgBot";
 import { callTonfestForOnOntonPayment } from "@/cronJobs/helper/callTonfestForOnOntonPayment";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { callPridipieForOnOntonPayment } from "@/cronJobs/helper/callPridipieForOnOntonPayment";
-import { couponItemsDB } from "@/server/db/couponItems.db";
-import { is_mainnet } from "@/server/routers/services/tonCenter";
-import eventDB from "@/server/db/events";
+import { couponItemsDB } from "@/db/modules/couponItems.db";
+import { is_mainnet } from "@/services/tonCenter";
+import eventDB from "@/db/modules/events";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted

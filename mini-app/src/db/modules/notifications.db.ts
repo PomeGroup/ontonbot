@@ -3,8 +3,8 @@ import { NotificationItemType, notifications, NotificationStatus, NotificationTy
 import { redisTools } from "@/lib/redisTools";
 import { and, eq, inArray, lt, or, sql } from "drizzle-orm";
 import { QueueNames, NOTIFICATION_TIMEOUT_MARGIN, MAIN_NOTIFICATION_TTL } from "@/sockets/constants";
-import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
-import { v4 as uuidv4 } from 'uuid';
+import { rabbitMQService } from "@/services/rabbitMQService";
+import { v4 as uuidv4 } from "uuid";
 import { logger } from "@/server/utils/logger";
 /**
  * Represents the shape of notification data required for insertion.
@@ -80,7 +80,7 @@ export const addNotification = async (notificationData: {
 
     // Check if the result is empty, indicating the record already existed
     if (result.length === 0) {
-      logger.log(`Notification already exists.`,result  );
+      logger.log(`Notification already exists.`, result);
       return { success: false, message: "Record already exists." };
     }
     // add to rabbitMQ
@@ -93,7 +93,9 @@ export const addNotification = async (notificationData: {
     };
 
     await rabbitMQService.pushMessageToQueue(QueueNames.NOTIFICATIONS, message);
-    logger.log(`Notification added for User ${notificationData.userId} with ID ${notificationId} and type ${notificationData.type}`);
+    logger.log(
+      `Notification added for User ${notificationData.userId} with ID ${notificationId} and type ${notificationData.type}`
+    );
     return { success: true, notificationId: result[0].id }; // Return the ID of the inserted notification
   } catch (error) {
     logger.error("Error adding notification:", error);
@@ -104,16 +106,10 @@ export const addNotification = async (notificationData: {
 // Get notifications by status
 export const getNotificationsByStatusAndItemId = async (itemId: number, status: NotificationStatus) => {
   try {
-
     const result = await db
       .select()
       .from(notifications)
-      .where(
-        and(
-          eq(notifications.itemId, itemId),
-          eq(notifications.status, status)
-        )
-      )
+      .where(and(eq(notifications.itemId, itemId), eq(notifications.status, status)))
       .execute();
 
     logger.log(`Notifications with status "${status}" retrieved:`, result);
@@ -127,11 +123,7 @@ export const getNotificationsByStatusAndItemId = async (itemId: number, status: 
 // Update notification status
 export const updateNotificationStatus = async (notificationId: number, newStatus: NotificationStatus) => {
   try {
-    await db
-      .update(notifications)
-      .set({ status: newStatus })
-      .where(eq(notifications.id, notificationId))
-      .execute();
+    await db.update(notifications).set({ status: newStatus }).where(eq(notifications.id, notificationId)).execute();
 
     await redisTools.deleteCache(getNotificationCacheKey(notificationId)); // Clear cache
     logger.log(`Notification ${notificationId} status updated to ${newStatus}`);
@@ -141,17 +133,15 @@ export const updateNotificationStatus = async (notificationId: number, newStatus
   }
 };
 
-export const updateNotificationAsRead = async (notificationId: number, ) => {
-  const status : NotificationStatus = "READ";
-  if(Number.isNaN(notificationId )|| notificationId === undefined){
+export const updateNotificationAsRead = async (notificationId: number) => {
+  const status: NotificationStatus = "READ";
+  if (Number.isNaN(notificationId) || notificationId === undefined) {
     throw new Error("Notification ID is required to update notification as read");
-
   }
   try {
-
     await db
       .update(notifications)
-      .set({ status: status , readAt: new Date() })
+      .set({ status: status, readAt: new Date() })
       .where(eq(notifications.id, notificationId))
       .execute();
 
@@ -167,7 +157,7 @@ export const updateNotificationAsRead = async (notificationId: number, ) => {
 export const updateNotificationStatusAndReply = async (
   notificationId: number,
   newStatus: NotificationStatus,
-  actionReply: object,
+  actionReply: object
 ) => {
   try {
     await db
@@ -187,10 +177,7 @@ export const updateNotificationStatusAndReply = async (
 // Delete notifications with expiration date less than a specific date
 export const deleteNotificationsByExpiry = async (expiryDate: Date) => {
   try {
-    const result = await db
-      .delete(notifications)
-      .where(lt(notifications.expiresAt, expiryDate))
-      .execute();
+    const result = await db.delete(notifications).where(lt(notifications.expiresAt, expiryDate)).execute();
 
     logger.log(`Deleted notifications with expiry date less than ${expiryDate}:`, result);
     return result;
@@ -199,7 +186,6 @@ export const deleteNotificationsByExpiry = async (expiryDate: Date) => {
     throw error;
   }
 };
-
 
 export const getNotificationById = async (notificationId: number) => {
   try {
@@ -216,9 +202,6 @@ export const getNotificationById = async (notificationId: number) => {
     throw error;
   }
 };
-
-
-
 
 export const addNotifications = async (
   notificationsToAdd: NotificationData[],
@@ -357,10 +340,7 @@ export const addNotifications = async (
   }
 };
 
-export async function getRepliedPoaPasswordNotificationsForEvent(
-  eventId: number,
-  userIds: number[]
-) {
+export async function getRepliedPoaPasswordNotificationsForEvent(eventId: number, userIds: number[]) {
   return await db
     .select()
     .from(notifications)
@@ -370,18 +350,16 @@ export async function getRepliedPoaPasswordNotificationsForEvent(
         eq(notifications.status, "REPLIED"),
         inArray(notifications.userId, userIds),
         sql`((${notifications.additionalData})->>'eventId')::int = ${eventId}`
-      ),
+      )
     )
     .execute();
-
-
 }
 //
 export const expireReadNotifications = async () => {
   try {
     // Update notifications that are READ and whose readAt + actionTimeout is in the past
     logger.log("Expiring read notifications that exceeded their action timeout...");
-    const expiredNotifications =  await db
+    const expiredNotifications = await db
       .update(notifications)
       .set({ status: "EXPIRED" })
       .where(
@@ -396,7 +374,7 @@ export const expireReadNotifications = async () => {
       .execute();
     logger.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
     logger.log("Expiring waiting notifications that exceeded their action timeout...");
-    const expiredNotificationsWaiting =  await db
+    const expiredNotificationsWaiting = await db
       .update(notifications)
       .set({ status: "EXPIRED" })
       .where(
@@ -408,8 +386,8 @@ export const expireReadNotifications = async () => {
       )
       .returning({ id: notifications.id })
       .execute();
-     logger.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
-     logger.log(`Expired ${expiredNotificationsWaiting.length} notifications that exceeded their action timeout.`);
+    logger.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
+    logger.log(`Expired ${expiredNotificationsWaiting.length} notifications that exceeded their action timeout.`);
     return { success: true, count: expiredNotifications.length };
   } catch (error) {
     logger.error("Error expiring read notifications:", error);
@@ -427,5 +405,5 @@ export const notificationsDB = {
   addNotifications,
   updateNotificationAsRead,
   getRepliedPoaPasswordNotificationsForEvent,
-  expireReadNotifications
+  expireReadNotifications,
 };

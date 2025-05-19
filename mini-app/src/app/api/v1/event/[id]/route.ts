@@ -4,15 +4,15 @@ import { OrderRow } from "@/db/schema/orders";
 import "@/lib/gracefullyShutdown";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
-import { affiliateClicksDB } from "@/server/db/affiliateClicks.db";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
-import { couponItemsDB } from "@/server/db/couponItems.db";
-import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
-import eventDB from "@/server/db/events";
-import ordersDB from "@/server/db/orders.db";
-import { userRolesDB } from "@/server/db/userRoles.db";
-import { usersDB } from "@/server/db/users";
-import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
+import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
+import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
+import { couponItemsDB } from "@/db/modules/couponItems.db";
+import { getByEventUuidAndUserId } from "@/db/modules/eventRegistrants.db";
+import eventDB from "@/db/modules/events";
+import ordersDB from "@/db/modules/orders.db";
+import { userRolesDB } from "@/db/modules/userRoles.db";
+import { usersDB } from "@/db/modules/users";
+import tonCenter, { NFTItem } from "@/services/tonCenter";
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { logger } from "@/server/utils/logger";
 import { and, eq } from "drizzle-orm";
@@ -60,7 +60,7 @@ async function getValidNfts(
           continue;
         }
         // Query the tickets database for this NFT address
-        // const ticketsResult = await db.select().from(tickets).where(eq(tickets.nftAddress, nft.address)).execute();
+        // const ticketsResult = await modules.select().from(tickets).where(eq(tickets.nftAddress, nft.address)).execute();
 
         // Check if there's exactly one ticket for this NFT
         // if (ticketsResult.length !== 1) {
@@ -85,7 +85,7 @@ async function getValidNfts(
         const nft_db = (await db.select().from(nftItems).where(eq(nftItems.nft_address, nft.address)).execute()).pop();
 
         if (!nft_db) {
-          logger.error("Critical_API_V1_event NFT not found in our db ", nft.address);
+          logger.error("Critical_API_V1_event NFT not found in our modules ", nft.address);
         }
 
         if (

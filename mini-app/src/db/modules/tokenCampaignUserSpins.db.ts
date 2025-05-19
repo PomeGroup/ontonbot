@@ -369,7 +369,7 @@ export async function getAllUsersCollectionsCount(): Promise<AllUsersCollections
         ORDER BY u.user_id, c.id;
     `;
 
-    // db.execute(...) returns a raw result. We'll map it to our TS type.
+    // modules.execute(...) returns a raw result. We'll map it to our TS type.
     const result = await db.execute<AllUsersCollectionsCountRow>(query);
 
     // Depending on the driver/config, `result.rows` may hold the data:

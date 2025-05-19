@@ -1,6 +1,6 @@
 import { initDataProtectedProcedure, router } from "../trpc";
 import { z } from "zod";
-import { usersScoreDB } from "@/server/db/usersScore.db";
+import { usersScoreDB } from "@/db/modules/usersScore.db";
 import { TRPCError } from "@trpc/server";
 import { usersScoreActivity } from "@/db/schema/usersScore";
 

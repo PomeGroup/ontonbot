@@ -5,12 +5,12 @@ import { InferSelectModel, eq, sql, and, or, not, inArray, isNull } from "drizzl
 import { logger } from "@/server/utils/logger";
 import xss from "xss";
 import { logSQLQuery } from "@/lib/logSQLQuery";
-import { userRolesDB } from "@/server/db/userRoles.db";
+import { userRolesDB } from "@/db/modules/userRoles.db";
 import { ExtendedUser, InitUserData, MinimalOrganizerData } from "@/types/extendedUserTypes";
 import { usersScoreDB } from "./usersScore.db";
 import { taskUsersDB } from "./taskUsers.db";
-import { tasksDB } from "@/server/db/tasks.db";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { tasksDB } from "@/db/modules/tasks.db";
+import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { AffiliationCustomDataForJoinTasks } from "@/db/schema/taskUsers";
 // User data from the init data
 

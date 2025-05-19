@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema";
 import { and, count, eq, isNull, not, or } from "drizzle-orm";
-import { is_dev_env, is_stage_env } from "../utils/evnutils";
+import { is_dev_env, is_stage_env } from "../../server/utils/evnutils";
 import { OrderTypeValues } from "@/db/schema/orders";
 
 const getEventOrders = async (event_uuid: string) => {

@@ -1,11 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { eventManagementProtectedProcedure, router } from "../trpc";
-import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
-import { couponItemsDB } from "@/server/db/couponItems.db";
+import { couponDefinitionsDB } from "@/db/modules/couponDefinitions.db";
+import { couponItemsDB } from "@/db/modules/couponItems.db";
 import couponSchema from "@/zodSchema/couponSchema";
 import { db } from "@/db/db";
 import { logger } from "@/server/utils/logger";
-import eventDB from "@/server/db/events";
+import eventDB from "@/db/modules/events";
 import Papa from "papaparse";
 import axios from "axios";
 

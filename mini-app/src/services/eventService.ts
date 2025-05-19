@@ -1,4 +1,4 @@
-import { getEventByUuid } from "@/server/db/events";
+import { getEventByUuid } from "@/db/modules/events";
 import { logger } from "@/server/utils/logger";
 // Validate event dates
 export const validateEventDates = (start_date: number, end_date: number) => {

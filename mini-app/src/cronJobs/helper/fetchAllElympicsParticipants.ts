@@ -1,5 +1,5 @@
 import { getTournamentLeaderboard } from "@/lib/elympicsApi";
-import { GamerData } from "@/server/db/games.db";
+import { GamerData } from "@/db/modules/games.db";
 import { sleep } from "@/utils";
 import { logger } from "@/server/utils/logger";
 

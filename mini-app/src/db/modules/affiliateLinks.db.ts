@@ -3,7 +3,7 @@ import { AffiliateItemTypeEnum, affiliateLinks, AffiliateLinksRow } from "@/db/s
 import { and, eq, sql } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
-import { affiliateClicksDB } from "@/server/db/affiliateClicks.db";
+import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
 
 // Helper to build a cache key for a single link ID
 const getAffiliateLinkCacheKey = (linkHash: string) => `affiliate_link:${linkHash}`;
