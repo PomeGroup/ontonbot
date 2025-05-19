@@ -1,11 +1,10 @@
 "use client";
 
-import { Banner } from "@/app/(landing-pages)/genesis-onions/_components/Banner";
-import { Play2WinGenesisBanner } from "@/app/(landing-pages)/play2win-genesis/_components/Play2WinGenesisBanner";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
 import CustomButton from "@/app/_components/Button/CustomButton";
 import CustomSwiper from "@/app/_components/CustomSwiper";
+import FeaturedBanners from "@/app/_components/FeaturedBanners";
 import FilterIcon from "@/app/_components/icons/filter-icon";
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
@@ -66,8 +65,7 @@ const Play2WinFeatured = () => {
 
   return (
     <>
-      <Banner className="mb-3" />
-      <Play2WinGenesisBanner />
+      <FeaturedBanners />
       <Typography variant="title2">Featured Contests</Typography>
       <div>
         <CustomSwiper>
