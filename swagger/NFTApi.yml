@@ -1,0 +1,336 @@
+openapi: 3.0.3
+info:
+  title: NFT Creation API
+  description: This API allows creation of NFT Collections and NFT Items (minting), with a callback verification process and asynchronous finalization.
+  version: "1.0.0"
+
+servers:
+  - url: https://api.yourdomain.com
+
+tags:
+  - name: Collections
+    description: Endpoints for creating and checking the status of NFT Collections
+  - name: NFTs
+    description: Endpoints for creating (minting) and checking the status of NFTs
+
+paths:
+
+  /collections:
+    post:
+      tags:
+        - Collections
+      summary: Create a new NFT Collection
+      description: >
+        Initiates the creation of a new NFT collection. The API will return a
+        `collectionId`, with the creation state as `CREATING`. The `address` will be
+        `null` until the creation process completes on-chain. You can check the
+        status using **GET /collections/{collectionId}/status**.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCollectionRequest'
+      responses:
+        '200':
+          description: Successfully initiated collection creation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionCreationResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+
+  /collections/{collectionId}/status:
+    get:
+      tags:
+        - Collections
+      summary: Check status of an NFT Collection creation
+      description: >
+        Retrieve the current state of a Collection creation process. If completed,
+        returns the final blockchain collection address.
+      parameters:
+        - name: collectionId
+          in: path
+          required: true
+          description: The ID of the NFT Collection.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the status of the requested collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionStatusResponse'
+        '404':
+          description: Collection not found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+
+  /nfts:
+    post:
+      tags:
+        - NFTs
+      summary: Mint a new NFT item
+      description: >
+        Initiates the minting of a new NFT item. The API will return an `nftId`, 
+        with the creation/minting state as `CREATING`. The `address` will be
+        `null` until the minting process completes on-chain. You can check the
+        status using **GET /nfts/{nftId}/status**.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNFTRequest'
+      responses:
+        '200':
+          description: Successfully initiated NFT creation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NFTCreationResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+
+  /nfts/{nftId}/status:
+    get:
+      tags:
+        - NFTs
+      summary: Check status of an NFT minting
+      description: >
+        Retrieve the current state of an NFT minting process. If completed,
+        returns the final blockchain NFT address.
+      parameters:
+        - name: nftId
+          in: path
+          required: true
+          description: The ID of the NFT item.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the status of the requested NFT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NFTStatusResponse'
+        '404':
+          description: NFT not found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: Use your assigned API key here
+
+  schemas:
+
+    # -------------------------- REQUEST SCHEMAS -------------------------- #
+
+    CreateCollectionRequest:
+      type: object
+      required:
+        - apiKey
+        - walletAddress
+        - collectionData
+        - userCallbackUrl
+      properties:
+        apiKey:
+          type: string
+          description: The API key to authenticate the request (or JWT if used differently).
+        walletAddress:
+          type: string
+          description: Minter or owner wallet address.
+        collectionData:
+          type: object
+          required:
+            - name
+            - symbol
+          properties:
+            name:
+              type: string
+              description: Name of the NFT collection
+            symbol:
+              type: string
+              description: Symbol or short code for the collection
+            description:
+              type: string
+              description: Detailed description of the collection
+            externalLink:
+              type: string
+              format: uri
+              description: Link related to the collection (e.g., official site)
+            metadataUri:
+              type: string
+              format: uri
+              description: URI or IPFS link for the collection metadata
+        userCallbackUrl:
+          type: string
+          format: uri
+          description: URL on the user's side for request confirmation
+
+    CreateNFTRequest:
+      type: object
+      required:
+        - apiKey
+        - walletAddress
+        - nftData
+        - userCallbackUrl
+      properties:
+        apiKey:
+          type: string
+          description: The API key to authenticate the request (or JWT if used differently).
+        walletAddress:
+          type: string
+          description: Minter or owner wallet address.
+        nftData:
+          type: object
+          required:
+            - collectionId
+            - name
+            - metadataUri
+          properties:
+            collectionId:
+              type: string
+              description: Reference to the NFT's collection
+            name:
+              type: string
+              description: Name or title of the NFT
+            description:
+              type: string
+              description: Detailed description of the NFT
+            imageUri:
+              type: string
+              format: uri
+              description: URI or IPFS link for the NFT's main image or asset
+            metadataUri:
+              type: string
+              format: uri
+              description: URI or IPFS link for the NFT metadata
+        userCallbackUrl:
+          type: string
+          format: uri
+          description: URL on the user's side for request confirmation
+
+    # -------------------------- RESPONSE SCHEMAS -------------------------- #
+
+    CollectionCreationResponse:
+      type: object
+      properties:
+        collectionId:
+          type: string
+          description: The unique ID of the newly initiated collection creation
+        address:
+          type: string
+          nullable: true
+          description: Blockchain address of the collection if created, null otherwise
+        status:
+          type: string
+          description: Possible values: "CREATING", "COMPLETED", "FAILED"
+
+      required:
+        - collectionId
+        - status
+
+      example:
+        collectionId: "coll_12345"
+        address: null
+        status: "CREATING"
+
+    CollectionStatusResponse:
+      type: object
+      properties:
+        collectionId:
+          type: string
+          description: The unique ID of the collection
+        address:
+          type: string
+          nullable: true
+          description: Blockchain address of the collection if created, null otherwise
+        status:
+          type: string
+          description: Possible values: "CREATING", "COMPLETED", "FAILED"
+
+      required:
+        - collectionId
+        - status
+
+      example:
+        collectionId: "coll_12345"
+        address: "0xabcdef1234567890"
+        status: "COMPLETED"
+
+    NFTCreationResponse:
+      type: object
+      properties:
+        nftId:
+          type: string
+          description: The unique ID of the newly initiated NFT minting
+        address:
+          type: string
+          nullable: true
+          description: Blockchain address of the NFT if minted, null otherwise
+        status:
+          type: string
+          description: Possible values: "CREATING", "COMPLETED", "FAILED"
+
+      required:
+        - nftId
+        - status
+
+      example:
+        nftId: "nft_7890"
+        address: null
+        status: "CREATING"
+
+    NFTStatusResponse:
+      type: object
+      properties:
+        nftId:
+          type: string
+          description: The unique ID of the NFT
+        address:
+          type: string
+          nullable: true
+          description: Blockchain address of the NFT if minted, null otherwise
+        status:
+          type: string
+          description: Possible values: "CREATING", "COMPLETED", "FAILED"
+
+      required:
+        - nftId
+        - status
+
+      example:
+        nftId: "nft_7890"
+        address: "0xabcdef1234567890"
+        status: "COMPLETED"
+
+security:
+  - ApiKeyAuth: []
