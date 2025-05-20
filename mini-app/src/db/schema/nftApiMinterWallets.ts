@@ -16,8 +16,8 @@ export const nftApiMinterWallets = pgTable(
       .defaultNow(),
   },
   (table) => ({
-    walletAddressIdx: index("wallet_address_idx").on(table.walletAddress),
-    apiKeyIdIdx: index("api_key_id_idx").on(table.apiKeyId),
+    walletAddressIdx: index("nft_api_minter_wallets_wallet_address_idx").on(table.walletAddress),
+    apiKeyIdIdx: index("nft_api_minter_wallets_api_key_id_idx").on(table.apiKeyId),
   })
 );
 

@@ -16,7 +16,7 @@ export const nftApiKeys = pgTable(
       .defaultNow(),
   },
   (table) => ({
-    apiKeyIdx: index("api_key_idx").on(table.apiKey),
+    apiKeyIdx: index("nft_api_keys_api_key_idx").on(table.apiKey),
   })
 );
 
