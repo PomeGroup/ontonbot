@@ -162,7 +162,12 @@ import {
 
 import { nftApiKeys, NftApiKeys, NftApiKeysInsert } from "./schema/nftApiKeys";
 import { nftApiMinterWallets, NftApiMinterWallets, NftApiMinterWalletsInsert } from "./schema/nftApiMinterWallets";
-import { nftApiCollections, NftApiCollections, NftApiCollectionsInsert } from "./schema/nftApiCollections";
+import {
+  nftApiCollections,
+  NftApiCollections,
+  NftApiCollectionsInsert,
+  NftApiCollectionsUpdate,
+} from "./schema/nftApiCollections";
 import { nftApiItems, NftApiItems, NftApiItemsInsert } from "./schema/nftApiItems";
 
 export {
@@ -365,4 +370,5 @@ export type {
   NftApiItems,
   NftApiItemsInsert,
   NftStatusEnum,
+  NftApiCollectionsUpdate,
 };

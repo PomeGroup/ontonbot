@@ -1,7 +1,13 @@
 import { db } from "@/db/db";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
-import { nftApiCollections, NftApiCollections, NftApiCollectionsInsert } from "@/db/schema/nftApiCollections";
+import {
+  nftApiCollections,
+  NftApiCollections,
+  NftApiCollectionsInsert,
+  NftApiCollectionsUpdate,
+} from "@/db/schema/nftApiCollections";
+import { NftStatusEnum } from "@/db/enum";
 // import { redisTools } from "@/lib/redisTools";
 
 export const nftApiCollectionsDB = {
@@ -17,7 +23,18 @@ export const nftApiCollectionsDB = {
       throw error;
     }
   },
-
+  /**
+   * Get by status
+   */
+  async getByStatus(status: NftStatusEnum): Promise<NftApiCollections[]> {
+    try {
+      const rows = await db.select().from(nftApiCollections).where(eq(nftApiCollections.status, status)).execute();
+      return rows;
+    } catch (error) {
+      logger.error("nftApiCollectionsDB: Error fetching by status:", error);
+      throw error;
+    }
+  },
   /**
    * Create a new collection row
    */
@@ -25,7 +42,6 @@ export const nftApiCollectionsDB = {
     try {
       const [inserted] = await db.insert(nftApiCollections).values(data).returning().execute();
       logger.info("nftApiCollectionsDB: Collection inserted:", inserted);
-      // optional caching
       return inserted;
     } catch (error) {
       logger.error("nftApiCollectionsDB: Error inserting:", error);
@@ -36,7 +52,7 @@ export const nftApiCollectionsDB = {
   /**
    * Update by ID
    */
-  async updateById(id: number, data: Partial<NftApiCollectionsInsert>): Promise<NftApiCollections | undefined> {
+  async updateById(id: number, data: NftApiCollectionsUpdate): Promise<NftApiCollections | undefined> {
     try {
       const [updated] = await db
         .update(nftApiCollections)

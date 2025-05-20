@@ -48,3 +48,8 @@ export type NftApiCollectionsInsert = Omit<
   InferSelectModel<typeof nftApiCollections>,
   "id" | "createdAt" | "updatedAt" | "status"
 >; // Exclude isActive if you want to set it manually
+
+export type NftApiCollectionsUpdate = Partial<NftApiCollectionsInsert> & {
+  // Explicitly add status as optional
+  status?: string;
+};

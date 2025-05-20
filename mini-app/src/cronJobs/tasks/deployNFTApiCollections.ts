@@ -1,0 +1,65 @@
+// server/jobs/deployMissingCollections.ts
+import { nftApiCollectionsDB } from "@/db/modules/nftApiCollections.db";
+import { NftApiCollections } from "@/db/schema/nftApiCollections";
+import { uploadJsonToMinio } from "@/lib/minioTools";
+import { logger } from "@/server/utils/logger";
+import { deployCollection } from "@/lib/nft";
+
+export async function deployNFTApiCollections() {
+  const rows = await nftApiCollectionsDB.getByStatus("CREATING");
+
+  if (rows.length === 0) {
+    logger.log("No NFT collections need deployment.");
+    return;
+  }
+
+  for (const coll of rows) {
+    try {
+      logger.log(`Deploying collection ID=${coll.id}...`);
+
+      // a) (Optional) Validate again or call user callback
+      const valid = await externalValidate(coll);
+      if (!valid) {
+        await nftApiCollectionsDB.updateById(coll.id, { status: "VALIDATION_FAILED" });
+        continue; // move to next
+      }
+
+      // b) Suppose you want to upload metadata
+      //    This might be a structure: { name, desc, image, cover, social_links, royalties... }
+      const metaObj = {
+        name: coll.name,
+        description: coll.description,
+        image: coll.image,
+        cover_image: coll.coverImage,
+        social_links: coll.socialLinks,
+        royalties: coll.royalties,
+      };
+      const metadataUrl = await uploadJsonToMinio(metaObj, "some-bucket");
+
+      // c) Deploy on-chain
+      const onChainAddress = await deployCollection(metadataUrl);
+      if (!onChainAddress) {
+        throw new Error("Failed to deploy on chain");
+      }
+
+      // d) Mark as completed
+      await nftApiCollectionsDB.updateById(coll.id, {
+        address: onChainAddress,
+        status: "COMPLETED",
+      });
+
+      logger.log(`Collection #${coll.id} deployed at address=${onChainAddress}`);
+    } catch (err) {
+      logger.error(`Error deploying collection #${coll.id}`, err);
+      // set status=FAILED so user sees it's not minted
+      await nftApiCollectionsDB.updateById(coll.id, { status: "FAILED" });
+    }
+  }
+}
+
+async function externalValidate(coll: NftApiCollections): Promise<boolean> {
+  // Possibly call coll.userCallbackUrl or some external check
+  // We'll mock it as always true
+  logger.log(`Validating collection ID=${coll.id}...`);
+  return true;
+}

@@ -1,5 +1,5 @@
 import { db } from "@/db/db"; // Your Drizzle DB connection
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { nftApiKeys, NftApiKeys, NftApiKeysInsert } from "@/db/schema/nftApiKeys";
 // (Optionally) import Redis or other caching here
@@ -19,7 +19,23 @@ export const nftApiKeysDB = {
       throw error;
     }
   },
+  /**
+   * Get one API key record by "apiKey" value, ensuring it isActive = true.
+   */
+  async getByKeyAndActive(apiKey: string): Promise<NftApiKeys | undefined> {
+    try {
+      const [row] = await db
+        .select()
+        .from(nftApiKeys)
+        .where(and(eq(nftApiKeys.apiKey, apiKey), eq(nftApiKeys.isActive, true)))
+        .execute();
 
+      return row;
+    } catch (error) {
+      logger.error("nftApiKeysDB: Error fetching active apiKey:", error);
+      throw error;
+    }
+  },
   /**
    * Insert a new row.
    * Returns the inserted record.

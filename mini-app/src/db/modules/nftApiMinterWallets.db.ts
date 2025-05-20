@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { nftApiMinterWallets, NftApiMinterWallets, NftApiMinterWalletsInsert } from "@/db/schema/nftApiMinterWallets";
 
@@ -15,7 +15,35 @@ export const nftApiMinterWalletsDB = {
       throw error;
     }
   },
+  /**
+   * Find a wallet row by walletAddress + apiKeyId
+   */
+  async findByAddress(apiKeyId: number, walletAddress: string): Promise<NftApiMinterWallets | undefined> {
+    try {
+      const [row] = await db
+        .select()
+        .from(nftApiMinterWallets)
+        .where(and(eq(nftApiMinterWallets.apiKeyId, apiKeyId), eq(nftApiMinterWallets.walletAddress, walletAddress)))
+        .execute();
 
+      return row;
+    } catch (err) {
+      logger.error("nftApiMinterWalletsDB: Error in findByAddress:", err);
+      throw err;
+    }
+  },
+  /**
+   * Find a wallet row by id
+   */
+  async findById(id: number): Promise<NftApiMinterWallets | undefined> {
+    try {
+      const [row] = await db.select().from(nftApiMinterWallets).where(eq(nftApiMinterWallets.id, id)).execute();
+      return row;
+    } catch (error) {
+      logger.error("nftApiMinterWalletsDB: Error fetching by ID:", error);
+      throw error;
+    }
+  },
   /**
    * Insert a new minter wallet row.
    */
