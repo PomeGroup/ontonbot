@@ -1,7 +1,8 @@
 import { db } from "@/db/db";
 import { eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
-import { nftApiItems, NftApiItems, NftApiItemsInsert } from "@/db/schema/nftApiItems";
+import { NftApiCollectionsUpdate, nftApiItems, NftApiItems, NftApiItemsInsert } from "@/db/schema/nftApiItems";
+import { NftStatusEnum } from "@/db/enum";
 
 export const nftApiItemsDB = {
   /**
@@ -34,7 +35,7 @@ export const nftApiItemsDB = {
   /**
    * Update item by ID
    */
-  async updateById(id: number, data: Partial<NftApiItemsInsert>): Promise<NftApiItems | undefined> {
+  async updateById(id: number, data: NftApiCollectionsUpdate): Promise<NftApiItems | undefined> {
     try {
       const [updated] = await db.update(nftApiItems).set(data).where(eq(nftApiItems.id, id)).returning().execute();
       return updated;
@@ -52,6 +53,17 @@ export const nftApiItemsDB = {
       return await db.select().from(nftApiItems).where(eq(nftApiItems.collectionId, collectionId)).execute();
     } catch (error) {
       logger.error("nftApiItemsDB: Error getting items by collectionId:", error);
+      throw error;
+    }
+  },
+  /**
+   * Get items by status
+   */
+  async getItemsByStatus(status: NftStatusEnum): Promise<NftApiItems[]> {
+    try {
+      return await db.select().from(nftApiItems).where(eq(nftApiItems.status, status)).execute();
+    } catch (error) {
+      logger.error("nftApiItemsDB: Error getting items by status:", error);
       throw error;
     }
   },

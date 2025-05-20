@@ -333,7 +333,7 @@ export async function mintNFT(
     amount: toNano("0.055"),
     commonContentUrl: nft_metadata_url,
   };
-  logger.log(`mintNFT:  minting nft address : ${nft_addres} mintParams:`, mintParams);
+  logger.log(`mintNFT:  minting nft address one : ${nft_addres} mintParams:`, mintParams);
   const beforeSeqno = await wallet.contract.getSeqno();
   logger.log("mintNFT:seq before mint : ", beforeSeqno);
   const nftItem = new NftItem(collection);

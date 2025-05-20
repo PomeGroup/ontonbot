@@ -4,6 +4,7 @@ import { NftApiCollections } from "@/db/schema/nftApiCollections";
 import { uploadJsonToMinio } from "@/lib/minioTools";
 import { logger } from "@/server/utils/logger";
 import { deployCollection } from "@/lib/nft";
+import { Address } from "@ton/core";
 
 export async function deployNFTApiCollections() {
   const rows = await nftApiCollectionsDB.getByStatus("CREATING");
@@ -34,21 +35,25 @@ export async function deployNFTApiCollections() {
         social_links: coll.socialLinks,
         royalties: coll.royalties,
       };
-      const metadataUrl = await uploadJsonToMinio(metaObj, "some-bucket");
-
+      const metadataUrl = await uploadJsonToMinio(metaObj, "ontoncollection");
+      logger.log(`Uploaded metadata to ${metadataUrl}`);
       // c) Deploy on-chain
       const onChainAddress = await deployCollection(metadataUrl);
       if (!onChainAddress) {
         throw new Error("Failed to deploy on chain");
       }
 
+      const parsed = Address.parseFriendly(onChainAddress);
+      const rawAddress = parsed.address.workChain + ":" + parsed.address.hash.toString("hex");
+      logger.log(`Parsed address: ${rawAddress} from ${onChainAddress}`);
       // d) Mark as completed
       await nftApiCollectionsDB.updateById(coll.id, {
-        address: onChainAddress,
+        address: rawAddress,
+        friendlyAddress: onChainAddress,
         status: "COMPLETED",
       });
 
-      logger.log(`Collection #${coll.id} deployed at address=${onChainAddress}`);
+      logger.log(`Collection #${coll.id} deployed at address=${onChainAddress}  / ${rawAddress} metadataUrl=${metadataUrl}`);
     } catch (err) {
       logger.error(`Error deploying collection #${coll.id}`, err);
       // set status=FAILED so user sees it's not minted

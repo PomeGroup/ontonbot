@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import {
   nftApiCollections,
@@ -11,6 +11,18 @@ import { NftStatusEnum } from "@/db/enum";
 // import { redisTools } from "@/lib/redisTools";
 
 export const nftApiCollectionsDB = {
+  /**
+   * Get by address
+   */
+  async getByAddress(address: string): Promise<NftApiCollections | undefined> {
+    try {
+      const [row] = await db.select().from(nftApiCollections).where(eq(nftApiCollections.address, address)).execute();
+      return row;
+    } catch (error) {
+      logger.error("nftApiCollectionsDB: Error fetching by address:", error);
+      throw error;
+    }
+  },
   /**
    * Get by ID
    */
@@ -68,22 +80,21 @@ export const nftApiCollectionsDB = {
   },
 
   /**
-   * Example: increment some numeric field (like salesCount)
+   * Example: increment some numeric field (like lastRegisteredIndex)
    */
-  async incrementSalesCount(id: number): Promise<NftApiCollections | undefined> {
+  async setLastRegisteredIndex(id: number, nextIndex: number): Promise<NftApiCollections | undefined> {
     try {
       const [updated] = await db
         .update(nftApiCollections)
         .set({
-          // For example if you store "salesCount" in collection
-          // salesCount: sql`${nftApiCollections.salesCount} + 1`
+          lastRegisteredIndex: nextIndex,
         })
         .where(eq(nftApiCollections.id, id))
         .returning()
         .execute();
       return updated;
     } catch (error) {
-      logger.error("nftApiCollectionsDB: Error incrementing salesCount:", error);
+      logger.error("nftApiCollectionsDB: Error incrementing lastRegisteredIndex:", error);
       throw error;
     }
   },

@@ -2,7 +2,7 @@ import { pgTable, serial, varchar, text, bigint, timestamp, json, index, numeric
 import { InferSelectModel } from "drizzle-orm";
 
 // Import the enum for NFT statuses
-import { nftStatusEnum } from "../enum";
+import { nftStatusEnum, NftStatusEnum } from "../enum";
 
 // Shared enum for collection/NFT statuses
 export const nftApiCollections = pgTable(
@@ -24,7 +24,7 @@ export const nftApiCollections = pgTable(
     friendlyAddress: varchar("friendly_address", { length: 255 }),
     status: nftStatusEnum("status").notNull().default("CREATING"),
     royalties: numeric("royalties", { precision: 5, scale: 2 }), // 5% = 5.00
-
+    lastRegisteredIndex: bigint("last_registered_index", { mode: "number" }).default(-1).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 })
       .$onUpdate(() => new Date())
@@ -50,6 +50,5 @@ export type NftApiCollectionsInsert = Omit<
 >; // Exclude isActive if you want to set it manually
 
 export type NftApiCollectionsUpdate = Partial<NftApiCollectionsInsert> & {
-  // Explicitly add status as optional
-  status?: string;
+  status?: NftStatusEnum; // now it matches Drizzle’s union
 };

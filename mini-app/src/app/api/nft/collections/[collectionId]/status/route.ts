@@ -22,8 +22,10 @@ export async function GET(request: Request, { params }: { params: { collectionId
       return new Response(JSON.stringify({ error: "Collection not found" }), { status: 404 });
     }
 
-    // (Optional) check ownership (coll.apiKeyId === apiKeyRecord.id) if you want
-
+    // check ownership (coll.apiKeyId === apiKeyRecord.id) if you want
+    if (coll.apiKeyId !== apiKeyRecord.id) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    }
     // 4) return data
     // e.g. {collectionId, address, status, minterAddress, collectionData}
     const responseBody = {

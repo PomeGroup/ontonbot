@@ -1,6 +1,6 @@
 import { pgTable, serial, varchar, text, bigint, timestamp, json, index } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
-import { nftStatusEnum } from "../enum";
+import { NftStatusEnum, nftStatusEnum } from "../enum";
 
 export const nftApiItems = pgTable(
   "nft_api_items",
@@ -47,3 +47,7 @@ export type NftApiItems = InferSelectModel<typeof nftApiItems>;
  *   2) have default values you typically don't supply (e.g., `createdAt`, `updatedAt`).
  */
 export type NftApiItemsInsert = Omit<InferSelectModel<typeof nftApiItems>, "id" | "createdAt" | "updatedAt" | "status">; // Exclude isActive if you want to set it manually
+
+export type NftApiCollectionsUpdate = Partial<NftApiItemsInsert> & {
+  status?: NftStatusEnum; // now it matches Drizzle’s union
+};

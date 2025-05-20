@@ -2,6 +2,7 @@ import { getAuthenticatedNftApi } from "@/server/utils/getAuthenticatedNftApi";
 import { nftApiMinterWalletsDB } from "@/db/modules/nftApiMinterWallets.db";
 import { nftApiCollectionsDB } from "@/db/modules/nftApiCollections.db";
 import { logger } from "@/server/utils/logger";
+import { NFTApi } from "@/lib/NFTApi";
 
 export async function POST(request: Request) {
   // 1) Handle Preflight
@@ -15,25 +16,8 @@ export async function POST(request: Request) {
 
   try {
     // 3) Parse body
-    const body = await request.json();
 
-    const { walletAddress, collectionData, userCallbackUrl } = body;
-    logger.log("POST /collections", { walletAddress, collectionData, userCallbackUrl });
-    if (!walletAddress || !collectionData) {
-      return new Response(JSON.stringify({ error: "Missing walletAddress or collectionData" }), { status: 400 });
-    }
-
-    // Basic validation of collectionData
-    if (!collectionData.name || !collectionData.description || !collectionData.image) {
-      return new Response(JSON.stringify({ error: "Invalid or missing name/description/image" }), { status: 400 });
-    }
-    if (collectionData.social_links && !Array.isArray(collectionData.social_links)) {
-      return new Response(JSON.stringify({ error: "social_links must be an array" }), { status: 400 });
-    }
-    if (collectionData.royalties && (collectionData.royalties < 0 || collectionData.royalties > 100)) {
-      return new Response(JSON.stringify({ error: "Royalties must be between 0 and 100" }), { status: 400 });
-    }
-
+    const { walletAddress, collectionData, userCallbackUrl } = await NFTApi.parseCreateCollectionBody(request);
     const walletRow = await nftApiMinterWalletsDB.findByAddress(apiKeyRecord.id, walletAddress);
     if (!walletRow) {
       return new Response(JSON.stringify({ error: "Wallet not found" }), { status: 404 });
@@ -49,7 +33,7 @@ export async function POST(request: Request) {
       image: collectionData.image,
       coverImage: collectionData.cover_image,
       socialLinks: collectionData.social_links ?? null,
-      royalties: collectionData.royalties ?? null,
+      royalties: collectionData.royalties.toString() ?? null,
 
       // We start with no address and status "CREATING"
       address: null,
