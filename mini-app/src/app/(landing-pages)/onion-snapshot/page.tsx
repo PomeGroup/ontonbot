@@ -49,13 +49,6 @@ const OnionSnapshotPage = () => {
                 size="lg"
                 className="w-full"
               >
-                <span
-                  role="img"
-                  aria-label="magnifying glass"
-                  className="mr-2 text-xl"
-                >
-                  🔍
-                </span>
                 Check My Status
               </Button>
             </Link>
@@ -73,13 +66,6 @@ const OnionSnapshotPage = () => {
                 size="lg"
                 className="w-full"
               >
-                <span
-                  role="img"
-                  aria-label="rocket"
-                  className="mr-2 text-xl"
-                >
-                  🚀
-                </span>
                 Boost Your Score
               </Button>
             </Link>
@@ -97,13 +83,6 @@ const OnionSnapshotPage = () => {
                 size="lg"
                 className="w-full"
               >
-                <span
-                  role="img"
-                  aria-label="calendar"
-                  className="mr-2 text-xl"
-                >
-                  🗓️
-                </span>
                 Important Dates
               </Button>
             </Link>
@@ -121,13 +100,6 @@ const OnionSnapshotPage = () => {
                 size="lg"
                 className="w-full"
               >
-                <span
-                  role="img"
-                  aria-label="onion"
-                  className="mr-2 text-xl"
-                >
-                  🧅
-                </span>
                 What is ONION?
               </Button>
             </Link>
