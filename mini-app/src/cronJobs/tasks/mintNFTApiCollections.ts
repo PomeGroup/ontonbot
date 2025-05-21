@@ -5,6 +5,7 @@ import { uploadJsonToMinio } from "@/lib/minioTools";
 import { mintNFT } from "@/lib/nft";
 import { Address } from "@ton/core";
 import { nftApiCollectionsDB } from "@/db/modules/nftApiCollections.db";
+import { nftApiMinterWalletsDB } from "@/db/modules/nftApiMinterWallets.db";
 
 export async function mintNFTApiCollections() {
   // 1) fetch items with status=CREATING, or address is null
@@ -13,7 +14,9 @@ export async function mintNFTApiCollections() {
     logger.log("No NFT items to deploy right now.");
     return;
   }
-
+  for (const item of items) {
+    await nftApiItemsDB.updateById(item.id, { status: "MINTING" });
+  }
   for (const item of items) {
     try {
       // a) Validate or external callback
@@ -22,11 +25,13 @@ export async function mintNFTApiCollections() {
         await nftApiItemsDB.updateById(item.id, { status: "VALIDATION_FAILED" });
         continue;
       }
+
       if (!item.ownerWalletAddress || !item.collectionId) {
         logger.error(`Item #${item.id} is missing ownerWalletAddress or collectionId`);
         await nftApiItemsDB.updateById(item.id, { status: "FAILED" });
         continue;
       }
+
       // b) build metadata
       const metaObj = {
         name: item.name,
@@ -49,13 +54,24 @@ export async function mintNFTApiCollections() {
       if (!collection || !collection.address) {
         throw new Error(`Collection missing on-chain address for item #${item.id}`);
       }
-
+      const minterWallet = await nftApiMinterWalletsDB.findById(collection.minterWalletId);
+      if (!minterWallet || !minterWallet?.mnemonic) {
+        logger.error(`Minter wallet not found for collection ID=${collection.id}  and item #${item.id}`);
+        await nftApiItemsDB.updateById(collection.id, { status: "FAILED" });
+        continue; // move to next
+      }
       // d) determine the next index or the user-supplied index
       //   For example, let's say we do a simple "collection.lastItemIndex + 1"
       const nextIndex = collection.lastRegisteredIndex + 1;
 
       // e) do the on-chain mint
-      const mintedAddress = await mintNFT(item.ownerWalletAddress, collection.address, nextIndex, metadataUrl);
+      const mintedAddress = await mintNFT(
+        item.ownerWalletAddress,
+        collection.address,
+        nextIndex,
+        metadataUrl,
+        minterWallet.mnemonic
+      );
       if (!mintedAddress) {
         throw new Error(`Minting on-chain returned null for item #${item.id}`);
       }
