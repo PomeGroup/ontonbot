@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eq, sql } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import {
   nftApiCollections,
@@ -16,7 +16,11 @@ export const nftApiCollectionsDB = {
    */
   async getByAddress(address: string): Promise<NftApiCollections | undefined> {
     try {
-      const [row] = await db.select().from(nftApiCollections).where(eq(nftApiCollections.address, address)).execute();
+      const [row] = await db
+        .select()
+        .from(nftApiCollections)
+        .where(or(eq(nftApiCollections.address, address), eq(nftApiCollections.friendlyAddress, address)))
+        .execute();
       return row;
     } catch (error) {
       logger.error("nftApiCollectionsDB: Error fetching by address:", error);

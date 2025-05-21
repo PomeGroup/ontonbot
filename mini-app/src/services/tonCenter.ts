@@ -97,7 +97,7 @@ interface TonCenterResponse {
 }
 
 // Function to fetch NFT items
-async function fetchNFTItems(
+export async function fetchNFTItems(
   ownerAddress: string,
   collectionAddress: string,
   nft_address: string = "",
@@ -112,6 +112,8 @@ async function fetchNFTItems(
     url = `${BASE_URL}/nft/items?address=${nft_address}&owner_address=${ownerAddress}`;
   } else if (index > -1 && collectionAddress) {
     url = `${BASE_URL}/nft/items?index=${index}&collection_address=${collectionAddress}`;
+  } else if (index === -1 && collectionAddress) {
+    url = `${BASE_URL}/nft/items?collection_address=${collectionAddress}&limit=${limit}&offset=${offset}`;
   } else {
     throw Error("Wrong Params");
   }

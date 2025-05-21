@@ -67,4 +67,15 @@ export const nftApiItemsDB = {
       throw error;
     }
   },
+  /**
+   * Get items by collection ID
+   */
+  async findAllByCollectionId(collectionId: number): Promise<NftApiItems[]> {
+    try {
+      return await db.select().from(nftApiItems).where(eq(nftApiItems.collectionId, collectionId)).execute();
+    } catch (error) {
+      logger.error("nftApiItemsDB: Error getting items by collection address:", error);
+      throw error;
+    }
+  },
 };

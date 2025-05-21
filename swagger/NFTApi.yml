@@ -16,6 +16,8 @@ info:
 servers:
   - url: https://staging-app.toncloud.observer/api/nft
     description: Staging server
+  - url: http://host.docker.internal:3000/api/nft
+    description: Local server
   - url: https://dev-app.toncloud.observer/api/nft
     description: Development server
   - url: https://app.onton.live/api/nft
@@ -171,118 +173,10 @@ paths:
           description: Forbidden
         '500':
           description: Internal server error
-
-  /collections/{collectionAddress}/nfts/first-owner:
-    get:
-      tags:
-        - Collections
-      summary: List NFT items in a collection by first (original) owner
-      description: >
-        Returns a list of NFTs in this collection for which the **firstOwnerAddress** 
-        matches the wallet(s) authorized by the current API key.
-      security:
-        - ApiKeyAuth: []
-      parameters:
-        - name: collectionAddress
-          in: path
-          required: true
-          description: The **on-chain** address of the NFT collection
-          schema:
-            type: string
-        - name: friendlyAddress
-          in: query
-          required: false
-          description: A user-friendly version (e.g., ENS) of the collection address
-          schema:
-            type: string
-      responses:
-        '200':
-          description: List of NFT items originally minted by the API key's wallet(s)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  collectionAddress:
-                    type: string
-                    description: The on-chain address of the collection
-                  friendlyAddress:
-                    type: string
-                    nullable: true
-                    description: A user-friendly version of the collection's address
-                  minterAddress:
-                    type: string
-                    description: The wallet address that created this collection (if available)
-                  nfts:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/NFTItem'
-        '404':
-          description: Collection not found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal server error
-
-  /collections/{collectionAddress}/nfts/current-owner:
-    get:
-      tags:
-        - Collections
-      summary: List NFT items in a collection by current owner
-      description: >
-        Returns a list of NFTs in this collection where the **currentOwnerAddress** 
-        matches the wallet(s) authorized by the current API key.
-      security:
-        - ApiKeyAuth: []
-      parameters:
-        - name: collectionAddress
-          in: path
-          required: true
-          description: The **on-chain** address of the NFT collection
-          schema:
-            type: string
-        - name: friendlyAddress
-          in: query
-          required: false
-          description: A user-friendly version (e.g., ENS) of the collection address
-          schema:
-            type: string
-      responses:
-        '200':
-          description: List of NFT items currently owned by the API key's wallet(s)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  collectionAddress:
-                    type: string
-                    description: The on-chain address of the collection
-                  friendlyAddress:
-                    type: string
-                    nullable: true
-                    description: A user-friendly version of the collection's address
-                  minterAddress:
-                    type: string
-                    description: The wallet address that created this collection (if available)
-                  nfts:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/NFTItem'
-        '404':
-          description: Collection not found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal server error
-
   ###########################
   #     NFT ENDPOINTS       #
   ###########################
+
 
   /nfts:
     post:
@@ -351,6 +245,114 @@ paths:
           description: Forbidden
         '500':
           description: Internal server error
+  /nfts/first-owner/{collectionAddress}:
+    get:
+      tags:
+        - NFTs
+      summary: List NFT items in a collection by first (original) owner
+      description: >
+        Returns a list of NFTs in this collection for which the **firstOwnerAddress** 
+        matches the wallet(s) authorized by the current API key.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: collectionAddress
+          in: path
+          required: true
+          description: The **on-chain** address of the NFT collection
+          schema:
+            type: string
+        - name: friendlyAddress
+          in: query
+          required: false
+          description: A user-friendly version (e.g., ENS) of the collection address
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of NFT items originally minted by the API key's wallet(s)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collectionAddress:
+                    type: string
+                    description: The on-chain address of the collection
+                  friendlyAddress:
+                    type: string
+                    nullable: true
+                    description: A user-friendly version of the collection's address
+                  minterAddress:
+                    type: string
+                    description: The wallet address that created this collection (if available)
+                  nfts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NFTItem'
+        '404':
+          description: Collection not found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+
+  /nfts/current-owner/{collectionAddress}:
+    get:
+      tags:
+        - NFTs
+      summary: List NFT items in a collection by current owner
+      description: >
+        Returns a list of NFTs in this collection where the **currentOwnerAddress** 
+        matches the wallet(s) authorized by the current API key.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: collectionAddress
+          in: path
+          required: true
+          description: The **on-chain** address of the NFT collection
+          schema:
+            type: string
+        - name: friendlyAddress
+          in: query
+          required: false
+          description: A user-friendly version (e.g., ENS) of the collection address
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of NFT items currently owned by the API key's wallet(s)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collectionAddress:
+                    type: string
+                    description: The on-chain address of the collection
+                  friendlyAddress:
+                    type: string
+                    nullable: true
+                    description: A user-friendly version of the collection's address
+                  minterAddress:
+                    type: string
+                    description: The wallet address that created this collection (if available)
+                  nfts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NFTItem'
+        '404':
+          description: Collection not found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+
 
   /nfts/owner/{ownerAddress}:
     get:
