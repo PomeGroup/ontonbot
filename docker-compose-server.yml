@@ -424,7 +424,7 @@ services:
       driver: "fluentd"
       options:
         fluentd-address: "127.0.0.1:24224"
-        tag: "docker.${BRANCH_NAME}-mini-app-sbt-worker"
+        tag: "docker.${BRANCH_NAME}-mini-app-nft-api-worker"
         #fluentd-async-connect: "true"
 
 
