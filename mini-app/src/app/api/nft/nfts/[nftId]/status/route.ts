@@ -7,8 +7,10 @@ import { nftApiCollectionsDB } from "@/db/modules/nftApiCollections.db"; // if y
 export async function GET(request: Request, { params }: { params: { nftId: string } }) {
   // 1) Auth
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
-  if (authError || !apiKeyRecord) return authError;
-
+  if (authError) return authError;
+  if (!apiKeyRecord) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
   try {
     // parse
     const id = parseInt(params.nftId, 10);

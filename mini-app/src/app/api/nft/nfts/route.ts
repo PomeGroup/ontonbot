@@ -14,8 +14,10 @@ export async function POST(request: Request) {
 
   // 2) Authenticate
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
-  if (authError || !apiKeyRecord) return authError;
-
+  if (authError) return authError;
+  if (!apiKeyRecord) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
   try {
     // 3) Validate body
     const { walletAddress, nftData, userCallbackUrl } = await parseCreateNFTBody(request);

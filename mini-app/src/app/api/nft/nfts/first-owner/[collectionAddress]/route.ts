@@ -8,8 +8,10 @@ import { logger } from "@/server/utils/logger";
 export async function GET(request: Request, { params }: { params: { collectionAddress: string } }) {
   // 1) Authenticate
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
-  if (authError || !apiKeyRecord) return authError;
-
+  if (authError) return authError;
+  if (!apiKeyRecord) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
   try {
     // 2) Parse path param
     const { collectionAddress } = params;

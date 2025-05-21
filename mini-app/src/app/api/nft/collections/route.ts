@@ -12,8 +12,10 @@ export async function POST(request: Request) {
 
   // 2) Authenticate
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
-  if (authError || !apiKeyRecord) return authError; // 401 or 500
-
+  if (authError) return authError; // 401 or 500
+  if (!apiKeyRecord) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
   try {
     // 3) Parse body
 
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
       coverImage: collectionData.cover_image,
       socialLinks: collectionData.social_links ?? null,
       royalties: collectionData.royalties.toString() ?? null,
-
+      lastRegisteredIndex: 0,
       // We start with no address and status "CREATING"
       address: null,
       friendlyAddress: null,

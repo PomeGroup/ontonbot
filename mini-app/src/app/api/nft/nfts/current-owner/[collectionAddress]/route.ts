@@ -1,5 +1,3 @@
-// app/api/collections/[collectionAddress]/nfts/current-owner/route.ts
-
 import { getAuthenticatedNftApi } from "@/server/utils/getAuthenticatedNftApi";
 import { nftApiCollectionsDB } from "@/db/modules/nftApiCollections.db";
 import { nftApiMinterWalletsDB } from "@/db/modules/nftApiMinterWallets.db";
@@ -11,8 +9,10 @@ import axios from "axios";
 export async function GET(request: Request, { params }: { params: { collectionAddress: string } }) {
   // 1) Auth
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
-  if (authError || !apiKeyRecord) return authError;
-
+  if (authError) return authError;
+  if (!apiKeyRecord) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
   try {
     // 2) parse path param
     const { collectionAddress } = params;
@@ -80,7 +80,7 @@ export async function GET(request: Request, { params }: { params: { collectionAd
     const dbItems = await nftApiItemsDB.getAllByCollectionId(collection.id);
     const firstOwnerMap = new Map<string, string>();
     for (const dbi of dbItems) {
-      if (!dbi.address) continue;
+      if (!dbi.address || !dbi.ownerWalletAddress) continue;
       // The assumption: dbi.ownerWalletAddress => first owner
       firstOwnerMap.set(dbi.address, dbi.ownerWalletAddress.toUpperCase() || "");
     }
