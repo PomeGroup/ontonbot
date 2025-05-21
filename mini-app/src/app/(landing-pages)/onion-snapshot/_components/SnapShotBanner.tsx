@@ -1,15 +1,17 @@
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
+import { useConfig } from "@/context/ConfigContext";
 import { useConfigDate } from "@/hooks/useConfigDate";
 import Image from "next/image";
 import Link from "next/link";
 
 const SnapShotBanner = () => {
   const timeLeft = useConfigDate("snapshot_date");
-  console.log("timeLeft", timeLeft);
+  const config = useConfig();
+  const disable = config["disable_snapshot_banner"];
 
-  if (!timeLeft) return null;
+  if (!timeLeft || disable) return null;
 
   return (
     <CustomCard
