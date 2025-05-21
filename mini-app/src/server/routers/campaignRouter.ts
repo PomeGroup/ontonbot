@@ -4,22 +4,22 @@ import { TokenCampaignOrdersInsert, TokenCampaignOrdersStatus } from "@/db/schem
 import { checkRateLimit } from "@/lib/checkRateLimit";
 import { generateRandomHash } from "@/lib/generateRandomHash";
 import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
-import userEligibilityDB from "@/server/db/tokenCampaignEligibleUsers.db";
-import tokenCampaignMergeTransactionsDB from "@/server/db/tokenCampaignMergeTransactions.db";
-import { tokenCampaignNftCollectionsDB } from "@/server/db/tokenCampaignNftCollections.db";
-import { tokenCampaignNftItemsDB } from "@/server/db/tokenCampaignNftItems.db";
-import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
-import { tokenCampaignSpinPackagesDB } from "@/server/db/tokenCampaignSpinPackages.db";
-import { tokenCampaignUserSpinsDB } from "@/server/db/tokenCampaignUserSpins.db";
-import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
+import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
+import userEligibilityDB from "@/db/modules/tokenCampaignEligibleUsers.db";
+import tokenCampaignMergeTransactionsDB from "@/db/modules/tokenCampaignMergeTransactions.db";
+import { tokenCampaignNftCollectionsDB } from "@/db/modules/tokenCampaignNftCollections.db";
+import { tokenCampaignNftItemsDB } from "@/db/modules/tokenCampaignNftItems.db";
+import { tokenCampaignOrdersDB } from "@/db/modules/tokenCampaignOrders.db";
+import { tokenCampaignSpinPackagesDB } from "@/db/modules/tokenCampaignSpinPackages.db";
+import { tokenCampaignUserSpinsDB } from "@/db/modules/tokenCampaignUserSpins.db";
+import tonCenter, { NFTItem } from "@/services/tonCenter";
 import { is_prod_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
 import { CampaignNFT } from "@/types/campaign.types";
 import { Address } from "@ton/core";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { affiliateClicksDB } from "../db/affiliateClicks.db";
+import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
 import { initDataProtectedProcedure, router } from "../trpc";
 
 export const campaignRouter = router({

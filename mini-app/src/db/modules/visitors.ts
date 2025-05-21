@@ -1,10 +1,10 @@
 import { db } from "@/db/db";
 import { eventFields, events, rewards, specialGuests, tickets, userEventFields, users, visitors } from "@/db/schema";
 import { and, between, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
-import { checkEventTicketToCheckIn } from "@/server/db/events";
+import { checkEventTicketToCheckIn } from "@/db/modules/events";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
-import { getUserCacheKey } from "@/server/db/users";
+import { getUserCacheKey } from "@/db/modules/users";
 import { VisitorsRow } from "@/db/schema/visitors";
 
 const getVisitorCacheKey = (user_id: number, event_uuid: string) => `visitor:${user_id}:${event_uuid}`;
@@ -106,7 +106,7 @@ export const selectValidVisitorById = async (visitorId: number) => {
           sql`TO_TIMESTAMP
               (events.start_date)`,
           sql`TO_TIMESTAMP
-              (events.end_date)`,
+              (events.end_date)`
         ),
         eq(
           db
@@ -119,8 +119,8 @@ export const selectValidVisitorById = async (visitorId: number) => {
               and(
                 eq(userEventFields.user_id, visitors.user_id),
                 eq(userEventFields.completed, true),
-                eq(userEventFields.event_id, events.event_id),
-              ),
+                eq(userEventFields.event_id, events.event_id)
+              )
             ),
           db
             .select({
@@ -128,9 +128,9 @@ export const selectValidVisitorById = async (visitorId: number) => {
                   (*)`.mapWith(Number),
             })
             .from(eventFields)
-            .where(and(eq(eventFields.event_id, events.event_id))),
-        ),
-      ),
+            .where(and(eq(eventFields.event_id, events.event_id)))
+        )
+      )
     );
 };
 
@@ -139,7 +139,7 @@ export const selectVisitorsByEventUuid = async (
   limit: number,
   cursor: number = 0,
   dynamic_fields: boolean = true,
-  search?: string,
+  search?: string
 ) => {
   const eventTicketToCheckIn = await checkEventTicketToCheckIn(event_uuid);
 
@@ -194,12 +194,12 @@ export const selectVisitorsByEventUuid = async (
           eq(visitors.event_uuid, event_uuid),
           search
             ? or(
-              ilike(users.username, `%${search}%`),
-              ilike(users.first_name, `%${search}%`),
-              ilike(users.last_name, `%${search}%`),
-            )
-            : sql`true`,
-        ),
+                ilike(users.username, `%${search}%`),
+                ilike(users.first_name, `%${search}%`),
+                ilike(users.last_name, `%${search}%`)
+              )
+            : sql`true`
+        )
       )
       .orderBy(desc(visitors.created_at))
       .limit(limit)
@@ -279,12 +279,12 @@ export const selectVisitorsByEventUuid = async (
           eq(tickets.event_uuid, event_uuid),
           search
             ? or(
-              ilike(users.username, `%${search}%`),
-              ilike(users.first_name, `%${search}%`),
-              ilike(users.last_name, `%${search}%`),
-            )
-            : sql`true`,
-        ),
+                ilike(users.username, `%${search}%`),
+                ilike(users.first_name, `%${search}%`),
+                ilike(users.last_name, `%${search}%`)
+              )
+            : sql`true`
+        )
       )
       .limit(limit)
       .offset(cursor || 0);
@@ -392,12 +392,12 @@ export const selectVisitorsByEventUuid = async (
             eq(specialGuests.eventUuid, event_uuid), // Adding event_uuid condition
             search
               ? or(
-                ilike(specialGuests.telegram, `%${search}%`),
-                ilike(specialGuests.name, `%${search}%`),
-                ilike(specialGuests.surname, `%${search}%`),
-              )
-              : sql`true`,
-          ),
+                  ilike(specialGuests.telegram, `%${search}%`),
+                  ilike(specialGuests.name, `%${search}%`),
+                  ilike(specialGuests.surname, `%${search}%`)
+                )
+              : sql`true`
+          )
         )
         .execute();
 
@@ -495,7 +495,7 @@ export const selectVisitorsWithWalletAddress = async (event_uuid: string) => {
 
 export const findVisitorByUserAndEventUuid = async (
   user_id: number,
-  event_uuid: string,
+  event_uuid: string
 ): Promise<VisitorsRow | undefined> => {
   const cacheKey = getVisitorCacheKey(user_id, event_uuid);
   const cachedVisitor = await redisTools.getCache(cacheKey);

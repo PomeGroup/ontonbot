@@ -8,7 +8,7 @@ import { games } from "@/db/schema";
 import { postTelegramCsvToTonSociety } from "@/cronJobs/helper/postTelegramCsvToTonSociety";
 import { generateTelegramCsv } from "@/cronJobs/helper/generateTelegramCsv";
 import { fetchAllElympicsParticipants } from "@/cronJobs/helper/fetchAllElympicsParticipants";
-import gameLeaderboardDB from "@/server/db/gameLeaderboard.db";
+import gameLeaderboardDB from "@/db/modules/gameLeaderboard.db";
 
 /**
  * 1) A helper that returns tournaments whose endDate is

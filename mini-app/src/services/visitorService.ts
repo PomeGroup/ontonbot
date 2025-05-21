@@ -1,8 +1,8 @@
 // Helper function to validate and retrieve visitor
-import visitorsDB from "@/server/db/visitors";
-import eventDB from "@/server/db/events";
+import visitorsDB from "@/db/modules/visitors";
+import eventDB from "@/db/modules/events";
 import { TRPCError } from "@trpc/server";
-import userEventFieldsDB from "@/server/db/userEventFields.db";
+import userEventFieldsDB from "@/db/modules/userEventFields.db";
 import { logger } from "@/server/utils/logger";
 
 export const getAndValidateVisitor = async (user_id: number, event_uuid: string, ticketOrderUuid?: string | null) => {

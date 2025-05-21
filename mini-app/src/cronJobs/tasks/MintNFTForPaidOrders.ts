@@ -7,12 +7,12 @@ import { eventPayment } from "@/db/schema/eventPayment";
 import { uploadJsonToMinio } from "@/lib/minioTools";
 import { nftItems } from "@/db/schema/nft_items";
 import { mintNFT } from "@/lib/nft";
-import { is_mainnet } from "@/server/routers/services/tonCenter";
-import { selectUserById } from "@/server/db/users";
+import { is_mainnet } from "@/services/tonCenter";
+import { selectUserById } from "@/db/modules/users";
 import { sendLogNotification } from "@/lib/tgBot";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
-import { couponItemsDB } from "@/server/db/couponItems.db";
+import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
+import { couponItemsDB } from "@/db/modules/couponItems.db";
 
 export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -78,7 +78,7 @@ export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
         },
         "ontonitem"
       );
-      // const approved_users = db.select().from(eventRegistrants).where(
+      // const approved_users = modules.select().from(eventRegistrants).where(
       //   and(
       //     eq(eventRegistrants.event_uuid , event_uuid),
       //     eq(eventRegistrants)

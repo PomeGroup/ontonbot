@@ -27,6 +27,8 @@ import { deployMissingCampaignCollections } from "@/cronJobs/tasks/deployMissing
 import { checkMinterTransactions } from "@/cronJobs/tasks/checkNFTTransactions";
 import { mintPlatinumNftForMergedNFTS } from "@/cronJobs/tasks/mintPlatinumNftForMergedNFTS";
 import { burnMergedNfts } from "@/cronJobs/tasks/burnMergedNfts";
+import { deployNFTApiCollections } from "@/cronJobs/tasks/deployNFTApiCollections";
+import { mintNFTApiCollections } from "@/cronJobs/tasks/mintNFTApiCollections";
 
 const cronJobs = {
   CheckTransactions,
@@ -57,6 +59,8 @@ const cronJobs = {
   checkMinterTransactions,
   mintPlatinumNftForMergedNFTS,
   burnMergedNfts,
+  deployNFTApiCollections,
+  mintNFTApiCollections,
 };
 export { cronJobRunner };
 export default cronJobs;

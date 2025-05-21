@@ -1,5 +1,5 @@
 import { validateMiniAppData } from "@/utils";
-import { usersDB } from "./db/users";
+import { usersDB } from "@/db/modules/users";
 import { logger } from "@/server/utils/logger";
 import { TRPCError } from "@trpc/server";
 import { cookies } from "next/headers";

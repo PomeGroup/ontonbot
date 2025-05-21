@@ -5,9 +5,9 @@ import { redisTools } from "@/lib/redisTools";
 import { roundDateToInterval } from "@/lib/time.utils";
 import { findActivity } from "@/lib/ton-society-api";
 import { removeKey } from "@/lib/utils";
-import eventFieldsDB from "@/server/db/eventFields.db";
-import { organizerTsVerified } from "@/server/db/userFlags.db";
-import { selectUserById } from "@/server/db/users";
+import eventFieldsDB from "@/db/modules/eventFields.db";
+import { organizerTsVerified } from "@/db/modules/userFlags.db";
+import { selectUserById } from "@/db/modules/users";
 import { is_prod_env } from "@/server/utils/evnutils";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
@@ -16,7 +16,7 @@ import crypto from "crypto";
 import { and, asc, count, desc, eq, gt, inArray, isNotNull, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
-import { logger } from "../utils/logger";
+import { logger } from "../../server/utils/logger";
 
 export const getEventIDCacheKey = (eventID: number) => redisTools.cacheKeys.event_id + eventID;
 export const getEventUUIDCacheKey = (eventUUID: string) => redisTools.cacheKeys.event_uuid + eventUUID;
@@ -113,7 +113,7 @@ export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
 };
 
 export const checkEventTicketToCheckIn = async (eventUuid: string) => {
-  // const event = await db
+  // const event = await modules
   //   .select({
   //     event_uuid: events.event_uuid,
   //     ticketToCheckIn: events.ticketToCheckIn,
@@ -137,7 +137,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
     return null;
   }
 
-  // const eventData = (await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute()).pop();
+  // const eventData = (await modules.select().from(events).where(eq(events.event_uuid, eventUuid)).execute()).pop();
   const eventData = await fetchEventByUuid(eventUuid);
 
   if (!eventData) {
@@ -207,7 +207,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     .where(eq(visitors.user_id, userId));
 
   // // b) eventQuery => events owned by the user if role='organizer'
-  // const eventQuery = db
+  // const eventQuery = modules
   //   .select({
   //     event_uuid: events.event_uuid,
   //     user_id: users.user_id,
@@ -219,7 +219,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
   //   .where(and(eq(users.user_id, userId), eq(users.role, "organizer")));
 
   // // c) ticketsQuery => user’s paid events (tickets)
-  // const ticketsQuery = db
+  // const ticketsQuery = modules
   //   .select({
   //     event_uuid: tickets.event_uuid,
   //     user_id: tickets.user_id,
@@ -240,7 +240,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     .from(eventRegistrants)
     .where(eq(eventRegistrants.user_id, userId));
 
-  // const userRolesQuery = db
+  // const userRolesQuery = modules
   //   .select({
   //     event_uuid: events.event_uuid, // from events
   //     user_id: userRoles.userId, // from userRoles
@@ -527,7 +527,7 @@ export const getEventsWithFilters = async (
 };
 
 export const getEventByUuid = async (eventUuid: string, removeSecret: boolean = true) => {
-  // const event = await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute();
+  // const event = await modules.select().from(events).where(eq(events.event_uuid, eventUuid)).execute();
   const event = await fetchEventByUuid(eventUuid);
   if (!event) {
     throw new TRPCError({
@@ -541,7 +541,7 @@ export const getEventByUuid = async (eventUuid: string, removeSecret: boolean = 
 };
 
 export const getEventById = async (eventId: number) => {
-  // const event = await db.select().from(events).where(eq(events.event_id, eventId)).execute();
+  // const event = await modules.select().from(events).where(eq(events.event_id, eventId)).execute();
   return await fetchEventById(eventId);
 };
 

@@ -3,7 +3,7 @@ import { logger } from "@/server/utils/logger";
 import { db } from "@/db/db";
 import { walletChecks } from "@/db/schema/walletChecks";
 import { and, eq, or } from "drizzle-orm";
-import tonCenter from "@/server/routers/services/tonCenter";
+import tonCenter from "@/services/tonCenter";
 import { orders } from "@/db/schema/orders";
 import { tokenCampaignOrders, TokenCampaignOrdersStatus } from "@/db/schema";
 

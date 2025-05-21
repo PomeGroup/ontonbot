@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { user_custom_flags, userFlagsType } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
-import { logger } from "../utils/logger";
+import { logger } from "../../server/utils/logger";
 import { redisTools } from "@/lib/redisTools";
 
 export const getUserFlagsCacheKey = (flag: string, userId: number) =>

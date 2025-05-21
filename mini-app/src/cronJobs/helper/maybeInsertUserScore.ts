@@ -1,6 +1,6 @@
-import eventDB from "@/server/db/events";
+import eventDB from "@/db/modules/events";
 import { UsersScoreActivityType } from "@/db/schema/usersScore";
-import { usersScoreDB } from "@/server/db/usersScore.db";
+import { usersScoreDB } from "@/db/modules/usersScore.db";
 import { logger } from "@/server/utils/logger";
 
 /**

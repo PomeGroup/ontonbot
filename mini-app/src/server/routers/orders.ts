@@ -2,8 +2,8 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedProcedure, router } from "../trpc";
 import { logger } from "@/server/utils/logger";
-import ordersDB from "@/server/db/orders.db";
-import { selectUserById } from "@/server/db/users";
+import ordersDB from "@/db/modules/orders.db";
+import { selectUserById } from "@/db/modules/users";
 
 // Hard-coded example event UUID
 const hardCodedEventUuid = "4e76c66c-ef3d-483c-9836-a3e12815b044";
@@ -41,12 +41,10 @@ export const ordersRouter = router({
     }),
 
   // 2) Get event orders
-  getEventOrders: evntManagerPP
-    .input(z.object({ event_uuid: z.string().uuid() }))
-    .query(async (opts) => {
-      // DB call moved to ordersDB
-      return ordersDB.getEventOrders(opts.input.event_uuid);
-    }),
+  getEventOrders: evntManagerPP.input(z.object({ event_uuid: z.string().uuid() })).query(async (opts) => {
+    // DB call moved to ordersDB
+    return ordersDB.getEventOrders(opts.input.event_uuid);
+  }),
 
   // 3) Add a 'promote_to_organizer' order if user doesn't already have one
   addPromoteToOrganizerOrder: initDataProtectedProcedure

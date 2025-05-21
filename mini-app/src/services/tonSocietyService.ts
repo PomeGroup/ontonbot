@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { PLACEHOLDER_IMAGE, PLACEHOLDER_VIDEO } from "@/constants";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
-import { fetchCountryById } from "@/server/db/giataCity.db";
+import { fetchCountryById } from "@/db/modules/giataCity.db";
 import { EventDataSchema } from "@/types";
 import { timestampToIsoString } from "@/lib/DateAndTime";
 interface TonSocietyDraftSchema {
@@ -51,49 +51,49 @@ export async function CreateTonSocietyDraft(
     },
     ...(input_event_data.ts_reward_url
       ? {
-        rewards: {
-          mint_type: "manual",
-          collection: {
-            title: input_event_data.title,
-            description: input_event_data.description,
-            image: {
-              url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
-            },
-            cover: {
-              url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
-            },
-            item_title: input_event_data.title,
-            item_description: "Reward for participation",
-            item_image: {
-              url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
-            },
-            ...(input_event_data.video_url
-              ? {
-                item_video: {
-                  url:
-                    process.env.ENV !== "local"
-                      ? new URL(input_event_data.video_url).origin + new URL(input_event_data.video_url).pathname
-                      : PLACEHOLDER_VIDEO,
-                },
-              }
-              : {}),
-            item_metadata: {
-              activity_type: "event",
-              place: {
-                type: input_event_data.eventLocationType === "online" ? "Online" : "Offline",
-                ...(country && country?.abbreviatedCode
-                  ? {
-                    country_code_iso: country.abbreviatedCode,
-                    venue_name: input_event_data.location,
+          rewards: {
+            mint_type: "manual",
+            collection: {
+              title: input_event_data.title,
+              description: input_event_data.description,
+              image: {
+                url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
+              },
+              cover: {
+                url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
+              },
+              item_title: input_event_data.title,
+              item_description: "Reward for participation",
+              item_image: {
+                url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
+              },
+              ...(input_event_data.video_url
+                ? {
+                    item_video: {
+                      url:
+                        process.env.ENV !== "local"
+                          ? new URL(input_event_data.video_url).origin + new URL(input_event_data.video_url).pathname
+                          : PLACEHOLDER_VIDEO,
+                    },
                   }
-                  : {
-                    venue_name: input_event_data.location, // Use location regardless of country
-                  }),
+                : {}),
+              item_metadata: {
+                activity_type: "event",
+                place: {
+                  type: input_event_data.eventLocationType === "online" ? "Online" : "Offline",
+                  ...(country && country?.abbreviatedCode
+                    ? {
+                        country_code_iso: country.abbreviatedCode,
+                        venue_name: input_event_data.location,
+                      }
+                    : {
+                        venue_name: input_event_data.location, // Use location regardless of country
+                      }),
+                },
               },
             },
           },
-        },
-      }
+        }
       : {}),
   };
   return eventDraft;

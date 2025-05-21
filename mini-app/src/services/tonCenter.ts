@@ -5,8 +5,8 @@ import { is_local_env, is_prod_env, is_stage_env } from "@/server/utils/evnutils
 import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 
-// export const is_mainnet = is_prod_env() || is_stage_env();
-export const is_mainnet = true;
+export const is_mainnet = is_prod_env() || is_stage_env();
+// export const is_mainnet = true;
 // export const is_mainnet = false;
 /* -------------------------------------------------------------------------- */
 /*                                   API KEY                                  */
@@ -18,10 +18,7 @@ const apiKeys = is_mainnet
       "51a79c3e82d6fb3a97360a6406f955e25bd787c75a0fa37ab5383291b20c825c",
       "56f164ae58ab79ade2d4ae1ecb5a1717c320f69aa9b3c52c6069c90a9bbc7552",
     ]
-  : [
-      "5481fc1517a904264da06f24f66c1b7a67ff11b4f5847f3942e3526c998bb9f1",
-      "1dd90a08cac83c13d27078fdb5f73752b393c8db47d9bf959d288fe486b9bcd1",
-    ];
+  : ["4fb3c0656555c4f63de82e91f978285e88ea0738389c05365220dee7bdfe1c84"];
 
 /* --------------------------- ONTON ORDER PREFIX --------------------------- */
 const ORDER_PREFIX = "onton_order=";
@@ -100,7 +97,7 @@ interface TonCenterResponse {
 }
 
 // Function to fetch NFT items
-async function fetchNFTItems(
+export async function fetchNFTItems(
   ownerAddress: string,
   collectionAddress: string,
   nft_address: string = "",
@@ -115,6 +112,8 @@ async function fetchNFTItems(
     url = `${BASE_URL}/nft/items?address=${nft_address}&owner_address=${ownerAddress}`;
   } else if (index > -1 && collectionAddress) {
     url = `${BASE_URL}/nft/items?index=${index}&collection_address=${collectionAddress}`;
+  } else if (index === -1 && collectionAddress) {
+    url = `${BASE_URL}/nft/items?collection_address=${collectionAddress}&limit=${limit}&offset=${offset}`;
   } else {
     throw Error("Wrong Params");
   }

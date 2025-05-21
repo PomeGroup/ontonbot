@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema";
 import { sendLogNotification } from "@/lib/tgBot";
-import { selectUserById, updateUserRole } from "@/server/db/users";
+import { selectUserById, updateUserRole } from "@/db/modules/users";
 import { logger } from "@/server/utils/logger";
 import { InferSelectModel, and, count, eq } from "drizzle-orm";
 import { is_mainnet } from "./tonCenter";

@@ -9,8 +9,7 @@ import { logger } from "@/server/utils/logger";
  */
 export const isUserEligible = async (telegramUserId: number): Promise<boolean> => {
   try {
-
-    // const [row] = await db
+    // const [row] = await modules
     //   .select()
     //   .from(tokenCampaignEligibleUsers)
     //   .where(eq(tokenCampaignEligibleUsers.userTelegramId, telegramUserId))
