@@ -16,7 +16,10 @@ import { rawToFriendlyAddress } from "@/server/utils/rawToFriendlyAddress";
 export async function GET(request: Request, { params }: { params: { walletAddress: string } }) {
   // 1) Authentication
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
-  if (authError || !apiKeyRecord) return authError;
+  if (authError) return authError;
+  if (!apiKeyRecord) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
 
   try {
     // 2) Parse path param => "walletAddress"
