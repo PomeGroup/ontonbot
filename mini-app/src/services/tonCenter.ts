@@ -46,7 +46,7 @@ export const getApiKey = (() => {
 
 export function v2_client() {
   const toncenterBaseEndpoint: string = !is_mainnet ? "https://testnet.toncenter.com" : "https://toncenter.com";
-
+  logger.log("toncenterBaseEndpoint", toncenterBaseEndpoint, "is_mainnet", is_mainnet);
   const client = new TonClient({
     endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
     apiKey: getApiKey(),
