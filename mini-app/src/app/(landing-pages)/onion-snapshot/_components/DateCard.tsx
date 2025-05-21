@@ -20,6 +20,7 @@ type DateCardProps = {
   description?: string;
   link?: string;
   linkText?: string;
+  linkAfter?: string;
   linkTextAfter?: string;
   showCountdown?: boolean;
   status?: React.ReactNode;
@@ -33,6 +34,7 @@ const DateCard = ({
   description,
   link,
   linkText = "More",
+  linkAfter,
   linkTextAfter,
   showCountdown = false,
   status,
@@ -48,10 +50,9 @@ const DateCard = ({
       day: "numeric",
     }) || date;
 
-  const handleLinkClilck = () => {
+  const handleLinkClilck = (link: string) => {
     if (!link) {
       // open a modal
-
       return;
     }
 
@@ -101,10 +102,10 @@ const DateCard = ({
                   )}
                 </div>
               </div>
-              {link && !timeLeft ? (
+              {(linkAfter && !timeLeft) || link ? (
                 <Button
                   variant="link"
-                  onClick={handleLinkClilck}
+                  onClick={() => handleLinkClilck(timeLeft && link ? link : linkAfter || "")}
                   className="flex items-center align-middle text-primary p-0"
                 >
                   <Typography weight="medium">{!timeLeft ? linkTextAfter : linkText}</Typography>
