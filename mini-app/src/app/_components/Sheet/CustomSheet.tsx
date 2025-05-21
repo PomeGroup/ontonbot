@@ -51,7 +51,7 @@ const CustomSheet: React.FC<ReusableSheetProps> = ({
   return createPortal(
     <Sheet
       opened={opened}
-      className={cn("w-full rounded-t-2xl max-h-screen", className)}
+      className={cn("w-full rounded-t-2xl max-h-screen pb-[calc(var(--tg-safe-area-inset-bottom))]", className)}
       onBackdropClick={onClose}
     >
       <div
