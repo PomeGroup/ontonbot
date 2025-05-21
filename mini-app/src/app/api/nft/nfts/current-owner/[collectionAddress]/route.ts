@@ -5,6 +5,7 @@ import { nftApiItemsDB } from "@/db/modules/nftApiItems.db";
 import { fetchNFTItems, NFTItem as TonCenterItem } from "@/services/tonCenter";
 import { logger } from "@/server/utils/logger";
 import axios from "axios";
+import { rawToFriendlyAddress } from "@/server/utils/rawToFriendlyAddress";
 
 export async function GET(request: Request, { params }: { params: { collectionAddress: string } }) {
   // 1) Auth
@@ -114,7 +115,9 @@ export async function GET(request: Request, { params }: { params: { collectionAd
 
         // The first owner is from DB, default to empty if not found
         const firstOwnerAddress = firstOwnerMap.get(tcItem.address) ?? "";
-
+        const firstOwnerAddressFriendly = rawToFriendlyAddress(firstOwnerAddress);
+        const currentOwnerAddress = tcItem.owner_address || "";
+        const currentOwnerAddressFriendly = rawToFriendlyAddress(currentOwnerAddress);
         return {
           nftId: "0", // no DB ID => "0"
           address: tcItem.address,
@@ -127,7 +130,9 @@ export async function GET(request: Request, { params }: { params: { collectionAd
           content_type: contentType,
           attributes: [], // or meta.attributes if you store them
           firstOwnerAddress,
-          currentOwnerAddress: tcItem.owner_address || "",
+          firstOwnerAddressFriendly,
+          currentOwnerAddress,
+          currentOwnerAddressFriendly,
         };
       })
     );

@@ -4,6 +4,7 @@ import { nftApiCollectionsDB } from "@/db/modules/nftApiCollections.db";
 import { nftApiItemsDB } from "@/db/modules/nftApiItems.db";
 import { nftApiMinterWalletsDB } from "@/db/modules/nftApiMinterWallets.db";
 import { logger } from "@/server/utils/logger";
+import { rawToFriendlyAddress } from "@/server/utils/rawToFriendlyAddress";
 
 export async function GET(request: Request, { params }: { params: { collectionAddress: string } }) {
   // 1) Authenticate
@@ -60,6 +61,7 @@ export async function GET(request: Request, { params }: { params: { collectionAd
 
     // 7) Transform them to the shape required by the NFTItem schema
     //    (nftId, address, friendlyAddress, nftIndex, name, description, image, content_url, content_type, attributes, firstOwnerAddress, currentOwnerAddress)
+
     const nftItems = filteredItems.map((it) => ({
       nftId: it.id.toString(),
       address: it.address,
@@ -74,6 +76,7 @@ export async function GET(request: Request, { params }: { params: { collectionAd
       // We assume 'ownerWalletAddress' is also the 'firstOwnerAddress' if minted by them?
       // If you store firstOwnerAddress separately, use that
       firstOwnerAddress: it.ownerWalletAddress || "",
+      firstOwnerAddressFriendly: rawToFriendlyAddress(it.ownerWalletAddress || ""),
     }));
 
     // 8) Build final JSON

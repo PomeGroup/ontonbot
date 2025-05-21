@@ -119,60 +119,6 @@ paths:
         '500':
           description: Internal server error
 
-  /collections/{collectionAddress}/nfts:
-    get:
-      tags:
-        - Collections
-      summary: List **all** NFT items in a collection
-      description: >
-        Returns a list of all NFTs for the given **on-chain collectionAddress**.  
-        Includes the `minterAddress` for this collection, if known, 
-        and each NFT with `firstOwnerAddress`, `currentOwnerAddress`, etc.
-      security:
-        - ApiKeyAuth: []
-      parameters:
-        - name: collectionAddress
-          in: path
-          required: true
-          description: The **on-chain** address of the NFT collection
-          schema:
-            type: string
-        - name: friendlyAddress
-          in: query
-          required: false
-          description: A user-friendly version (e.g., ENS) of the collection address
-          schema:
-            type: string
-      responses:
-        '200':
-          description: List of all NFT items in the specified collection
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  collectionAddress:
-                    type: string
-                    description: The on-chain address of the collection
-                  friendlyAddress:
-                    type: string
-                    nullable: true
-                    description: A user-friendly version of the collection's address (e.g., ENS name)
-                  minterAddress:
-                    type: string
-                    description: The wallet address that created this collection (if available)
-                  nfts:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/NFTItem'
-        '404':
-          description: Collection not found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal server error
   ###########################
   #     NFT ENDPOINTS       #
   ###########################
@@ -354,11 +300,11 @@ paths:
           description: Internal server error
 
 
-  /nfts/owner/{ownerAddress}:
+  /nfts/wallet/check-nfts/{walletAddress}:
     get:
       tags:
-        - NFTs
-      summary: List NFTs for a given owner, optionally filtered by specific collections
+        - Wallets
+      summary: List NFTs for a given owner, filtered by specific collections
       description: >
         Returns an array of **collections** that the specified `ownerAddress` has NFTs in, 
         **filtered** by an optional array of `collectionAddress` query parameters.  
@@ -376,12 +322,6 @@ paths:
           in: path
           required: true
           description: The wallet address or domain name of the current owner
-          schema:
-            type: string
-        - name: friendlyAddress
-          in: query
-          required: false
-          description: A user-friendly domain name or ENS for the owner address
           schema:
             type: string
         - name: collectionAddress
@@ -414,54 +354,14 @@ paths:
   #    WALLET ENDPOINTS     #
   ###########################
 
-  /wallets/{walletAddress}/info:
+  /wallets/info/{walletAddress}:
     get:
       tags:
         - Wallets
-      summary: Check wallet information (balance + owned NFTs)
+      summary: Check the wallet balance
       description: >
-        Returns the wallet's balance, a list of NFT collections the user holds, 
-        and the specific NFTs the user has in each collection.  
-        An optional `friendlyAddress` query param allows specifying a human-readable domain or ENS name.
-      security:
-        - ApiKeyAuth: []
-      parameters:
-        - name: walletAddress
-          in: path
-          required: true
-          description: The wallet (or domain) address to retrieve info for
-          schema:
-            type: string
-        - name: friendlyAddress
-          in: query
-          required: false
-          description: A user-friendly domain name or ENS for the wallet address
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Wallet information including balance and owned NFTs
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WalletInfoResponse'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '404':
-          description: Wallet not found
-        '500':
-          description: Internal server error
-
-  /wallets/minter-balance/{walletAddress}:
-    get:
-      tags:
-        - Wallets
-      summary: Check the minter wallet balance
-      description: >
-        Returns the balance of the specified minter wallet. 
-        If the wallet is **not** in the list of minter wallets for this API key, 
+        Returns the balance of the specified wallet. 
+        If the wallet is **not** in the list of wallets for this API key, 
         return an error (e.g., `403`).
       security:
         - ApiKeyAuth: []
@@ -469,7 +369,7 @@ paths:
         - name: walletAddress
           in: path
           required: true
-          description: The minter wallet address (or domain) to retrieve the balance for
+          description: The wallet address (or domain) to retrieve the balance for
           schema:
             type: string
         - name: friendlyAddress
@@ -480,7 +380,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Minter wallet balance
+          description: wallet balance
           content:
             application/json:
               schema:
@@ -939,7 +839,7 @@ components:
         - description
         - image
 
-    # Response for /nfts/owner/{ownerAddress}
+    # Response for /nfts/wallet/check-nfts/{walletAddress}
     OwnerNFTListResponse:
       type: object
       description: Structure grouping all NFT collections for the specified owner
@@ -951,6 +851,9 @@ components:
           type: string
           nullable: true
           description: A user-friendly domain or name for this owner address
+        balance:
+          type: string
+          description: The wallet’s current coin/token balance for this chain
         collections:
           type: array
           description: Array of collection objects, each with an NFT list the owner possesses
@@ -968,94 +871,18 @@ components:
                 type: string
                 description: The wallet address that created this collection
               collectionData:
-                type: object
-                description: Basic metadata about this collection
-                properties:
-                  name:
-                    type: string
-                  description:
-                    type: string
-                  image:
-                    type: string
-                    format: uri
-                  cover_image:
-                    type: string
-                    format: uri
-                  social_links:
-                    type: array
-                    items:
-                      type: string
-                      format: uri
+              # ...
               nfts:
                 type: array
-                description: The NFTs from this collection the user currently owns
-                items:
-                  $ref: '#/components/schemas/NFTItem'
+                # ...
       required:
         - ownerAddress
-        - collections
-
-    # Response for /wallets/{walletAddress}/info
-    WalletInfoResponse:
-      type: object
-      description: Detailed info about a wallet, its balance, and owned NFTs.
-      properties:
-        walletAddress:
-          type: string
-          description: The queried wallet address
-        friendlyAddress:
-          type: string
-          nullable: true
-          description: A user-friendly domain or name for this wallet address
-        balance:
-          type: string
-          description: The wallet's cryptocurrency balance (in ETH, BNB, etc.)
-        collections:
-          type: array
-          description: An array of collections in which this user holds NFTs
-          items:
-            type: object
-            properties:
-              collectionAddress:
-                type: string
-                description: On-chain address of the collection
-              friendlyAddress:
-                type: string
-                nullable: true
-                description: A user-friendly name for this collection
-              minterAddress:
-                type: string
-                description: The wallet address that created this collection
-              collectionData:
-                type: object
-                description: Basic metadata about this collection
-                properties:
-                  name:
-                    type: string
-                  description:
-                    type: string
-                  image:
-                    type: string
-                    format: uri
-                  cover_image:
-                    type: string
-                    format: uri
-                  social_links:
-                    type: array
-                    items:
-                      type: string
-                      format: uri
-              nfts:
-                type: array
-                description: The NFTs from this collection the user currently owns
-                items:
-                  $ref: '#/components/schemas/NFTItem'
-      required:
-        - walletAddress
         - balance
         - collections
 
-    # Response for /wallets/minter-balance/{walletAddress}
+
+
+    # Response for /wallets/info/{walletAddress}
     WalletBalanceResponse:
       type: object
       description: Basic wallet balance information
