@@ -17,11 +17,11 @@ import {
 import { registerActivity, tonSocietyClient, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { tgBotModerationMenu } from "@/moderationBot/menu";
-import eventFieldsDB from "@/server/db/eventFields.db";
-import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
-import eventDB from "@/server/db/events";
-import { userRolesDB } from "@/server/db/userRoles.db";
-import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
+import eventFieldsDB from "@/db/modules/eventFields.db";
+import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
+import eventDB from "@/db/modules/events";
+import { userRolesDB } from "@/db/modules/userRoles.db";
+import { CreateTonSocietyDraft } from "@/services/tonSocietyService";
 import { logger } from "@/server/utils/logger";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
@@ -34,8 +34,8 @@ import { Message } from "grammy/types";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { config, configProtected } from "../config";
-import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
-import { getUserCacheKey, usersDB } from "../db/users";
+import { organizerTsVerified, userHasModerationAccess } from "@/db/modules/userFlags.db";
+import { getUserCacheKey, usersDB } from "@/db/modules/users";
 import {
   adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure as eventManagerPP,

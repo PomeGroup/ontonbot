@@ -1,6 +1,6 @@
 import { CheckProofRequest } from "@/types/ton-proof";
-import { TonApiService } from "@/server/routers/services/ton-api-service";
-import { TonProofService } from "@/server/routers/services/ton-proof-service";
+import { TonApiService } from "@/services/ton-api-service";
+import { TonProofService } from "@/services/ton-proof-service";
 import { createAuthToken, verifyToken } from "@/server/utils/jwt";
 import { NextResponse } from "next/server";
 import { logger } from "@/server/utils/logger";

@@ -1,8 +1,8 @@
-import visitorsDB from "@/server/db/visitors";
+import visitorsDB from "@/db/modules/visitors";
 import { getSBTClaimedStatus } from "@/lib/ton-society-api";
 import { RewardTonSocietyStatusType } from "@/db/schema/rewards";
 import { logger } from "@/server/utils/logger";
-import rewardDB from "@/server/db/rewards.db";
+import rewardDB from "@/db/modules/rewards.db";
 import { maybeInsertUserScore } from "@/cronJobs/helper/maybeInsertUserScore";
 import { informTonfestUserClaim } from "@/cronJobs/helper/informTonfestUserClaim";
 import { RewardType } from "@/db/enum";

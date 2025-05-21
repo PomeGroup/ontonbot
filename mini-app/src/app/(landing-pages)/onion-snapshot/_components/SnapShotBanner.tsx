@@ -115,12 +115,12 @@ const SnapShotBanner = () => {
           </div>
           <Typography
             variant="title2"
-            className="text-[#F36A00]"
+            className="text-[#F36A00] hidden xsm:block"
           >
             :
           </Typography>
           {/* Seconds */}
-          <div className="flex flex-col items-center bg-white/5 backdrop-blur-xl rounded-md px-2 py-1 min-w-[40px]">
+          <div className="flex-col items-center bg-white/5 backdrop-blur-xl rounded-md px-2 py-1 min-w-[40px] hidden xsm:flex">
             <Typography
               variant="title2"
               weight="bold"

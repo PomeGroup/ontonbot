@@ -1,8 +1,8 @@
 import { callTaskImmediate } from "@/lib/callTaskImmediate";
-import { usersDB } from "@/server/db/users";
+import { usersDB } from "@/db/modules/users";
 import { OrderRow } from "@/db/schema/orders";
 import { logger } from "@/server/utils/logger";
-import eventDB from "@/server/db/events";
+import eventDB from "@/db/modules/events";
 import { ALLOWED_TONFEST_EVENT_UUIDS } from "@/constants";
 
 export const callTonfestForOnOntonPayment = async (ordr: OrderRow, eventUuid: string) => {

@@ -1,5 +1,5 @@
 import { RouterOutput } from "@/server";
-import { NFTItem } from "@/server/routers/services/tonCenter";
+import { NFTItem } from "@/services/tonCenter";
 
 export type CampaignNFT = {
   onChain: NFTItem | undefined;

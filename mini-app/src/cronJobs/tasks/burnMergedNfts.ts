@@ -4,7 +4,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { Address, internal, beginCell, toNano, SendMode } from "@ton/core";
 import { waitSeqno, openWallet } from "@/lib/nft"; // adjust import path
-import tonCenter from "@/server/routers/services/tonCenter";
+import tonCenter from "@/services/tonCenter";
 import { sleep } from "@/utils";
 
 // The blackhole address: any NFT sent here is effectively "burned"
