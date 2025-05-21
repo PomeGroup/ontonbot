@@ -102,4 +102,21 @@ export const nftApiCollectionsDB = {
       throw error;
     }
   },
+  /**
+   * Get all collections by apiKeyId
+   */
+  async getAllByApiKey(apiKeyId: number): Promise<NftApiCollections[]> {
+    try {
+      const rows = await db
+        .select()
+        .from(nftApiCollections)
+        .where(eq(nftApiCollections.apiKeyId, apiKeyId))
+        .orderBy(sql`${nftApiCollections.createdAt} DESC`)
+        .execute();
+      return rows;
+    } catch (error) {
+      logger.error("nftApiCollectionsDB: Error fetching by apiKeyId:", error);
+      throw error;
+    }
+  },
 };
