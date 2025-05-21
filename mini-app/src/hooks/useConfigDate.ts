@@ -6,11 +6,18 @@ export const useConfigDate = (configKey: string) => {
   const config = useConfig();
   const endDateString = config[configKey];
 
-  const [timeLeft, setTimeLeft] = useState({
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    endDate: Date | null;
+  }>({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
+    endDate: null,
   });
 
   useEffect(() => {
@@ -19,7 +26,7 @@ export const useConfigDate = (configKey: string) => {
 
     const updateTimer = () => {
       const { days, hours, minutes, seconds } = getTimeLeft(endDate);
-      setTimeLeft({ days, hours, minutes, seconds });
+      setTimeLeft({ days, hours, minutes, seconds, endDate });
     };
 
     updateTimer();

@@ -62,30 +62,30 @@ export default function MyPointsPage() {
           <EventPointsGroup title="Online Events">
             <EventPointsCard
               eventTitle="Attend paid online events"
-              tasksCount={paidOnlineData?.count ?? 0}
+              tasksCount={Number(paidOnlineData?.count ?? 0)}
               description="10 Points"
-              totalPoints={paidOnlineData?.total ?? 0}
+              totalPoints={Number(paidOnlineData?.total ?? 0)}
             />
             <EventPointsCard
               eventTitle="Attend free online events"
-              tasksCount={freeOnlineData?.count ?? 0}
+              tasksCount={Number(freeOnlineData?.count ?? 0)}
               description="1 Points"
-              totalPoints={freeOnlineData?.total ?? 0}
+              totalPoints={Number(freeOnlineData?.total ?? 0)}
             />
           </EventPointsGroup>
 
           <EventPointsGroup title="In-Person Events">
             <EventPointsCard
               eventTitle="Attend paid in-person events"
-              tasksCount={paidOfflineData?.count ?? 0}
+              tasksCount={Number(paidOfflineData?.count ?? 0)}
               description="20 Points"
-              totalPoints={paidOfflineData?.total ?? 0}
+              totalPoints={Number(paidOfflineData?.total ?? 0)}
             />
             <EventPointsCard
               eventTitle="Attend free in-person events"
-              tasksCount={freeOfflineData?.count ?? 0}
+              tasksCount={Number(freeOfflineData?.count ?? 0)}
               description="10 Points"
-              totalPoints={freeOfflineData?.total ?? 0}
+              totalPoints={Number(freeOfflineData?.total ?? 0)}
             />
           </EventPointsGroup>
         </div>

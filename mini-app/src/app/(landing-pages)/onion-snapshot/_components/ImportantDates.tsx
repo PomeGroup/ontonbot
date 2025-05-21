@@ -1,15 +1,9 @@
 "use client";
 
-import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import Typography from "@/components/Typography";
-import { Button } from "@/components/ui/button";
-import { useConfigDate } from "@/hooks/useConfigDate";
-import Image from "next/image";
-import Link from "next/link";
+import DateCard from "./DateCard";
 
 const ImportantDates = () => {
-  const timeLeft = useConfigDate("snapshot_date");
-
   return (
     <div className="bg-brand-bg p-4 flex flex-col gap-4 min-h-screen">
       {/* Header Section */}
@@ -29,145 +23,55 @@ const ImportantDates = () => {
       </div>
 
       {/* Snapshot Date Card */}
-      <CustomCard defaultPadding>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2 items-start">
-              <div className="h-10 w-10">
-                <Image
-                  src="/images/snapshot.svg"
-                  width={40}
-                  height={40}
-                  alt="Calendar"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <Typography variant="title3">Snapshot Date</Typography>
-                <Typography
-                  variant="footnote"
-                  weight="medium"
-                >
-                  June 10, 2025
-                </Typography>
-              </div>
-            </div>
-            <Typography
-              variant="footnote"
-              weight="medium"
-            >
-              Your points and NFTs will be locked-in while in the reward distribution period.
-            </Typography>
-          </div>
-          <div className="flex items-center justify-center gap-1 bg-brand-bg py-1">
-            <span className="text-xl">⏳</span>
-            <Typography
-              variant="title2"
-              weight="bold"
-            >
-              {timeLeft.days}
-            </Typography>
-            <Typography
-              variant="subheadline1"
-              weight="semibold"
-            >
-              Days Left
-            </Typography>
-          </div>
-          <Link href="/onion-snapshot/check-status">
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full"
-            >
-              Check Status
-            </Button>
-          </Link>
-        </div>
-      </CustomCard>
+      <DateCard
+        iconSrc="/images/snapshot.svg"
+        title="Snapshot Date"
+        endDateKey="snapshot_date"
+        link="/onion-snapshot/check-status"
+        linkText="Check Status"
+        showCountdown={true}
+      />
 
       {/* Claim Portal Opens Card */}
-      <CustomCard defaultPadding>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2 items-start">
-              <div className="h-10 w-10">
-                <Image
-                  src="/images/gift-icon.svg"
-                  width={40}
-                  height={40}
-                  alt="Calendar"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <Typography variant="title3">Claim Portal Opens</Typography>
-                <Typography
-                  variant="footnote"
-                  weight="medium"
-                >
-                  July 10, 2025
-                </Typography>
-              </div>
-            </div>
-            <Typography
-              variant="footnote"
-              weight="medium"
-            >
-              Use / Claim to receive your ONION tokens.
-            </Typography>
-          </div>
-          <div className="flex items-center justify-center gap-1 bg-[#EFEFF4] py-1">
-            <span className="text-xl">⏳</span>
-            <Typography
-              variant="subheadline1"
-              weight="semibold"
-            >
-              Not yet open
-            </Typography>
-          </div>
-        </div>
-      </CustomCard>
+      <DateCard
+        iconSrc="/images/gift-icon.svg"
+        title="Claim Portal Opens"
+        endDateKey="snapshot_claim_date"
+        link="https://onion.tg/docs/"
+        description="Use / Claim ONIONs to receive your ONION tokens and be a part of the governance power of TON Ecosystem."
+      />
+
+      <DateCard
+        iconSrc="https://storage.onton.live/ontonimage/airdrop-calendar.svg"
+        title="Token Generation Event"
+        date="June 20, 2025"
+      />
+
+      <DateCard
+        iconSrc="https://storage.onton.live/ontonimage/airdrop-checklist.svg"
+        title="DEX Listing Date"
+        date="June 20, 2025"
+      />
+
+      <DateCard
+        iconSrc="https://storage.onton.live/ontonimage/airdrop-lock-open.svg"
+        title="Genesis Airdrop Unlock"
+        date="June 20, 2025"
+      />
+
+      <DateCard
+        iconSrc="https://storage.onton.live/ontonimage/airdrop-mountain.svg"
+        title="Genesis Airdrop Cliff"
+        date="September 20, 2025"
+      />
 
       {/* DAO Voting Begins Card */}
-      <CustomCard defaultPadding>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2 items-start">
-              <div className="h-10 w-10">
-                <Image
-                  src="/images/voting-icon.svg"
-                  width={40}
-                  height={40}
-                  alt="Calendar"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <Typography variant="title3">DAO Voting Begins</Typography>
-                <Typography
-                  variant="footnote"
-                  weight="medium"
-                >
-                  July 12, 2025
-                </Typography>
-              </div>
-            </div>
-            <Typography
-              variant="footnote"
-              weight="medium"
-            >
-              Start voting using your ONIONs in ONIONVerse DAO to be a part of decisions.
-            </Typography>
-          </div>
-          <div className="flex items-center justify-center gap-1 bg-[#EFEFF4] py-1">
-            <span className="text-xl">⏳</span>
-            <Typography
-              variant="subheadline1"
-              weight="semibold"
-            >
-              Not yet open
-            </Typography>
-          </div>
-        </div>
-      </CustomCard>
+      <DateCard
+        iconSrc="/images/voting-icon.svg"
+        title="DAO Voting Begins"
+        endDateKey="snapshot_voting_date"
+        description="Start voting using your ONIONs in ONIONVerse DAO to be a part of decisions."
+      />
     </div>
   );
 };

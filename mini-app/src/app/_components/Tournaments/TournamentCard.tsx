@@ -33,6 +33,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                 src={tournament.imageUrl}
                 width={120}
                 height={120}
+                className="min-w-[120px] min-h-[120px]"
                 alt="game card"
               />
             )}

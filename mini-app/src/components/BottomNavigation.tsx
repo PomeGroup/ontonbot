@@ -63,7 +63,7 @@ export default function BottomNavigation(props: { children: ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen bg-ios-light-surface dark:bg-ios-dark-surface">
       <div
-        className="flex-1 p-4 overflow-y-auto"
+        className="flex-1 p-4 overflow-y-auto isolate"
         style={{
           paddingBottom: `calc(${navHeight} + 1rem + var(--tg-safe-area-inset-bottom))`,
         }}
