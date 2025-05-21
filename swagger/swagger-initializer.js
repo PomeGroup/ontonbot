@@ -2,9 +2,9 @@ window.onload = function() {
   window.ui = SwaggerUIBundle({
     // List multiple specs via `urls`
     urls: [
-      { url: "./ExternalSeller.yaml", name: "External Seller API" },
-      { url: "./GameRewards.yaml", name: "Game Rewards API" },
-      { url: "./NFTApi.yaml", name: "NFT API" },
+      { url: "./swagger/ExternalSeller.yaml", name: "External Seller API" },
+      { url: "./swagger/GameRewards.yaml", name: "Game Rewards API" },
+      { url: "./swagger/NFTApi.yaml", name: "NFT API" },
     ],
 
     // The ID of the DOM element where Swagger UI will render

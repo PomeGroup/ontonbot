@@ -555,12 +555,12 @@ services:
     ports:
       - "${SWAGGER_UI_PORT}:8080"
     volumes:
-      - ./swagger/ExternalSeller.yml:/usr/share/nginx/html/ExternalSeller.yaml
-      - ./swagger/GameRewards.yml:/usr/share/nginx/html/GameRewards.yaml
-      - ./swagger/NFTApi.yml:/usr/share/nginx/html/NFTApi.yaml
+      - ./swagger/ExternalSeller.yml:/usr/share/nginx/html/swagger/ExternalSeller.yaml
+      - ./swagger/GameRewards.yml:/usr/share/nginx/html/swagger/GameRewards.yaml
+      - ./swagger/NFTApi.yml:/usr/share/nginx/html/swagger/NFTApi.yaml
       - ./swagger/swagger-initializer.js:/usr/share/nginx/html/swagger-initializer.js
-      - ./swagger/custom.css:/usr/share/nginx/html/custom.css
-      - ./swagger/home.html:/usr/share/nginx/html/home.html
+      - ./swagger/custom.css:/usr/share/nginx/html/swagger/custom.css
+      - ./swagger/home.html:/usr/share/nginx/html/swagger/home.html
     depends_on:
       - caddy
     networks:
