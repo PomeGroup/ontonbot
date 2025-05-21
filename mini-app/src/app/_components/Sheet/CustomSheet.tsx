@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Sheet } from "konsta/react";
-import { IoCloseCircleOutline } from "react-icons/io5";
 import Typography from "@/components/Typography";
-import { cn } from "@/lib/utils";
-import { createPortal } from "react-dom";
 import useWebApp from "@/hooks/useWebApp";
+import { cn } from "@/lib/utils";
+import { Sheet } from "konsta/react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { IoCloseCircleOutline } from "react-icons/io5";
 
 interface ReusableSheetProps {
   title: string;
@@ -13,6 +13,9 @@ interface ReusableSheetProps {
   className?: string;
   onClose?: () => void;
   defaultPadding?: boolean;
+  hideClose?: boolean;
+  centerTitle?: boolean;
+  hideTitle?: boolean;
 }
 
 const CustomSheet: React.FC<ReusableSheetProps> = ({
@@ -21,6 +24,9 @@ const CustomSheet: React.FC<ReusableSheetProps> = ({
   children,
   className,
   defaultPadding = true,
+  hideClose = false,
+  hideTitle = false,
+  centerTitle = false,
   onClose,
 }) => {
   const webApp = useWebApp();
@@ -48,16 +54,26 @@ const CustomSheet: React.FC<ReusableSheetProps> = ({
       className={cn("w-full rounded-t-2xl max-h-screen", className)}
       onBackdropClick={onClose}
     >
-      <div className="flex !mt-5 mx-4 justify-between items-center">
-        <Typography
-          variant="title3"
-          weight="normal"
-        >
-          {title}
-        </Typography>
-        <button onClick={onClose}>
-          <IoCloseCircleOutline className="text-2xl" />
-        </button>
+      <div
+        className={cn("flex !mt-5 mx-4 justify-between items-center", {
+          "justify-center": centerTitle,
+          hidden: hideTitle && hideClose,
+        })}
+      >
+        {!hideTitle && (
+          <Typography
+            variant="title3"
+            weight="normal"
+          >
+            {title}
+          </Typography>
+        )}
+
+        {!hideClose && (
+          <button onClick={onClose}>
+            <IoCloseCircleOutline className="text-2xl" />
+          </button>
+        )}
       </div>
       <div
         className={cn({
