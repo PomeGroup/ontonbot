@@ -7,6 +7,7 @@ import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import useWebApp from "@/hooks/useWebApp";
 import { telegramShareLink } from "@/utils";
+import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -34,8 +35,8 @@ const BoostYourScorePage = () => {
       </div>
 
       {/* Points card */}
-      <div className="flex flex-col items-center justify-center bg-white p-3 gap-2">
-        <div className="flex items-center gap-6 bg-white p-2 rounded-lg">
+      <div className="flex items-center justify-between bg-white py-3 px-8 gap-2">
+        <div className="flex items-center gap-6 bg-white rounded-lg">
           <div className="flex items-center gap-2">
             <OntonIcon />
             <div className="flex flex-col">
@@ -50,6 +51,22 @@ const BoostYourScorePage = () => {
             </div>
           </div>
         </div>
+        <Link
+          href="/my/points"
+          className="text-primary  hover:underline font-medium"
+        >
+          <Typography
+            variant="subheadline1"
+            weight="medium"
+            className="flex items-center"
+          >
+            <span>View Details</span>
+            <ChevronRightIcon
+              strokeWidth={3}
+              className="w-4 h-4"
+            />
+          </Typography>
+        </Link>
       </div>
       <div className=" p-4 flex flex-col gap-4">
         {/* Join Events Card */}
@@ -115,11 +132,11 @@ const BoostYourScorePage = () => {
           </div>
 
           {/* Button group */}
-          <div className="flex gap-2 w-full flex-wrap">
+          <div className="flex gap-2 w-full xs:flex-wrap">
             <Button
               variant="primary"
               size="lg"
-              className="flex-1 bg-[#007AFF] text-white"
+              className="flex-1 bg-[#007AFF] text-white tracking-tighter"
               onClick={async () => {
                 if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                   await navigator.clipboard.writeText(ontonJoinAffiliateDataQuery.data?.linkHash);
@@ -136,7 +153,7 @@ const BoostYourScorePage = () => {
               variant="primary"
               size="lg"
               disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
-              className="flex-1 bg-[#007AFF] text-white"
+              className="flex-1 bg-[#007AFF] text-white tracking-tighter"
               onClick={() => {
                 if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                   webapp?.openTelegramLink(
@@ -159,6 +176,7 @@ Good luck and see you in the ONTON world! 🏆`
             </Button>
           </div>
         </CustomCard>
+        <p className="text-center">Points are counted until May 30, 2025. Earn as many as you can before the snapshot!</p>
       </div>
     </div>
   );

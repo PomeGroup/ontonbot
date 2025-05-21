@@ -36,7 +36,6 @@ const ImportantDates = () => {
       <DateCard
         iconSrc="/images/gift-icon.svg"
         title="Claim Portal Opens"
-        endDateKey="snapshot_claim_date"
         link="https://onion.tg/docs/"
         description="Use / Claim ONIONs to receive your ONION tokens and be a part of the governance power of TON Ecosystem."
       />

@@ -80,7 +80,7 @@ const DateCard = ({
       <CustomCard defaultPadding>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center gap-1">
               <div className="flex gap-2 items-start">
                 <div className="h-10 w-10">
                   <Image
