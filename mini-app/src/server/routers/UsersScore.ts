@@ -56,73 +56,71 @@ export const UsersScoreRouter = router({
       }
     }),
 
-  getEventsWithClaimAndScoreInfinite: initDataProtectedProcedure
-    .input(getEventsWithClaimAndScoreInfiniteInput)
-    .query(async ({ ctx, input }) => {
-      try {
-        // 1) Destructure and compute flags
-        const { activityType, limit, cursor } = input;
-        const currentTimeSec = Math.floor(Date.now() / 1000);
+  getScoreDetail: initDataProtectedProcedure.input(getEventsWithClaimAndScoreInfiniteInput).query(async ({ ctx, input }) => {
+    try {
+      // 1) Destructure and compute flags
+      const { activityType, limit, cursor } = input;
+      const currentTimeSec = Math.floor(Date.now() / 1000);
 
-        let isPaid = false;
-        let isOnline = false;
-        let pointsCouldBeClaimed = 0;
+      let isPaid = false;
+      let isOnline = false;
+      let pointsCouldBeClaimed = 0;
 
-        switch (activityType) {
-          case "paid_online_event":
-            isPaid = true;
-            isOnline = true;
-            pointsCouldBeClaimed = 10;
-            break;
-          case "paid_offline_event":
-            isPaid = true;
-            pointsCouldBeClaimed = 20;
-            break;
-          case "free_online_event":
-            isOnline = true;
-            pointsCouldBeClaimed = 1;
-            break;
-          case "free_offline_event":
-            pointsCouldBeClaimed = 10;
-            break;
-        }
-
-        logger.log(
-          `getEventsWithClaimAndScoreInfinite: userId=${ctx.user.user_id}, activityType=${activityType}, ` +
-            `isPaid=${isPaid}, isOnline=${isOnline}, pointsCouldBeClaimed=${pointsCouldBeClaimed}, ` +
-            `limit=${limit}, cursor=${cursor}`
-        );
-
-        // 2) Fetch data with offset & limit
-        const data = await usersScoreDB.getEventsWithClaimAndScoreDBPaginated(
-          ctx.user.user_id,
-          activityType,
-          isPaid,
-          isOnline,
-          pointsCouldBeClaimed,
-          currentTimeSec,
-          limit,
-          cursor
-        );
-
-        // 3) Determine the nextCursor (if there are more records beyond this batch)
-        // If data.length < limit => we've likely hit the end, so no next cursor
-        let nextCursor: number | null = null;
-        if (data.length === limit) {
-          // The next offset after this batch
-          nextCursor = cursor + limit;
-        }
-
-        return {
-          items: data,
-          nextCursor,
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Error getting paginated events with claim & score for user: ${ctx.user.user_id}`,
-          cause: error,
-        });
+      switch (activityType) {
+        case "paid_online_event":
+          isPaid = true;
+          isOnline = true;
+          pointsCouldBeClaimed = 10;
+          break;
+        case "paid_offline_event":
+          isPaid = true;
+          pointsCouldBeClaimed = 20;
+          break;
+        case "free_online_event":
+          isOnline = true;
+          pointsCouldBeClaimed = 1;
+          break;
+        case "free_offline_event":
+          pointsCouldBeClaimed = 10;
+          break;
       }
-    }),
+
+      logger.log(
+        `getEventsWithClaimAndScoreInfinite: userId=${ctx.user.user_id}, activityType=${activityType}, ` +
+          `isPaid=${isPaid}, isOnline=${isOnline}, pointsCouldBeClaimed=${pointsCouldBeClaimed}, ` +
+          `limit=${limit}, cursor=${cursor}`
+      );
+
+      // 2) Fetch data with offset & limit
+      const data = await usersScoreDB.getEventsWithClaimAndScoreDBPaginated(
+        ctx.user.user_id,
+        activityType,
+        isPaid,
+        isOnline,
+        pointsCouldBeClaimed,
+        currentTimeSec,
+        limit,
+        cursor
+      );
+
+      // 3) Determine the nextCursor (if there are more records beyond this batch)
+      // If data.length < limit => we've likely hit the end, so no next cursor
+      let nextCursor: number | null = null;
+      if (data.length === limit) {
+        // The next offset after this batch
+        nextCursor = cursor + limit;
+      }
+
+      return {
+        items: data,
+        nextCursor,
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Error getting paginated events with claim & score for user: ${ctx.user.user_id}`,
+        cause: error,
+      });
+    }
+  }),
 });
