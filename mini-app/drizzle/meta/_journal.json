@@ -561,6 +561,20 @@
       "when": 1747769581705,
       "tag": "0079_elite_revanche",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1747832967827,
+      "tag": "0080_special_multiple_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1747921960626,
+      "tag": "0081_sturdy_wolf_cub",
+      "breakpoints": true
     }
   ]
 }

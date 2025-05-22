@@ -72,7 +72,7 @@ import {
   userRolesRelations,
   userRoleStatusEnum,
 } from "./schema/userRoles";
-import { UserScoreItemType, usersScore, UsersScoreActivityType, UsersScoreType } from "./schema/usersScore";
+import { UserScoreItemType, usersScore, UsersScoreActivityType, UsersScoreType, userScoreItem } from "./schema/usersScore";
 
 import { callbackTaskRuns, CallbackTaskRunsRow, callbackTaskRunStatusType } from "./schema/callbackTaskRuns";
 import { gameLeaderboard, GameLeaderboardRow, GameLeaderboardRowInsert } from "./schema/gameLeaderboard";
@@ -206,6 +206,7 @@ export {
   taskSBTStatusEnum,
   taskUserPointStatusEnum,
   taskUserStatusEnum,
+  userScoreItem,
 };
 
 // export all the tables and relations

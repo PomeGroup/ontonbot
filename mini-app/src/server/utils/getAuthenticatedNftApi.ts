@@ -8,7 +8,7 @@ import type { NftApiKeys } from "@/db/schema/nftApiKeys";
  */
 export async function getAuthenticatedNftApi(req: Request): Promise<[NftApiKeys | null, Response | null]> {
   // 1) Extract the API key from header
-  const apiKey = req.headers.get("api_key") || req.headers.get("Authorization");
+  const apiKey = req.headers.get("X-API-KEY") || req.headers.get("Authorization");
 
   if (!apiKey) {
     return [

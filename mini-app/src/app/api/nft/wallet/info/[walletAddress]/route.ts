@@ -12,8 +12,11 @@ export async function GET(request: Request, { params }: { params: { walletAddres
 
   // 2) Authenticate
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
-  if (authError || !apiKeyRecord) {
+  if (authError) {
     return authError; // 401 or 500
+  }
+  if (!apiKeyRecord) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
   // 3) parse path param

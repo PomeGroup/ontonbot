@@ -36,13 +36,13 @@ export async function POST(request: Request) {
       coverImage: collectionData.cover_image,
       socialLinks: collectionData.social_links ?? null,
       royalties: collectionData.royalties.toString() ?? null,
-      lastRegisteredIndex: 0,
+      lastRegisteredIndex: -1,
       // We start with no address and status "CREATING"
       address: null,
       friendlyAddress: null,
     });
 
-    // Optionally, store userCallbackUrl in a separate table or column if you want
+    // Optionally, store userCallbackUrl in a separate table or column if you want to use it later
     // For now, we skip it or store it in the collection row if you have a column
 
     // 6) Return success
