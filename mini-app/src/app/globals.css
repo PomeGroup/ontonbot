@@ -134,7 +134,7 @@ table {
 
 @layer base {
   :root {
-    --shadcn-background: #ffffff;
+    --shadcn-background: 240, 19%, 95%;
     --shadcn-shadcn-foreground: 222.2 84% 4.9%;
 
     --shadcn-card: 0 0% 100%;
@@ -201,7 +201,7 @@ table {
 
 @layer base {
   body {
-    @apply dark:bg-[#1C1C1E] bg-white;
+    @apply dark:bg-[#1C1C1E] bg-cn-background;
     @apply box-border;
   }
 }

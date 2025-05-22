@@ -1,5 +1,7 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 interface EventPointsCardProps {
   eventTitle: string; // e.g. "Attend paid online events"
@@ -25,7 +27,18 @@ export default function EventPointsCard({ eventTitle, tasksCount, description, t
       </div>
 
       {/* Black circle showing total points (right side) */}
-      <Badge variant="outline">{totalPoints}</Badge>
+      <div className="flex items-center gap-1.5">
+        <Badge variant="outline">{totalPoints}</Badge>
+        <Link
+          href={`/my/points/${eventTitle}/details`}
+          className="text-primary"
+        >
+          <ChevronRight
+            size={20}
+            strokeWidth={3}
+          />
+        </Link>
+      </div>
     </div>
   );
 }
