@@ -8,6 +8,7 @@ import { type ForwardedRef } from "react";
 import Typography from "@/components/Typography";
 import { Badge } from "@/components/ui/badge";
 import useWebApp from "@/hooks/useWebApp";
+import { formatTime } from "@/lib/DateAndTime";
 import { cn } from "@/utils";
 import { PiLinkSimple } from "react-icons/pi";
 import CustomCard from "../atoms/cards/CustomCard";
@@ -107,15 +108,6 @@ function EventCard({ event, afterTitle, timeOnly, noClick }: EventCardProps, ref
 
   const start = new Date(startDate * 1000);
   const end = new Date(endDate * 1000);
-
-  // Helper to format time without seconds and using lowercase am/pm
-  const formatTime = (date: Date) => {
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const period = hours >= 12 ? "pm" : "am";
-    hours = hours % 12 || 12;
-    return minutes === 0 ? `${hours}${period}` : `${hours}:${minutes < 10 ? "0" : ""}${minutes}${period}`;
-  };
 
   // Build the date part
   const startMonth = start.toLocaleString("en-US", { month: "short" });

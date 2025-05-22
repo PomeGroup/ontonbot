@@ -65,12 +65,14 @@ export default function MyPointsPage() {
               tasksCount={Number(paidOnlineData?.count ?? 0)}
               description="10 Points"
               totalPoints={Number(paidOnlineData?.total ?? 0)}
+              type="paid_online_event"
             />
             <EventPointsCard
               eventTitle="Attend free online events"
               tasksCount={Number(freeOnlineData?.count ?? 0)}
               description="1 Points"
               totalPoints={Number(freeOnlineData?.total ?? 0)}
+              type="free_online_event"
             />
           </EventPointsGroup>
 
@@ -80,12 +82,14 @@ export default function MyPointsPage() {
               tasksCount={Number(paidOfflineData?.count ?? 0)}
               description="20 Points"
               totalPoints={Number(paidOfflineData?.total ?? 0)}
+              type="paid_offline_event"
             />
             <EventPointsCard
               eventTitle="Attend free in-person events"
               tasksCount={Number(freeOfflineData?.count ?? 0)}
               description="10 Points"
               totalPoints={Number(freeOfflineData?.total ?? 0)}
+              type="free_offline_event"
             />
           </EventPointsGroup>
         </div>
