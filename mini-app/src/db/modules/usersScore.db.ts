@@ -1,8 +1,10 @@
 import { db } from "@/db/db";
 import { usersScore, UsersScoreActivityType, UserScoreItemType, activityTypesArray } from "@/db/schema/usersScore";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lte, not, or, sql } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
+import { EventWithScoreAndReward } from "@/types/event.types";
+import { events, rewards, visitors } from "../schema";
 
 export type TotalScoreByActivityTypeAndUserId = {
   total: number;
@@ -230,6 +232,83 @@ export const upsertOrganizerScore = async (scoreData: {
     throw error;
   }
 };
+
+export async function getEventsWithClaimAndScoreDBPaginated(
+  userId: number,
+  activityType: UsersScoreActivityType,
+  isPaid: boolean,
+  isOnline: boolean,
+  pointsCouldBeClaimed: number,
+  currentTimeSec: number,
+  limit: number,
+  offset: number
+): Promise<EventWithScoreAndReward[]> {
+  // The same query as before, but add .limit(...) and .offset(...)
+  const rows = await db
+    .select({
+      eventId: events.event_id,
+      eventTitle: events.title,
+      eventUuid: events.event_uuid,
+      eventStartDate: events.start_date,
+      eventEndDate: events.end_date,
+      imageUrl: events.image_url,
+      visitorId: visitors.id,
+      rewardId: rewards.id,
+      rewardStatus: rewards.status,
+      tonSocietyStatus: rewards.tonSocietyStatus,
+      userScoreId: usersScore.id,
+      userScorePoints: usersScore.point,
+    })
+    .from(visitors)
+    .innerJoin(
+      events,
+      and(
+        eq(events.event_uuid, visitors.event_uuid),
+        or(eq(events.has_payment, isPaid), eq(events.ticketToCheckIn, true)),
+        eq(events.participationType, isOnline ? "online" : "in_person"),
+        lte(events.end_date, currentTimeSec),
+        eq(events.hidden, false)
+      )
+    )
+    .innerJoin(
+      rewards,
+      and(
+        eq(rewards.visitor_id, visitors.id),
+        eq(rewards.type, "ton_society_sbt"),
+        not(eq(rewards.status, "pending_creation")),
+        not(eq(rewards.status, "failed"))
+      )
+    )
+    .leftJoin(
+      usersScore,
+      and(
+        eq(usersScore.itemId, events.event_id),
+        eq(usersScore.itemType, "event"),
+        eq(usersScore.activityType, activityType),
+        eq(usersScore.userId, visitors.user_id)
+      )
+    )
+    .where(eq(visitors.user_id, userId))
+    .limit(limit)
+    .offset(offset);
+
+  // Convert row data
+  return rows.map((row) => ({
+    eventId: Number(row.eventId),
+    eventTitle: row.eventTitle,
+    eventUuid: row.eventUuid,
+    eventStartDate: Number(row.eventStartDate),
+    eventEndDate: Number(row.eventEndDate),
+    imageUrl: row.imageUrl || null,
+    visitorId: Number(row.visitorId),
+    tonSocietyStatus: row.tonSocietyStatus,
+    rewardId: row.rewardId ? String(row.rewardId) : null,
+    rewardStatus: row.rewardStatus || null,
+    userScoreId: row.userScoreId ? Number(row.userScoreId) : null,
+    userScorePoints: row.userScorePoints ? Number(row.userScorePoints) : 0,
+    pointsCouldBeClaimed,
+  }));
+}
 export const usersScoreDB = {
   createUserScore,
   changeUserScoreStatus,
@@ -237,4 +316,5 @@ export const usersScoreDB = {
   getTotalScoreByUserId,
   getTotalScoreByActivityTypeAndUserId,
   upsertOrganizerScore,
+  getEventsWithClaimAndScoreDBPaginated,
 };
