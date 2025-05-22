@@ -304,7 +304,8 @@ export async function mintNFT(
   owner_address: string,
   collection_address: string,
   nftIndex: number | null,
-  nft_metadata_url: string
+  nft_metadata_url: string,
+  MNEMONIC?: string
 ) {
   if (nftIndex === null) {
     const result = await tonCenter.fetchCollection(collection_address);
@@ -314,7 +315,7 @@ export async function mintNFT(
   let nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);
   if (nft_addres) return nft_addres;
 
-  const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
+  const wallet = await openWallet(MNEMONIC?.split(" ") || process.env.MNEMONIC!.split(" "));
   logger.log(`mintNFT: openWallet minting nft address : ${nft_addres} `, wallet.contract.address);
   const collectionData = {
     ownerAddress: wallet.contract.address,
@@ -354,8 +355,8 @@ export async function mintNFT(
   return null;
 }
 
-export async function deployCollection(collectio_metadata_url: string) {
-  const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
+export async function deployCollection(collectio_metadata_url: string, MNEMONIC?: string) {
+  const wallet = await openWallet(MNEMONIC?.split(" ") || process.env.MNEMONIC!.split(" "));
 
   logger.log("Start deploy of nft collection...");
   const collectionData = {

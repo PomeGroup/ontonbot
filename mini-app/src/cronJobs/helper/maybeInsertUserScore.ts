@@ -31,6 +31,7 @@ export const maybeInsertUserScore = async (userId: number, eventId: number) => {
   // e.g. "free_online_event"
   let chosenActivityType: UsersScoreActivityType = "free_online_event";
   let points = 10;
+  let organizerPoints = 0.2;
 
   const isPaid = !!eventRow.has_payment;
   const isOnline = eventRow.participationType === "online";
@@ -49,7 +50,7 @@ export const maybeInsertUserScore = async (userId: number, eventId: number) => {
     chosenActivityType = "free_offline_event";
     points = 10;
   }
-
+  organizerPoints = points * 0.2;
   // 3) Insert user score if not exists
   // Rely on your unique index or check manually
   try {
@@ -61,10 +62,19 @@ export const maybeInsertUserScore = async (userId: number, eventId: number) => {
       itemId: eventId, // item_id = event's ID
       itemType: "event", // item_type = "event"
     });
+    //insert points for organizer
+    await usersScoreDB.upsertOrganizerScore({
+      userId: eventRow.owner,
+      activityType: chosenActivityType,
+      point: organizerPoints,
+      active: true,
+      itemId: eventId, // item_id = event's ID
+      itemType: "organize_event", // item_type = "organize_event"
+    });
     logger.log(`[UserScore] Inserted ${chosenActivityType} for user=${userId}, event=${eventId}, points=${points}`);
-  } catch (err: any) {
+  } catch (err) {
     // If it's a unique violation, ignore—score already exists
-    const message = String(err.message || err);
+    const message = String(err);
     if (message.includes("duplicate key value") || message.includes("unique constraint")) {
       logger.log(`[UserScore] Score record already exists for user=${userId}, event=${eventId}. Skipped duplicate.`);
     } else {

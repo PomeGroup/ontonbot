@@ -9,7 +9,7 @@ export const nftApiMinterWallets = pgTable(
     walletAddress: varchar("wallet_address", { length: 255 }).notNull(),
     apiKeyId: bigint("api_key_id", { mode: "number" }).notNull(),
     friendlyName: varchar("friendly_name", { length: 255 }),
-
+    mnemonic: varchar("mnemonic", { length: 255 }).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 })
       .$onUpdate(() => new Date())

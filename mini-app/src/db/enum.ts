@@ -14,7 +14,7 @@ export const rewardStatus = pgEnum("reward_status", [
   "fixed_failed",
 ]);
 export const ticketStatus = pgEnum("event_ticket_status", ["USED", "UNUSED"]);
-export const nftStatusEnum = pgEnum("nft_status_enum", ["CREATING", "VALIDATION_FAILED", "COMPLETED", "FAILED"]);
+export const nftStatusEnum = pgEnum("nft_status_enum", ["CREATING", "MINTING", "VALIDATION_FAILED", "COMPLETED", "FAILED"]);
 
 export const orderState = pgEnum("order_state", ["new", "confirming", "processing", "completed", "cancelled", "failed"]);
 export const paymentTypes = pgEnum("payment_types", ["USDT", "TON", "STAR"]);

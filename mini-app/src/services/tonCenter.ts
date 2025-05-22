@@ -5,7 +5,7 @@ import { is_local_env, is_prod_env, is_stage_env } from "@/server/utils/evnutils
 import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 
-export const is_mainnet = is_prod_env() || is_stage_env();
+export const is_mainnet = is_prod_env();
 // export const is_mainnet = true;
 // export const is_mainnet = false;
 /* -------------------------------------------------------------------------- */
@@ -46,7 +46,7 @@ export const getApiKey = (() => {
 
 export function v2_client() {
   const toncenterBaseEndpoint: string = !is_mainnet ? "https://testnet.toncenter.com" : "https://toncenter.com";
-
+  logger.log("toncenterBaseEndpoint", toncenterBaseEndpoint, "is_mainnet", is_mainnet);
   const client = new TonClient({
     endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
     apiKey: getApiKey(),

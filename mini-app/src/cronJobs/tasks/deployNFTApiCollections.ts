@@ -5,6 +5,7 @@ import { uploadJsonToMinio } from "@/lib/minioTools";
 import { logger } from "@/server/utils/logger";
 import { deployCollection } from "@/lib/nft";
 import { Address } from "@ton/core";
+import { nftApiMinterWalletsDB } from "@/db/modules/nftApiMinterWallets.db";
 
 export async function deployNFTApiCollections() {
   const rows = await nftApiCollectionsDB.getByStatus("CREATING");
@@ -13,7 +14,9 @@ export async function deployNFTApiCollections() {
     logger.log("No NFT collections need deployment.");
     return;
   }
-
+  for (const coll of rows) {
+    await nftApiCollectionsDB.updateById(coll.id, { status: "MINTING" });
+  }
   for (const coll of rows) {
     try {
       logger.log(`Deploying collection ID=${coll.id}...`);
@@ -24,7 +27,12 @@ export async function deployNFTApiCollections() {
         await nftApiCollectionsDB.updateById(coll.id, { status: "VALIDATION_FAILED" });
         continue; // move to next
       }
-
+      const minterWallet = await nftApiMinterWalletsDB.findById(coll.minterWalletId);
+      if (!minterWallet || !minterWallet?.mnemonic) {
+        logger.error(`Minter wallet not found for collection ID=${coll.id}`);
+        await nftApiCollectionsDB.updateById(coll.id, { status: "FAILED" });
+        continue; // move to next
+      }
       // b) Suppose you want to upload metadata
       //    This might be a structure: { name, desc, image, cover, social_links, royalties... }
       const metaObj = {
@@ -38,7 +46,7 @@ export async function deployNFTApiCollections() {
       const metadataUrl = await uploadJsonToMinio(metaObj, "ontoncollection");
       logger.log(`Uploaded metadata to ${metadataUrl}`);
       // c) Deploy on-chain
-      const onChainAddress = await deployCollection(metadataUrl);
+      const onChainAddress = await deployCollection(metadataUrl, minterWallet.mnemonic);
       if (!onChainAddress) {
         throw new Error("Failed to deploy on chain");
       }

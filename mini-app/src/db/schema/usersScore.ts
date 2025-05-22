@@ -4,7 +4,7 @@ import { users } from "@/db/schema";
 import { decimal } from "drizzle-orm/pg-core/columns/numeric";
 
 // Define ENUM types
-export const userScoreItem = pgEnum("user_score_item_type", ["event", "task"]);
+export const userScoreItem = pgEnum("user_score_item_type", ["event", "task", "organize_event"]);
 
 export const activityTypesArray = [
   "free_online_event",
