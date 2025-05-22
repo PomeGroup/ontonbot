@@ -93,7 +93,7 @@ export type EventWithScoreAndReward = {
   rewardId: string | null;
   rewardStatus: RewardStatus | null;
   userScoreId: number | null;
-  userScorePoints: number;
+  userClaimedPoints: number;
   pointsCouldBeClaimed: number;
 };
 

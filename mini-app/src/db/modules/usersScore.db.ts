@@ -293,7 +293,7 @@ export async function getEventsWithClaimAndScoreDBPaginated(
     .offset(offset);
 
   // Convert row data
-  return rows.map((row) => ({
+  return rows.map<EventWithScoreAndReward>((row) => ({
     eventId: Number(row.eventId),
     eventTitle: row.eventTitle,
     eventUuid: row.eventUuid,
@@ -305,7 +305,7 @@ export async function getEventsWithClaimAndScoreDBPaginated(
     rewardId: row.rewardId ? String(row.rewardId) : null,
     rewardStatus: row.rewardStatus || null,
     userScoreId: row.userScoreId ? Number(row.userScoreId) : null,
-    userScorePoints: row.userScorePoints ? Number(row.userScorePoints) : 0,
+    userClaimedPoints: row.userScorePoints ? Number(row.userScorePoints) : 0,
     pointsCouldBeClaimed,
   }));
 }
