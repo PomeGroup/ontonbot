@@ -19,7 +19,7 @@ const MyPointsDetailsPage = () => {
   const { type } = useParams();
   const router = useRouter();
 
-  const scoreDetails = trpc.usersScore.getEventsWithClaimAndScoreInfinite.useInfiniteQuery(
+  const scoreDetails = trpc.usersScore.getScoreDetail.useInfiniteQuery(
     {
       limit: 10,
       activityType: type as UsersScoreActivityType,
