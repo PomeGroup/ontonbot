@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { usersScore, UsersScoreActivityType, UserScoreItemType, activityTypesArray } from "@/db/schema/usersScore";
-import { and, eq, lte, not, or, sql } from "drizzle-orm";
+import { and, desc, eq, lte, not, or, sql } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import { EventWithScoreAndReward } from "@/types/event.types";
@@ -289,6 +289,7 @@ export async function getEventsWithClaimAndScoreDBPaginated(
       )
     )
     .where(eq(visitors.user_id, userId))
+    .orderBy(desc(events.end_date))
     .limit(limit)
     .offset(offset);
 
