@@ -165,10 +165,76 @@ export const getTotalScoreByActivityTypeAndUserId = async (
   }
 };
 
+export const upsertOrganizerScore = async (scoreData: {
+  userId: number;
+  activityType: UsersScoreActivityType;
+  point: number; // how much to add or insert
+  active: boolean;
+  itemId: number;
+  itemType: UserScoreItemType;
+}) => {
+  try {
+    // 1) Check if a record already exists for (userId, activityType, active, itemId, itemType)
+    const [existing] = await db
+      .select({
+        id: usersScore.id,
+        point: usersScore.point,
+      })
+      .from(usersScore)
+      .where(
+        and(
+          eq(usersScore.userId, scoreData.userId),
+          eq(usersScore.activityType, scoreData.activityType),
+          eq(usersScore.itemId, scoreData.itemId),
+          eq(usersScore.itemType, scoreData.itemType),
+          eq(usersScore.active, scoreData.active)
+        )
+      )
+      .execute();
+
+    // 2) If no record found, INSERT
+    if (!existing) {
+      const insertResult = await db
+        .insert(usersScore)
+        .values({
+          userId: scoreData.userId,
+          activityType: scoreData.activityType,
+          point: scoreData.point.toString(), // Drizzle expects string for numeric columns
+          active: scoreData.active,
+          itemId: scoreData.itemId,
+          itemType: scoreData.itemType,
+          createdAt: new Date(),
+        })
+        .returning(); // Return the newly inserted row(s)
+
+      // Invalidate cache for user
+      await invalidateUserScoreCache(scoreData.userId);
+
+      logger.log("UserScore inserted:", insertResult);
+      return insertResult;
+    } else {
+      // 3) If record **does** exist, increment the existing point
+      const currentPoint = parseFloat(existing.point || "0"); // Convert to number
+      const newTotal = currentPoint + scoreData.point; // add the new points
+
+      await db.update(usersScore).set({ point: newTotal.toString() }).where(eq(usersScore.id, existing.id)).execute();
+
+      // Invalidate cache for user
+      await invalidateUserScoreCache(scoreData.userId);
+
+      logger.log(`UserScore ${existing.id} incremented by ${scoreData.point}, new total: ${newTotal}`);
+      return { updatedId: existing.id, newTotal };
+    }
+  } catch (error) {
+    logger.error("Error upserting organizer score:", error);
+    throw error;
+  }
+};
 export const usersScoreDB = {
   createUserScore,
   changeUserScoreStatus,
   updateUserScore,
   getTotalScoreByUserId,
   getTotalScoreByActivityTypeAndUserId,
+  upsertOrganizerScore,
 };
