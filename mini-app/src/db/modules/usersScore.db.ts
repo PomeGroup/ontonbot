@@ -4,11 +4,24 @@ import { and, desc, eq, lte, not, or, sql } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import { EventWithScoreAndReward } from "@/types/event.types";
-import { events, rewards, visitors } from "../schema";
+import { events, rewards, users, visitors } from "../schema";
 
 export type TotalScoreByActivityTypeAndUserId = {
   total: number;
   count: number;
+};
+
+export type JoinOntonAffiliateRow = {
+  id: bigint;
+  point: string | null; // non-null
+  itemId: number | null;
+  itemType: UserScoreItemType | null;
+  createdAt: Date | null;
+  userId: number;
+  userName: string | null; // these four may be null
+  userFirstName: string | null;
+  userLastName: string | null;
+  userPhotoUrl: string | null;
 };
 
 // Cache key helpers
@@ -313,6 +326,51 @@ export async function getEventsWithClaimAndScoreDBPaginated(
     pointsCouldBeClaimed,
   }));
 }
+//**
+// getUserScoresByActivityTypeAndUserId
+// Get all user scores for a specific activity type and user ID
+// */
+export async function getUserScoresForJoinOntonAffiliatePaginated(
+  userId: number,
+  limit: number,
+  offset: number
+): Promise<JoinOntonAffiliateRow[]> {
+  const raw = await db
+    .select({
+      id: usersScore.id,
+      point: usersScore.point, // numeric → string
+      itemId: usersScore.itemId,
+      itemType: usersScore.itemType,
+      createdAt: usersScore.createdAt,
+      userId: users.user_id,
+      userName: users.username,
+      userFirstName: users.first_name,
+      userLastName: users.last_name,
+      userPhotoUrl: users.photo_url,
+    })
+    .from(usersScore)
+    .innerJoin(users, and(eq(usersScore.itemId, users.user_id), eq(usersScore.activityType, "join_onton_affiliate")))
+    .where(eq(usersScore.userId, userId))
+    .limit(limit)
+    .offset(offset)
+    .execute();
+
+  /* Cast fields that are guaranteed non-null */
+  const rows: JoinOntonAffiliateRow[] = raw.map((r) => ({
+    id: r.id as bigint,
+    point: r.point as string,
+    itemId: r.itemId,
+    itemType: r.itemType as UserScoreItemType,
+    createdAt: r.createdAt as Date,
+    userId: r.userId,
+    userName: r.userName,
+    userFirstName: r.userFirstName,
+    userLastName: r.userLastName,
+    userPhotoUrl: r.userPhotoUrl,
+  }));
+
+  return rows;
+}
 export const usersScoreDB = {
   createUserScore,
   changeUserScoreStatus,
@@ -321,4 +379,5 @@ export const usersScoreDB = {
   getTotalScoreByActivityTypeAndUserId,
   upsertOrganizerScore,
   getEventsWithClaimAndScoreDBPaginated,
+  getUserScoresForJoinOntonAffiliatePaginated,
 };

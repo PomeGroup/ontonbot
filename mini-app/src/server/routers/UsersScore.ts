@@ -1,5 +1,5 @@
 import { usersScoreDB } from "@/db/modules/usersScore.db";
-import { usersScoreActivity } from "@/db/schema/usersScore";
+import { usersScoreActivity, UsersScoreActivityType } from "@/db/schema/usersScore";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { initDataProtectedProcedure, router } from "../trpc";
@@ -16,6 +16,17 @@ export type GetEventSBTUserScoreResult = {
   tonSocietyStatus: RewardTonSocietyStatusType | null; // true if the event is integrated with Ton Society
   userPoint: number; // The user's total or newly updated points
   visitorId: number | null; // The visitor ID we processed
+};
+export type JoinOntonAffiliateScore = {
+  id: number;
+  point: number; // converted to number for the client
+  itemId: number;
+  createdAt: Date | null; // Date is converted to string on the client
+  userId: number;
+  userName: string | null;
+  userFirstName: string | null;
+  userLastName: string | null;
+  userPhotoUrl: string | null;
 };
 
 const getEventsWithClaimAndScoreInfiniteInput = z.object({
@@ -66,70 +77,106 @@ export const UsersScoreRouter = router({
     }),
 
   getScoreDetail: initDataProtectedProcedure.input(getEventsWithClaimAndScoreInfiniteInput).query(async ({ ctx, input }) => {
-    try {
-      // 1) Destructure and compute flags
-      const { activityType, limit, cursor } = input;
-      const currentTimeSec = Math.floor(Date.now() / 1000);
+    const { activityType, limit, cursor } = input;
+    const eventActivityTypes: UsersScoreActivityType[] = [
+      "paid_online_event",
+      "paid_offline_event",
+      "free_online_event",
+      "free_offline_event",
+    ];
+    const joinOntonActivityTypes: UsersScoreActivityType[] = ["join_onton_affiliate"];
+    if (activityType && eventActivityTypes.includes(activityType)) {
+      try {
+        // 1) Destructure and compute flags
 
-      let isPaid = false;
-      let isOnline = false;
-      let pointsCouldBeClaimed = 0;
+        const currentTimeSec = Math.floor(Date.now() / 1000);
 
-      switch (activityType) {
-        case "paid_online_event":
-          isPaid = true;
-          isOnline = true;
-          pointsCouldBeClaimed = 10;
-          break;
-        case "paid_offline_event":
-          isPaid = true;
-          pointsCouldBeClaimed = 20;
-          break;
-        case "free_online_event":
-          isOnline = true;
-          pointsCouldBeClaimed = 1;
-          break;
-        case "free_offline_event":
-          pointsCouldBeClaimed = 10;
-          break;
+        let isPaid = false;
+        let isOnline = false;
+        let pointsCouldBeClaimed = 0;
+
+        switch (activityType) {
+          case "paid_online_event":
+            isPaid = true;
+            isOnline = true;
+            pointsCouldBeClaimed = 10;
+            break;
+          case "paid_offline_event":
+            isPaid = true;
+            pointsCouldBeClaimed = 20;
+            break;
+          case "free_online_event":
+            isOnline = true;
+            pointsCouldBeClaimed = 1;
+            break;
+          case "free_offline_event":
+            pointsCouldBeClaimed = 10;
+            break;
+        }
+
+        logger.log(
+          `getEventsWithClaimAndScoreInfinite: userId=${ctx.user.user_id}, activityType=${activityType}, ` +
+            `isPaid=${isPaid}, isOnline=${isOnline}, pointsCouldBeClaimed=${pointsCouldBeClaimed}, ` +
+            `limit=${limit}, cursor=${cursor}`
+        );
+
+        // 2) Fetch data with offset and limit
+        const data = await usersScoreDB.getEventsWithClaimAndScoreDBPaginated(
+          ctx.user.user_id,
+          activityType,
+          isPaid,
+          isOnline,
+          pointsCouldBeClaimed,
+          currentTimeSec,
+          limit,
+          cursor
+        );
+
+        // 3) Determine the nextCursor (if there are more records beyond this batch)
+        // If data.length < limit => we've likely hit the end, so no next cursor
+        let nextCursor: number | null = null;
+        if (data.length === limit) {
+          // The next offset after this batch
+          nextCursor = cursor + limit;
+        }
+
+        return {
+          items: data,
+          nextCursor,
+        };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Error getting paginated events with claim & score for user: ${ctx.user.user_id}`,
+          cause: error,
+        });
       }
+    } else if (activityType && joinOntonActivityTypes.includes(activityType)) {
+      try {
+        const rows = await usersScoreDB.getUserScoresForJoinOntonAffiliatePaginated(ctx.user.user_id, limit, cursor);
 
-      logger.log(
-        `getEventsWithClaimAndScoreInfinite: userId=${ctx.user.user_id}, activityType=${activityType}, ` +
-          `isPaid=${isPaid}, isOnline=${isOnline}, pointsCouldBeClaimed=${pointsCouldBeClaimed}, ` +
-          `limit=${limit}, cursor=${cursor}`
-      );
+        const items: JoinOntonAffiliateScore[] = rows.map((r) => ({
+          id: Number(r.id),
+          point: Number(r.point),
+          itemId: Number(r.itemId),
+          createdAt: r.createdAt,
+          userId: Number(r.userId),
+          userName: r.userName,
+          userFirstName: r.userFirstName,
+          userLastName: r.userLastName,
+          userPhotoUrl: r.userPhotoUrl,
+        }));
 
-      // 2) Fetch data with offset and limit
-      const data = await usersScoreDB.getEventsWithClaimAndScoreDBPaginated(
-        ctx.user.user_id,
-        activityType,
-        isPaid,
-        isOnline,
-        pointsCouldBeClaimed,
-        currentTimeSec,
-        limit,
-        cursor
-      );
+        const nextCursor = rows.length === limit ? cursor + limit : null;
 
-      // 3) Determine the nextCursor (if there are more records beyond this batch)
-      // If data.length < limit => we've likely hit the end, so no next cursor
-      let nextCursor: number | null = null;
-      if (data.length === limit) {
-        // The next offset after this batch
-        nextCursor = cursor + limit;
+        return { items, nextCursor };
+      } catch (err) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Error paginating join_onton_affiliate scores for user ${ctx.user.user_id}`,
+          cause: err,
+        });
       }
-
-      return {
-        items: data,
-        nextCursor,
-      };
-    } catch (error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: `Error getting paginated events with claim & score for user: ${ctx.user.user_id}`,
-        cause: error,
-      });
     }
   }),
 
