@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { usersScore, UsersScoreActivityType, UserScoreItemType, activityTypesArray } from "@/db/schema/usersScore";
-import { and, eq, lte, not, or, sql } from "drizzle-orm";
+import { and, desc, eq, lte, not, or, sql } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import { EventWithScoreAndReward } from "@/types/event.types";
@@ -255,6 +255,7 @@ export async function getEventsWithClaimAndScoreDBPaginated(
       visitorId: visitors.id,
       rewardId: rewards.id,
       rewardStatus: rewards.status,
+      rewardData: rewards.data,
       tonSocietyStatus: rewards.tonSocietyStatus,
       userScoreId: usersScore.id,
       userScorePoints: usersScore.point,
@@ -289,23 +290,25 @@ export async function getEventsWithClaimAndScoreDBPaginated(
       )
     )
     .where(eq(visitors.user_id, userId))
+    .orderBy(desc(events.end_date))
     .limit(limit)
     .offset(offset);
 
   // Convert row data
-  return rows.map((row) => ({
+  return rows.map<EventWithScoreAndReward>((row) => ({
     eventId: Number(row.eventId),
     eventTitle: row.eventTitle,
     eventUuid: row.eventUuid,
     eventStartDate: Number(row.eventStartDate),
     eventEndDate: Number(row.eventEndDate),
     imageUrl: row.imageUrl || null,
+    rewardLink: row.rewardData?.ok ? row.rewardData.reward_link : null,
     visitorId: Number(row.visitorId),
     tonSocietyStatus: row.tonSocietyStatus,
     rewardId: row.rewardId ? String(row.rewardId) : null,
     rewardStatus: row.rewardStatus || null,
     userScoreId: row.userScoreId ? Number(row.userScoreId) : null,
-    userScorePoints: row.userScorePoints ? Number(row.userScorePoints) : 0,
+    userClaimedPoints: row.userScorePoints ? Number(row.userScorePoints) : 0,
     pointsCouldBeClaimed,
   }));
 }

@@ -1,10 +1,23 @@
-import { initDataProtectedProcedure, router } from "../trpc";
-import { z } from "zod";
 import { usersScoreDB } from "@/db/modules/usersScore.db";
-import { TRPCError } from "@trpc/server";
 import { usersScoreActivity } from "@/db/schema/usersScore";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { initDataProtectedProcedure, router } from "../trpc";
 
+import { handleSingleRewardUpdate } from "@/cronJobs/helper/handleSingleRewardUpdate";
+import { RewardType } from "@/db/enum";
+import eventDB from "@/db/modules/events";
+import visitorsDB from "@/db/modules/visitors";
+import { RewardTonSocietyStatusType } from "@/db/schema/rewards";
 import { logger } from "@/server/utils/logger";
+
+export type GetEventSBTUserScoreResult = {
+  success: boolean;
+  tonSocietyStatus: RewardTonSocietyStatusType | null; // true if the event is integrated with Ton Society
+  userPoint: number; // The user's total or newly updated points
+  visitorId: number | null; // The visitor ID we processed
+};
+
 const getEventsWithClaimAndScoreInfiniteInput = z.object({
   activityType: z.enum(usersScoreActivity.enumValues),
   limit: z.number().min(1).max(50).default(10),
@@ -39,11 +52,7 @@ export const UsersScoreRouter = router({
     )
     .query(async (opts) => {
       try {
-        const totalScore = await usersScoreDB.getTotalScoreByActivityTypeAndUserId(
-          opts.ctx.user.user_id,
-          opts.input.activityType
-        );
-        return totalScore;
+        return await usersScoreDB.getTotalScoreByActivityTypeAndUserId(opts.ctx.user.user_id, opts.input.activityType);
       } catch (error) {
         logger.error(
           `Error retrieving total score by activity type for user id: ${opts.ctx.user.user_id} and activity type: ${opts.input.activityType}`,
@@ -56,73 +65,130 @@ export const UsersScoreRouter = router({
       }
     }),
 
-  getEventsWithClaimAndScoreInfinite: initDataProtectedProcedure
-    .input(getEventsWithClaimAndScoreInfiniteInput)
-    .query(async ({ ctx, input }) => {
-      try {
-        // 1) Destructure and compute flags
-        const { activityType, limit, cursor } = input;
-        const currentTimeSec = Math.floor(Date.now() / 1000);
+  getScoreDetail: initDataProtectedProcedure.input(getEventsWithClaimAndScoreInfiniteInput).query(async ({ ctx, input }) => {
+    try {
+      // 1) Destructure and compute flags
+      const { activityType, limit, cursor } = input;
+      const currentTimeSec = Math.floor(Date.now() / 1000);
 
-        let isPaid = false;
-        let isOnline = false;
-        let pointsCouldBeClaimed = 0;
+      let isPaid = false;
+      let isOnline = false;
+      let pointsCouldBeClaimed = 0;
 
-        switch (activityType) {
-          case "paid_online_event":
-            isPaid = true;
-            isOnline = true;
-            pointsCouldBeClaimed = 10;
-            break;
-          case "paid_offline_event":
-            isPaid = true;
-            pointsCouldBeClaimed = 20;
-            break;
-          case "free_online_event":
-            isOnline = true;
-            pointsCouldBeClaimed = 1;
-            break;
-          case "free_offline_event":
-            pointsCouldBeClaimed = 10;
-            break;
-        }
+      switch (activityType) {
+        case "paid_online_event":
+          isPaid = true;
+          isOnline = true;
+          pointsCouldBeClaimed = 10;
+          break;
+        case "paid_offline_event":
+          isPaid = true;
+          pointsCouldBeClaimed = 20;
+          break;
+        case "free_online_event":
+          isOnline = true;
+          pointsCouldBeClaimed = 1;
+          break;
+        case "free_offline_event":
+          pointsCouldBeClaimed = 10;
+          break;
+      }
 
-        logger.log(
-          `getEventsWithClaimAndScoreInfinite: userId=${ctx.user.user_id}, activityType=${activityType}, ` +
-            `isPaid=${isPaid}, isOnline=${isOnline}, pointsCouldBeClaimed=${pointsCouldBeClaimed}, ` +
-            `limit=${limit}, cursor=${cursor}`
-        );
+      logger.log(
+        `getEventsWithClaimAndScoreInfinite: userId=${ctx.user.user_id}, activityType=${activityType}, ` +
+          `isPaid=${isPaid}, isOnline=${isOnline}, pointsCouldBeClaimed=${pointsCouldBeClaimed}, ` +
+          `limit=${limit}, cursor=${cursor}`
+      );
 
-        // 2) Fetch data with offset & limit
-        const data = await usersScoreDB.getEventsWithClaimAndScoreDBPaginated(
-          ctx.user.user_id,
-          activityType,
-          isPaid,
-          isOnline,
-          pointsCouldBeClaimed,
-          currentTimeSec,
-          limit,
-          cursor
-        );
+      // 2) Fetch data with offset and limit
+      const data = await usersScoreDB.getEventsWithClaimAndScoreDBPaginated(
+        ctx.user.user_id,
+        activityType,
+        isPaid,
+        isOnline,
+        pointsCouldBeClaimed,
+        currentTimeSec,
+        limit,
+        cursor
+      );
 
-        // 3) Determine the nextCursor (if there are more records beyond this batch)
-        // If data.length < limit => we've likely hit the end, so no next cursor
-        let nextCursor: number | null = null;
-        if (data.length === limit) {
-          // The next offset after this batch
-          nextCursor = cursor + limit;
-        }
+      // 3) Determine the nextCursor (if there are more records beyond this batch)
+      // If data.length < limit => we've likely hit the end, so no next cursor
+      let nextCursor: number | null = null;
+      if (data.length === limit) {
+        // The next offset after this batch
+        nextCursor = cursor + limit;
+      }
 
-        return {
-          items: data,
-          nextCursor,
-        };
-      } catch (error) {
+      return {
+        items: data,
+        nextCursor,
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Error getting paginated events with claim & score for user: ${ctx.user.user_id}`,
+        cause: error,
+      });
+    }
+  }),
+
+  checkEventPoints: initDataProtectedProcedure
+    .input(
+      z.object({
+        eventId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }): Promise<GetEventSBTUserScoreResult> => {
+      const userId = ctx.user.user_id;
+      const eventId = input.eventId;
+
+      /* Fetch the event */
+      const eventRow = await eventDB.fetchEventById(eventId);
+      if (!eventRow) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Error getting paginated events with claim & score for user: ${ctx.user.user_id}`,
-          cause: error,
+          code: "NOT_FOUND",
+          message: `Event with id=${eventId} not found`,
         });
       }
+
+      /* Activity-ID must exist (event integrated with Ton Society) */
+      const activityId = eventRow.activity_id;
+      if (!activityId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This event is not eligible for Ton Society rewards",
+        });
+      }
+
+      /* There must be a visitor row for this user and event */
+      const visitor = await visitorsDB.findVisitorByUserAndEvent(userId, eventRow.event_uuid);
+      if (!visitor) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You did not attend or are not registered for this event",
+        });
+      }
+
+      /* Sync with Ton Society and maybe insert a user score */
+      const rewardResult = await handleSingleRewardUpdate(activityId, visitor.id, eventId, "ton_society_sbt" as RewardType);
+
+      if (!rewardResult.success) {
+        // If Ton Society says NOT_ELIGIBLE, treat as forbidden; otherwise server error
+        const baseCode = rewardResult.tonSocietyStatus === "NOT_ELIGIBLE" ? "FORBIDDEN" : "INTERNAL_SERVER_ERROR";
+
+        throw new TRPCError({
+          code: baseCode,
+          message: rewardResult.error ?? "Unable to update reward status",
+        });
+      }
+
+      /* Success → return points just granted (or 0 if already had them) */
+      return {
+        success: true,
+        tonSocietyStatus: rewardResult.tonSocietyStatus,
+        userPoint: rewardResult.userScore?.user_point ?? 0,
+        visitorId: visitor.id,
+      };
     }),
 });

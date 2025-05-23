@@ -17,7 +17,6 @@ import useWebApp from "@/hooks/useWebApp";
 import { getDiffValueAndSuffix } from "@/lib/time.utils";
 import { Skeleton } from "@mui/material";
 import { fromNano } from "@ton/core";
-import { Page } from "konsta/react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { FaAngleRight } from "react-icons/fa6";
@@ -206,7 +205,7 @@ const Play2WinPage: React.FC<{
   const webapp = useWebApp();
 
   return (
-    <Page>
+    <div>
       {tournament.isError && <ErrorState errorCode="event_not_found" />}
 
       {tournament.isLoading ? (
@@ -299,7 +298,7 @@ const Play2WinPage: React.FC<{
           />
         </div>
       )}
-    </Page>
+    </div>
   );
 };
 

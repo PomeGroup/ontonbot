@@ -1,6 +1,6 @@
-import { pgTable, bigserial, bigint, smallint, timestamp, boolean, index, uniqueIndex, pgEnum } from "drizzle-orm/pg-core";
-import { InferSelectModel } from "drizzle-orm";
 import { users } from "@/db/schema";
+import { InferSelectModel } from "drizzle-orm";
+import { bigint, bigserial, boolean, index, pgEnum, pgTable, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { decimal } from "drizzle-orm/pg-core/columns/numeric";
 
 // Define ENUM types

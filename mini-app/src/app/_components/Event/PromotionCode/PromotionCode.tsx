@@ -1,6 +1,6 @@
 "use client";
 
-import { Block, Page } from "konsta/react";
+import { Block } from "konsta/react";
 import { useEffect, useState } from "react";
 
 import { useDownloadCSV } from "@/app/_components/Event/PromotionCode/useDownloadCSV";
@@ -112,27 +112,27 @@ export default function PromotionCode() {
   // 9) Loading / error / empty states
   if (isLoading) {
     return (
-      <Page>
+      <div>
         <div className="px-4">
           <h1 className="text-lg font-bold">Create Your Codes</h1>
         </div>
         <Block className="text-center mt-4">Loading promotion codes...</Block>
-      </Page>
+      </div>
     );
   }
   if (isError) {
     return (
-      <Page>
+      <div>
         <div className="px-4">
           <h1 className="text-lg font-bold">Create Your Codes</h1>
         </div>
         <Block className="text-center mt-4 text-red-600">Failed to load codes: {error.message}</Block>
-      </Page>
+      </div>
     );
   }
   if (!data || data.length === 0) {
     return (
-      <Page>
+      <div>
         <div className="px-4">
           <h1 className="text-lg font-bold">Create Your Codes</h1>
         </div>
@@ -160,7 +160,7 @@ export default function PromotionCode() {
             },
           ]}
         />
-      </Page>
+      </div>
     );
   }
 

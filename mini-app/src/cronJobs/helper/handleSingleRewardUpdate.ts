@@ -7,54 +7,117 @@ import { maybeInsertUserScore } from "@/cronJobs/helper/maybeInsertUserScore";
 import { informTonfestUserClaim } from "@/cronJobs/helper/informTonfestUserClaim";
 import { RewardType } from "@/db/enum";
 
-/**
- * Updates Ton Society status for a single reward record:
- * 1) Get the visitor row to find user_id
- * 2) Call getSBTClaimedStatus(activityId, userId)
- * 3) If status is "CLAIMED" or "RECEIVED", update `tonSocietyStatus`
- *    AND insert user score if not already inserted.
- */
+export type HandleSingleRewardUpdateResult = {
+  success: boolean; // was the update successful?
+  error: string | null; // any error message
+  tonSocietyStatus: RewardTonSocietyStatusType | null; // final status we ended up with, e.g. "CLAIMED"
+  userScore?: {
+    user_point: number | null;
+    organizer_point: number | null;
+    error: string | null;
+  };
+  visitorId?: number | null; // the visitor ID we processed
+};
+
 export const handleSingleRewardUpdate = async (
   activity_id: number,
   visitor_id: number,
   event_id: number,
   rewardType: RewardType
-) => {
-  // 1) Get the visitor to find user_id
+): Promise<HandleSingleRewardUpdateResult> => {
+  // 1) Validate input
   if (!activity_id || !visitor_id || !event_id || !rewardType) {
-    logger.error(
-      `[Event ${event_id}] Invalid input: activity_id=${activity_id}, visitor_id=${visitor_id}, event_id=${event_id}, rewardType=${rewardType}`
-    );
-    return;
+    const errorMsg = `[Event ${event_id}] Invalid input: activity_id=${activity_id}, visitor_id=${visitor_id}, event_id=${event_id}, rewardType=${rewardType}`;
+    logger.error(errorMsg);
+    return {
+      success: false,
+      error: errorMsg,
+      tonSocietyStatus: null,
+      visitorId: null,
+    };
   }
+
+  // 2) Get the visitor
   const visitorRow = await visitorsDB.findVisitorById(visitor_id);
-  if (!visitorRow) return;
+  if (!visitorRow) {
+    const errorMsg = `[Event ${event_id}] Visitor not found for id=${visitor_id}`;
+    logger.error(errorMsg);
+    return {
+      success: false,
+      error: errorMsg,
+      tonSocietyStatus: null,
+    };
+  }
 
   const userId = visitorRow.user_id;
-  if (!userId) return;
+  if (!userId) {
+    const errorMsg = `[Event ${event_id}] Visitor row has no user_id for visitor_id=${visitor_id}`;
+    logger.error(errorMsg);
+    return {
+      success: false,
+      error: errorMsg,
+      tonSocietyStatus: null,
+    };
+  }
 
-  // 2) Get the status from Ton Society
+  // 3) Fetch Ton Society's SBT claim status
   const result = await getSBTClaimedStatus(activity_id, userId);
+  const tsStatus = result?.status as RewardTonSocietyStatusType | undefined;
+  // possible "NOT_CLAIMED", "CLAIMED", "RECEIVED", etc.
 
-  const tsStatus = result?.status; // e.g. "NOT_CLAIMED" | "CLAIMED" | "RECEIVED" | ...
-
-  // 3) If it’s one of our known statuses, update local DB
+  // 4) If tsStatus is recognized, update local DB
   if (tsStatus && ["NOT_CLAIMED", "CLAIMED", "RECEIVED"].includes(tsStatus)) {
-    const tonSocietyStatus = tsStatus as RewardTonSocietyStatusType;
+    // update the reward row
     logger.log(
-      `[Event ${event_id}] Updating Ton Society status for visitor_id=${visitor_id}  user_id=${userId} to ${rewardType} ${tonSocietyStatus}`
+      `[Event ${event_id}] Updating Ton Society status for visitor_id=${visitor_id}, user_id=${userId} => ${rewardType} with status=${tsStatus}`
     );
-    await rewardDB.updateTonSocietyStatusByVisitorIdAndRewardType(visitor_id, tonSocietyStatus, rewardType);
 
-    // 4) If newly claimed, add user score — "CLAIMED" or "RECEIVED" implies the user actually claimed it
-    if (tonSocietyStatus === "CLAIMED" || tonSocietyStatus === "RECEIVED") {
+    await rewardDB.updateTonSocietyStatusByVisitorIdAndRewardType(visitor_id, tsStatus, rewardType);
+
+    // 4a) If it's "CLAIMED" or "RECEIVED", possibly insert user score
+    if (tsStatus === "CLAIMED" || tsStatus === "RECEIVED") {
       if (rewardType === "ton_society_sbt") {
-        await maybeInsertUserScore(userId, event_id);
+        // maybeInsertUserScore returns e.g. { user_point, organizer_point, error }
+        const userScoreResult = await maybeInsertUserScore(userId, event_id);
+
+        // Return success with userScore data
+        return {
+          success: true,
+          error: null,
+          tonSocietyStatus: tsStatus,
+          userScore: userScoreResult,
+          visitorId: visitor_id,
+        };
       }
+
       if (rewardType === "ton_society_csbt_ticket") {
-        await informTonfestUserClaim(userId, event_id, tonSocietyStatus === "CLAIMED" ? "addSbtFromOnton" : "setSbtPending");
+        // call your method
+        await informTonfestUserClaim(userId, event_id, tsStatus === "CLAIMED" ? "addSbtFromOnton" : "setSbtPending");
+
+        return {
+          success: true,
+          error: null,
+          tonSocietyStatus: tsStatus,
+          visitorId: visitor_id,
+        };
       }
     }
+
+    // 4b) If status is "NOT_CLAIMED" we still updated the DB, but no user score.
+    return {
+      success: true,
+      error: null,
+      tonSocietyStatus: tsStatus,
+      visitorId: visitor_id,
+    };
   }
-  return;
+
+  // 5) If we got here, either tsStatus is undefined or not recognized
+  const errorMsg = `[Event ${event_id}] Could not update Ton Society status; unrecognized or missing status: ${tsStatus}`;
+  logger.warn(errorMsg);
+  return {
+    success: false,
+    error: errorMsg,
+    tonSocietyStatus: tsStatus || null,
+  };
 };
