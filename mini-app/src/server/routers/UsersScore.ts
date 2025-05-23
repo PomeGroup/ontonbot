@@ -5,6 +5,19 @@ import { TRPCError } from "@trpc/server";
 import { usersScoreActivity } from "@/db/schema/usersScore";
 
 import { logger } from "@/server/utils/logger";
+import { RewardType } from "@/db/enum";
+import { handleSingleRewardUpdate } from "@/cronJobs/helper/handleSingleRewardUpdate";
+import visitorsDB from "@/db/modules/visitors";
+import eventDB from "@/db/modules/events";
+import { RewardTonSocietyStatusType } from "@/db/schema/rewards";
+
+export type GetEventSBTUserScoreResult = {
+  success: boolean;
+  tonSocietyStatus: RewardTonSocietyStatusType | null; // true if the event is integrated with Ton Society
+  userPoint: number; // The user's total or newly updated points
+  visitorId: number | null; // The visitor ID we processed
+};
+
 const getEventsWithClaimAndScoreInfiniteInput = z.object({
   activityType: z.enum(usersScoreActivity.enumValues),
   limit: z.number().min(1).max(50).default(10),
@@ -39,11 +52,7 @@ export const UsersScoreRouter = router({
     )
     .query(async (opts) => {
       try {
-        const totalScore = await usersScoreDB.getTotalScoreByActivityTypeAndUserId(
-          opts.ctx.user.user_id,
-          opts.input.activityType
-        );
-        return totalScore;
+        return await usersScoreDB.getTotalScoreByActivityTypeAndUserId(opts.ctx.user.user_id, opts.input.activityType);
       } catch (error) {
         logger.error(
           `Error retrieving total score by activity type for user id: ${opts.ctx.user.user_id} and activity type: ${opts.input.activityType}`,
@@ -91,7 +100,7 @@ export const UsersScoreRouter = router({
           `limit=${limit}, cursor=${cursor}`
       );
 
-      // 2) Fetch data with offset & limit
+      // 2) Fetch data with offset and limit
       const data = await usersScoreDB.getEventsWithClaimAndScoreDBPaginated(
         ctx.user.user_id,
         activityType,
@@ -123,4 +132,63 @@ export const UsersScoreRouter = router({
       });
     }
   }),
+
+  checkEventPoints: initDataProtectedProcedure
+    .input(
+      z.object({
+        eventId: z.number(),
+      })
+    )
+    .query(async ({ ctx, input }): Promise<GetEventSBTUserScoreResult> => {
+      const userId = ctx.user.user_id;
+      const eventId = input.eventId;
+
+      /* Fetch the event */
+      const eventRow = await eventDB.fetchEventById(eventId);
+      if (!eventRow) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Event with id=${eventId} not found`,
+        });
+      }
+
+      /* Activity-ID must exist (event integrated with Ton Society) */
+      const activityId = eventRow.activity_id;
+      if (!activityId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This event is not eligible for Ton Society rewards",
+        });
+      }
+
+      /* There must be a visitor row for this user and event */
+      const visitor = await visitorsDB.findVisitorByUserAndEvent(userId, eventRow.event_uuid);
+      if (!visitor) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You did not attend or are not registered for this event",
+        });
+      }
+
+      /* Sync with Ton Society and maybe insert a user score */
+      const rewardResult = await handleSingleRewardUpdate(activityId, visitor.id, eventId, "ton_society_sbt" as RewardType);
+
+      if (!rewardResult.success) {
+        // If Ton Society says NOT_ELIGIBLE, treat as forbidden; otherwise server error
+        const baseCode = rewardResult.tonSocietyStatus === "NOT_ELIGIBLE" ? "FORBIDDEN" : "INTERNAL_SERVER_ERROR";
+
+        throw new TRPCError({
+          code: baseCode,
+          message: rewardResult.error ?? "Unable to update reward status",
+        });
+      }
+
+      /* Success → return points just granted (or 0 if already had them) */
+      return {
+        success: true,
+        tonSocietyStatus: rewardResult.tonSocietyStatus,
+        userPoint: rewardResult.userScore?.user_point ?? 0,
+        visitorId: visitor.id,
+      };
+    }),
 });
