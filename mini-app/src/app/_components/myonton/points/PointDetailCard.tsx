@@ -68,7 +68,7 @@ const PointDetailCard = (props: {
 
           {/* Reward Status */}
           <>
-            {props.tonSocietyStatus === "NOT_CLAIMED" && (
+            {props.tonSocietyStatus === "NOT_CLAIMED" && props.userClaimedPoints === 0 && (
               <Typography
                 variant="subheadline2"
                 className="truncate text-brand-light-destructive flex items-center justify-center gap-1"
@@ -78,17 +78,18 @@ const PointDetailCard = (props: {
               </Typography>
             )}
 
-            {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") && (
-              <Typography
-                variant="subheadline2"
-                className="truncate text-brand-green flex items-center justify-center gap-1"
-              >
-                <CheckIcon className="w-4 h-4 flex-shrink-0" />
-                <span>Claimed</span>
-              </Typography>
-            )}
+            {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
+              props.userClaimedPoints === 0 && (
+                <Typography
+                  variant="subheadline2"
+                  className="truncate text-brand-green flex items-center justify-center gap-1"
+                >
+                  <CheckIcon className="w-4 h-4 flex-shrink-0" />
+                  <span>Claimed</span>
+                </Typography>
+              )}
 
-            {props.tonSocietyStatus === "NOT_ELIGIBLE" && (
+            {props.tonSocietyStatus === "NOT_ELIGIBLE" && props.userClaimedPoints === 0 && (
               <Typography
                 variant="subheadline2"
                 className="truncate text-brand-muted flex items-center justify-center gap-1"
@@ -102,7 +103,7 @@ const PointDetailCard = (props: {
 
         {/* Claim Button */}
         <>
-          {props.tonSocietyStatus === "NOT_CLAIMED" && (
+          {props.tonSocietyStatus === "NOT_CLAIMED" && props.userClaimedPoints === 0 && (
             <Button
               variant="outline"
               className="flex items-center gap-1 rounded-md flex-1 max-w-[96px]"
@@ -131,7 +132,8 @@ const PointDetailCard = (props: {
             )}
 
           {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
-            (props.userClaimedPoints === 0 || !checkEventPoints.isSuccess) && (
+            (props.userClaimedPoints === 0 || !checkEventPoints.isSuccess) &&
+            props.userClaimedPoints === 0 && (
               <Button
                 variant="outline"
                 className="flex items-center gap-1 rounded-md flex-1 max-w-[96px]"

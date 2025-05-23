@@ -265,7 +265,7 @@ export async function getEventsWithClaimAndScoreDBPaginated(
       events,
       and(
         eq(events.event_uuid, visitors.event_uuid),
-        or(eq(events.has_payment, isPaid), eq(events.ticketToCheckIn, true)),
+        or(eq(events.has_payment, isPaid), eq(events.ticketToCheckIn, isPaid)),
         eq(events.participationType, isOnline ? "online" : "in_person"),
         lte(events.end_date, currentTimeSec),
         eq(events.hidden, false)
@@ -294,6 +294,7 @@ export async function getEventsWithClaimAndScoreDBPaginated(
     .limit(limit)
     .offset(offset);
 
+  logger.log(`======================`, activityType, rows);
   // Convert row data
   return rows.map<EventWithScoreAndReward>((row) => ({
     eventId: Number(row.eventId),

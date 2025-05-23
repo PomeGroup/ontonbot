@@ -10,16 +10,16 @@ export type MaybeInsertUserScoreResult =
       error: null;
     }
   | {
-      user_point: null;
-      organizer_point: null;
+      user_point: number | null;
+      organizer_point: number | null;
       error: string;
     };
 /**
  * Inserts a new user score record if none exists yet for this user+event.
  *
  * We derive the "activityType" from:
- * - event.has_payment -> "paid" vs "free"
- * - event.participationType -> "online" vs "in_person"
+ * - event.has_payment -> "paid" vs. "free"
+ * - event.participationType -> "online" vs. "in_person"
  *
  * Then we pick the correct point value:
  *   "free_online_event" : 10 points
@@ -28,42 +28,38 @@ export type MaybeInsertUserScoreResult =
  *   "paid_offline_event": 25 points
  */
 export async function maybeInsertUserScore(userId: number, eventId: number): Promise<MaybeInsertUserScoreResult> {
+  // 1. Fetch event
+  const eventRow = await eventDB.fetchEventById(eventId);
+  if (!eventRow) {
+    logger.warn(`Event not found for eventId=${eventId}. Skipping user score insert.`);
+    return { user_point: null, organizer_point: null, error: "Event not found" };
+  }
+
+  // 2. Derive activity type & point values
+  const isPaid = !!eventRow.has_payment;
+  const isOnline = eventRow.participationType === "online";
+
+  let chosenActivityType: UsersScoreActivityType;
+  let points: number;
+
+  if (isPaid && isOnline) {
+    chosenActivityType = "paid_online_event";
+    points = 10;
+  } else if (isPaid && !isOnline) {
+    chosenActivityType = "paid_offline_event";
+    points = 20;
+  } else if (!isPaid && isOnline) {
+    chosenActivityType = "free_online_event";
+    points = 1;
+  } else {
+    chosenActivityType = "free_offline_event";
+    points = 10;
+  }
+
+  const organizerPoints = points * 0.2;
   try {
-    // 1) Fetch the event
-    const eventRow = await eventDB.fetchEventById(eventId);
-    if (!eventRow) {
-      logger.warn(`Event not found for eventId=${eventId}. Skipping user score insert.`);
-      return {
-        user_point: null,
-        organizer_point: null,
-        error: "Event not found",
-      };
-    }
-
-    // 2) Determine activity type & points
-    let chosenActivityType: UsersScoreActivityType = "free_online_event";
-    let points = 10;
-    let organizerPoints = 0.2;
-
-    const isPaid = !!eventRow.has_payment;
-    const isOnline = eventRow.participationType === "online";
-
-    if (isPaid && isOnline) {
-      chosenActivityType = "paid_online_event";
-      points = 10;
-    } else if (isPaid && !isOnline) {
-      chosenActivityType = "paid_offline_event";
-      points = 20;
-    } else if (!isPaid && isOnline) {
-      chosenActivityType = "free_online_event";
-      points = 1;
-    } else {
-      chosenActivityType = "free_offline_event";
-      points = 10;
-    }
-    organizerPoints = points * 0.2;
-
-    // 3) Insert participant's score
+    // 3. Insert participant score
+    let participantInserted = false;
     try {
       await usersScoreDB.createUserScore({
         userId,
@@ -73,59 +69,52 @@ export async function maybeInsertUserScore(userId: number, eventId: number): Pro
         itemId: eventId,
         itemType: "event",
       });
+      participantInserted = true;
       logger.log(`[UserScore] Inserted ${chosenActivityType} for user=${userId}, event=${eventId}, points=${points}`);
     } catch (err) {
       const message = String(err);
       if (message.includes("duplicate key value") || message.includes("unique constraint")) {
-        logger.log(`[UserScore] Score record already exists for user=${userId}, event=${eventId}. Skipped duplicate.`);
+        logger.log(`[UserScore] Score already exists for user=${userId}, event=${eventId}. Skipping organizer update.`);
+        return { user_point: points, organizer_point: organizerPoints, error: `Score already exists` };
       } else {
-        // Return an error
         logger.error(`[UserScore] Failed creating participant score for user=${userId}, event=${eventId}: ${message}`);
+        return { user_point: points, organizer_point: organizerPoints, error: "Failed creating participant score" };
+      }
+    }
+
+    // 4. Insert / update organizer score ONLY if participant score actually inserted
+    if (participantInserted) {
+      try {
+        await usersScoreDB.upsertOrganizerScore({
+          userId: eventRow.owner,
+          activityType: chosenActivityType,
+          point: organizerPoints,
+          active: true,
+          itemId: eventId,
+          itemType: "organize_event",
+        });
+        logger.log(
+          `[UserScore] Upserted organizer score for owner=${eventRow.owner}, event=${eventId}, points=${organizerPoints}`
+        );
+      } catch (err) {
+        const message = String(err);
         return {
-          user_point: null,
-          organizer_point: null,
-          error: `Failed creating participant score`,
+          user_point: points,
+          organizer_point: organizerPoints,
+          error: `Failed creating organizer score: ${message}`,
         };
       }
     }
 
-    // 4) Insert or update organizer score
-    try {
-      await usersScoreDB.upsertOrganizerScore({
-        userId: eventRow.owner,
-        activityType: chosenActivityType,
-        point: organizerPoints,
-        active: true,
-        itemId: eventId,
-        itemType: "organize_event",
-      });
-      logger.log(
-        `[UserScore] Inserted or updated organizer score for owner=${eventRow.owner}, event=${eventId}, points=${organizerPoints}`
-      );
-    } catch (err) {
-      const message = String(err);
-      // Return an error
-      return {
-        user_point: null,
-        organizer_point: null,
-        error: `Failed creating organizer score: ${message}`,
-      };
-    }
-
-    // 5) Return success
+    // 5. Success (participantInserted true means new points, false means nothing new)
     return {
-      user_point: points,
-      organizer_point: organizerPoints,
+      user_point: participantInserted ? points : 0,
+      organizer_point: participantInserted ? organizerPoints : 0,
       error: null,
     };
-  } catch (error) {
-    // Catch any unforeseen error
-    const message = String(error);
+  } catch (err) {
+    const message = String(err);
     logger.error(`[maybeInsertUserScore] Unexpected error: ${message}`);
-    return {
-      user_point: null,
-      organizer_point: null,
-      error: message,
-    };
+    return { user_point: points, organizer_point: organizerPoints, error: message };
   }
 }
