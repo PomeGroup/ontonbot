@@ -7,3 +7,4 @@ log reset
 Force fluent-plugin-elasticsearch to treat it as ES 8: major_version 8
 Force fluent-plugin-elasticsearch to treat it as ES 8: major_version 8 2
 fix fluent-plugin-elasticsearch to treat to  -v 5.3.0 version custom headers 2
+add swagger jan 2024
