@@ -8,13 +8,17 @@ import Typography from "@/components/Typography";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { UsersScoreActivityType } from "@/db/schema/usersScore";
+import { EventWithScoreAndReward } from "@/types/event.types";
 import { Skeleton } from "@mui/material";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { FaSpinner } from "react-icons/fa6";
 import { IoInformationCircle } from "react-icons/io5";
-
+import { ScoreItem } from "@/db/modules/usersScore.db";
+function isEventItem(item: ScoreItem): item is EventWithScoreAndReward {
+  return (item as any).eventId !== undefined;
+}
 const MyPointsDetailsPage = () => {
   const { type } = useParams();
   const router = useRouter();
@@ -25,7 +29,7 @@ const MyPointsDetailsPage = () => {
       activityType: type as UsersScoreActivityType,
     },
     {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      getNextPageParam: (lastPage) => lastPage?.nextCursor ?? null,
     }
   );
 
@@ -69,11 +73,12 @@ const MyPointsDetailsPage = () => {
 
       {scoreDetails.isSuccess && (
         <div className="flex flex-col gap-2">
-          {scoreDetails.data?.pages
-            .flatMap((page) => page.items)
+          {(scoreDetails.data.pages as { items: ScoreItem[] }[]) // <- cast once
+            .flatMap((p) => p.items) // now items is ScoreItem
+            .filter(isEventItem) // type-guard
             .map((points) => (
               <PointDetailCard
-                key={points.userScoreId + "-" + points.rewardId + "-" + points.eventId}
+                key={`${points.userScoreId ?? 0}-${points.rewardId ?? "0"}-${points.eventId}`}
                 eventId={points.eventId}
                 imageUrl={points.imageUrl}
                 eventTitle={points.eventTitle}
@@ -88,12 +93,12 @@ const MyPointsDetailsPage = () => {
       )}
 
       {/* Empty State */}
-      {scoreDetails.isSuccess && scoreDetails.data?.pages.flatMap((page) => page.items).length === 0 && (
+      {scoreDetails.isSuccess && (scoreDetails.data?.pages ?? []).flatMap((page) => page?.items ?? []).length === 0 && (
         <DataStatus
           status="not_found"
           size="lg"
           title={getNotFoundTitle(type as UsersScoreActivityType)}
-          description={"Earn points by enjoying various activities on ONTON"}
+          description="Earn points by enjoying various activities on ONTON"
           actionButton={
             <Link
               href="/"
