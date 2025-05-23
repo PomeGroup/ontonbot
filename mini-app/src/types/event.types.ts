@@ -92,6 +92,7 @@ export type EventWithScoreAndReward = {
   tonSocietyStatus: RewardTonSocietyStatusType | null; // or a more specific enum if you have "NOT_CLAIMED" | "CLAIMED", etc.
   rewardId: string | null;
   rewardStatus: RewardStatus | null;
+  rewardLink: string | null;
   userScoreId: number | null;
   userClaimedPoints: number;
   pointsCouldBeClaimed: number;
