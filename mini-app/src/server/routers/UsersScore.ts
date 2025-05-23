@@ -1,4 +1,4 @@
-import { usersScoreDB } from "@/db/modules/usersScore.db";
+import { JoinOntonAffiliateScore, ScoreItem, usersScoreDB } from "@/db/modules/usersScore.db";
 import { usersScoreActivity, UsersScoreActivityType } from "@/db/schema/usersScore";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -16,17 +16,6 @@ export type GetEventSBTUserScoreResult = {
   tonSocietyStatus: RewardTonSocietyStatusType | null; // true if the event is integrated with Ton Society
   userPoint: number; // The user's total or newly updated points
   visitorId: number | null; // The visitor ID we processed
-};
-export type JoinOntonAffiliateScore = {
-  id: number;
-  point: number; // converted to number for the client
-  itemId: number;
-  createdAt: Date | null; // Date is converted to string on the client
-  userId: number;
-  userName: string | null;
-  userFirstName: string | null;
-  userLastName: string | null;
-  userPhotoUrl: string | null;
 };
 
 const getEventsWithClaimAndScoreInfiniteInput = z.object({
@@ -141,7 +130,7 @@ export const UsersScoreRouter = router({
         }
 
         return {
-          items: data,
+          items: data as ScoreItem[],
           nextCursor,
         };
       } catch (error) {
@@ -169,7 +158,7 @@ export const UsersScoreRouter = router({
 
         const nextCursor = rows.length === limit ? cursor + limit : null;
 
-        return { items, nextCursor };
+        return { items: items as ScoreItem[], nextCursor };
       } catch (err) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

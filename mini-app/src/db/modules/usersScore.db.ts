@@ -23,6 +23,18 @@ export type JoinOntonAffiliateRow = {
   userLastName: string | null;
   userPhotoUrl: string | null;
 };
+export type JoinOntonAffiliateScore = {
+  id: number;
+  point: number; // converted to number for the client
+  itemId: number;
+  createdAt: Date | null; // Date is converted to string on the client
+  userId: number;
+  userName: string | null;
+  userFirstName: string | null;
+  userLastName: string | null;
+  userPhotoUrl: string | null;
+};
+export type ScoreItem = EventWithScoreAndReward | JoinOntonAffiliateScore;
 
 // Cache key helpers
 const getTotalScoreByUserIdCacheKey = (userId: number) => `${redisTools.cacheKeys.usersScore}total:${userId}`;
