@@ -1,51 +1,19 @@
 "use client";
 
-import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
+import PointDetailCard from "@/app/_components/myonton/points/PointDetailCard";
+import { getNotFoundTitle, getTitle } from "@/app/_components/myonton/points/points.utils";
 import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { UsersScoreActivityType } from "@/db/schema/usersScore";
-import { formatDateRange, formatTime } from "@/lib/DateAndTime";
+import type { UsersScoreActivityType } from "@/db/schema/usersScore";
 import { Skeleton } from "@mui/material";
-import { AwardIcon, CheckIcon, XIcon } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { FaSpinner } from "react-icons/fa6";
 import { IoInformationCircle } from "react-icons/io5";
-
-function getTitle(type: UsersScoreActivityType) {
-  switch (type) {
-    case "free_online_event":
-      return "Participated Free Online Events";
-    case "free_offline_event":
-      return "Participated Free In-Person Events";
-    case "paid_online_event":
-      return "Participated Paid Online Events";
-    case "paid_offline_event":
-      return "Participated Paid In-Person Events";
-    case "join_onton":
-      return "Referred Users";
-  }
-}
-
-function getNotFoundTitle(type: UsersScoreActivityType) {
-  switch (type) {
-    case "free_online_event":
-      return "Have not participated a free online event yet?";
-    case "free_offline_event":
-      return "Have not participated a free in-person event yet?";
-    case "paid_online_event":
-      return "Have not participated a paid online event yet?";
-    case "paid_offline_event":
-      return "Have not participated a paid in-person event yet?";
-    case "join_onton":
-      return "Have not referred any users yet?";
-  }
-}
 
 const MyPointsDetailsPage = () => {
   const { type } = useParams();
@@ -103,102 +71,17 @@ const MyPointsDetailsPage = () => {
         <div className="flex flex-col gap-2">
           {scoreDetails.data?.pages
             .flatMap((page) => page.items)
-            .map((event) => (
-              <CustomCard
-                key={event.eventId}
-                className="p-2"
-              >
-                <div className="flex items-center gap-2">
-                  {/* Event Image */}
-                  <Image
-                    src={event.imageUrl || "/template-images/default.webp"}
-                    alt={event.eventTitle}
-                    width={65}
-                    height={65}
-                    className="overflow-hidden object-cover rounded-md self-center aspect-square"
-                  />
-
-                  {/* Event Details */}
-                  <div className="flex flex-col flex-1 overflow-hidden items-start justify-start gap-[3.5px]">
-                    {/* Event Title */}
-                    <Typography
-                      variant="callout"
-                      className="line-clamp-1 leading-[17px]"
-                    >
-                      {event.eventTitle}
-                    </Typography>
-
-                    {/* Date and Time */}
-                    <div
-                      title={
-                        new Date(event.eventStartDate * 1000).toString() +
-                        " - " +
-                        new Date(event.eventEndDate * 1000).toString()
-                      }
-                      className="flex flex-col items-start text-gray-500"
-                    >
-                      <Typography
-                        variant="subheadline2"
-                        className="truncate"
-                      >
-                        {formatDateRange(event.eventStartDate, event.eventEndDate)} |{" "}
-                        {formatTime(new Date(event.eventStartDate * 1000))} -{" "}
-                        {formatTime(new Date(event.eventEndDate * 1000))}
-                      </Typography>
-                    </div>
-
-                    {/* Reward Status */}
-                    <>
-                      {event.tonSocietyStatus === "NOT_CLAIMED" && (
-                        <Typography
-                          variant="subheadline2"
-                          className="truncate text-brand-light-destructive flex items-center justify-center gap-1"
-                        >
-                          <XIcon className="w-4 h-4 flex-shrink-0" />
-                          <span>Unclaimed</span>
-                        </Typography>
-                      )}
-                      {(event.tonSocietyStatus === "CLAIMED" || event.tonSocietyStatus === "RECEIVED") && (
-                        <Typography
-                          variant="subheadline2"
-                          className="truncate text-brand-green flex items-center justify-center gap-1"
-                        >
-                          <CheckIcon className="w-4 h-4 flex-shrink-0" />
-                          <span>Claimed</span>
-                        </Typography>
-                      )}
-                      {event.tonSocietyStatus === "NOT_ELIGIBLE" && (
-                        <Typography
-                          variant="subheadline2"
-                          className="truncate text-brand-muted flex items-center justify-center gap-1"
-                        >
-                          <XIcon className="w-4 h-4 flex-shrink-0 opacity-50" />
-                          <span>Not eligible</span>
-                        </Typography>
-                      )}
-                    </>
-                  </div>
-
-                  {/* Claim Button */}
-                  <>
-                    {event.tonSocietyStatus === "NOT_CLAIMED" && (
-                      <Button
-                        variant="outline"
-                        className="flex items-center gap-1 rounded-md flex-1 max-w-[96px]"
-                      >
-                        <AwardIcon className="w-4 h-4" />
-                        <span>Claim</span>
-                      </Button>
-                    )}
-                    {(event.tonSocietyStatus === "CLAIMED" || event.tonSocietyStatus === "RECEIVED") && (
-                      <div className="flex flex-col gap-2 items-center">
-                        <Typography variant="callout">{event.userClaimedPoints}</Typography>
-                        <Typography variant="caption2">Points</Typography>
-                      </div>
-                    )}
-                  </>
-                </div>
-              </CustomCard>
+            .map((points) => (
+              <PointDetailCard
+                key={points.userScoreId + "-" + points.rewardId + "-" + points.eventId}
+                imageUrl={points.imageUrl}
+                eventTitle={points.eventTitle}
+                eventStartDate={points.eventStartDate}
+                eventEndDate={points.eventEndDate}
+                tonSocietyStatus={points.tonSocietyStatus}
+                userClaimedPoints={points.userClaimedPoints}
+                rewardLink={points.rewardLink}
+              />
             ))}
         </div>
       )}
