@@ -1,15 +1,15 @@
-import { initDataProtectedProcedure, router } from "../trpc";
-import { z } from "zod";
 import { usersScoreDB } from "@/db/modules/usersScore.db";
-import { TRPCError } from "@trpc/server";
 import { usersScoreActivity } from "@/db/schema/usersScore";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { initDataProtectedProcedure, router } from "../trpc";
 
-import { logger } from "@/server/utils/logger";
-import { RewardType } from "@/db/enum";
 import { handleSingleRewardUpdate } from "@/cronJobs/helper/handleSingleRewardUpdate";
-import visitorsDB from "@/db/modules/visitors";
+import { RewardType } from "@/db/enum";
 import eventDB from "@/db/modules/events";
+import visitorsDB from "@/db/modules/visitors";
 import { RewardTonSocietyStatusType } from "@/db/schema/rewards";
+import { logger } from "@/server/utils/logger";
 
 export type GetEventSBTUserScoreResult = {
   success: boolean;
@@ -139,7 +139,7 @@ export const UsersScoreRouter = router({
         eventId: z.number(),
       })
     )
-    .query(async ({ ctx, input }): Promise<GetEventSBTUserScoreResult> => {
+    .mutation(async ({ ctx, input }): Promise<GetEventSBTUserScoreResult> => {
       const userId = ctx.user.user_id;
       const eventId = input.eventId;
 

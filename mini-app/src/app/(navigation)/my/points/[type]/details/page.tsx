@@ -74,6 +74,7 @@ const MyPointsDetailsPage = () => {
             .map((points) => (
               <PointDetailCard
                 key={points.userScoreId + "-" + points.rewardId + "-" + points.eventId}
+                eventId={points.eventId}
                 imageUrl={points.imageUrl}
                 eventTitle={points.eventTitle}
                 eventStartDate={points.eventStartDate}

@@ -1,4 +1,5 @@
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
+import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import { RewardTonSocietyStatusType } from "@/db/schema";
@@ -9,6 +10,7 @@ import { AwardIcon, CheckIcon, RefreshCcwIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 
 const PointDetailCard = (props: {
+  eventId: number;
   imageUrl: string | null;
   eventTitle: string;
   eventStartDate: number;
@@ -18,6 +20,7 @@ const PointDetailCard = (props: {
   rewardLink: string | null;
 }) => {
   const webapp = useWebApp();
+  const checkEventPoints = trpc.usersScore.checkEventPoints.useMutation();
 
   return (
     <CustomCard className="p-2">
@@ -124,15 +127,12 @@ const PointDetailCard = (props: {
               <Button
                 variant="outline"
                 className="flex items-center gap-1 rounded-md flex-1 max-w-[96px]"
-                // onClick={() => {
-                //   if (props.rewardLink) {
-                //     if (isTelegramUrl(props.rewardLink)) {
-                //       webapp?.openTelegramLink(props.rewardLink);
-                //     } else {
-                //       webapp?.openLink(props.rewardLink);
-                //     }
-                //   }
-                // }}
+                isLoading={checkEventPoints.isLoading}
+                onClick={() =>
+                  checkEventPoints.mutate({
+                    eventId: props.eventId,
+                  })
+                }
               >
                 <RefreshCcwIcon className="w-4 h-4 flex-shrink-0" />
                 <span>Refresh</span>
