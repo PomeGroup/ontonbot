@@ -15,10 +15,16 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { FaSpinner } from "react-icons/fa6";
 import { IoInformationCircle } from "react-icons/io5";
-import { ScoreItem } from "@/db/modules/usersScore.db";
+import { JoinOntonAffiliateScore, ScoreItem } from "@/db/modules/usersScore.db";
+import { AffiliateDetailCard } from "../../AffiliateDetailCard";
 function isEventItem(item: ScoreItem): item is EventWithScoreAndReward {
   return (item as any).eventId !== undefined;
 }
+
+function isAffiliateItem(item: ScoreItem): item is JoinOntonAffiliateScore {
+  return "id" in item && !("eventId" in item);
+}
+
 const MyPointsDetailsPage = () => {
   const { type } = useParams();
   const router = useRouter();
@@ -91,7 +97,19 @@ const MyPointsDetailsPage = () => {
             ))}
         </div>
       )}
-
+      {scoreDetails.isSuccess && (
+        <div className="flex flex-col gap-2">
+          {scoreDetails.data.pages
+            .flatMap((p) => p?.items ?? [])
+            .filter(isAffiliateItem)
+            .map((row) => (
+              <AffiliateDetailCard
+                key={row.id}
+                data={row}
+              />
+            ))}
+        </div>
+      )}
       {/* Empty State */}
       {scoreDetails.isSuccess && (scoreDetails.data?.pages ?? []).flatMap((page) => page?.items ?? []).length === 0 && (
         <DataStatus

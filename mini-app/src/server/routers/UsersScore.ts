@@ -148,7 +148,7 @@ export const UsersScoreRouter = router({
           id: Number(r.id),
           point: Number(r.point),
           itemId: Number(r.itemId),
-          createdAt: r.createdAt,
+          createdAt: r?.createdAt?.toString() ?? null,
           userId: Number(r.userId),
           userName: r.userName,
           userFirstName: r.userFirstName,
