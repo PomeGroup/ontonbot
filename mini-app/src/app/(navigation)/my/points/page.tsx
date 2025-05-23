@@ -28,6 +28,9 @@ export default function MyPointsPage() {
     trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
       activityType: "free_offline_event",
     });
+  const joinOntonAffiliateData = trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
+    activityType: "join_onton_affiliate",
+  });
   const { data: totalPoints, isLoading: loadingTotalPoints } = trpc.usersScore.getTotalScoreByUserId.useQuery();
   // Optionally, handle loading states here (e.g., show a spinner)
   if (!user) return null;
@@ -90,6 +93,15 @@ export default function MyPointsPage() {
               description="10 Points"
               totalPoints={Number(freeOfflineData?.total ?? 0)}
               type="free_offline_event"
+            />
+          </EventPointsGroup>
+          <EventPointsGroup title="Referals">
+            <EventPointsCard
+              eventTitle="Join ONTON Affiliate"
+              tasksCount={Number(joinOntonAffiliateData?.data?.count ?? 0)}
+              description="0.2 Points"
+              totalPoints={Number(joinOntonAffiliateData?.data?.total ?? 0)}
+              type="join_onton_affiliate"
             />
           </EventPointsGroup>
         </div>
