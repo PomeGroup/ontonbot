@@ -8,6 +8,7 @@ import { formatDateRange, formatTime } from "@/lib/DateAndTime";
 import { isTelegramUrl } from "@tonconnect/ui-react";
 import { AwardIcon, CheckIcon, RefreshCcwIcon, XIcon } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 const PointDetailCard = (props: {
   eventId: number;
@@ -20,7 +21,14 @@ const PointDetailCard = (props: {
   rewardLink: string | null;
 }) => {
   const webapp = useWebApp();
-  const checkEventPoints = trpc.usersScore.checkEventPoints.useMutation();
+  const checkEventPoints = trpc.usersScore.checkEventPoints.useMutation({
+    onError: (error) => {
+      toast.error(`Failed, ${error.message}`);
+    },
+    onSuccess: () => {
+      toast.success("Points refreshed");
+    },
+  });
 
   return (
     <CustomCard className="p-2">
@@ -60,7 +68,7 @@ const PointDetailCard = (props: {
 
           {/* Reward Status */}
           <>
-            {props.tonSocietyStatus === "NOT_CLAIMED" && (
+            {props.tonSocietyStatus === "NOT_CLAIMED" && props.userClaimedPoints === 0 && (
               <Typography
                 variant="subheadline2"
                 className="truncate text-brand-light-destructive flex items-center justify-center gap-1"
@@ -70,17 +78,18 @@ const PointDetailCard = (props: {
               </Typography>
             )}
 
-            {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") && (
-              <Typography
-                variant="subheadline2"
-                className="truncate text-brand-green flex items-center justify-center gap-1"
-              >
-                <CheckIcon className="w-4 h-4 flex-shrink-0" />
-                <span>Claimed</span>
-              </Typography>
-            )}
+            {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
+              props.userClaimedPoints === 0 && (
+                <Typography
+                  variant="subheadline2"
+                  className="truncate text-brand-green flex items-center justify-center gap-1"
+                >
+                  <CheckIcon className="w-4 h-4 flex-shrink-0" />
+                  <span>Claimed</span>
+                </Typography>
+              )}
 
-            {props.tonSocietyStatus === "NOT_ELIGIBLE" && (
+            {props.tonSocietyStatus === "NOT_ELIGIBLE" && props.userClaimedPoints === 0 && (
               <Typography
                 variant="subheadline2"
                 className="truncate text-brand-muted flex items-center justify-center gap-1"
@@ -94,7 +103,7 @@ const PointDetailCard = (props: {
 
         {/* Claim Button */}
         <>
-          {props.tonSocietyStatus === "NOT_CLAIMED" && (
+          {props.tonSocietyStatus === "NOT_CLAIMED" && props.userClaimedPoints === 0 && (
             <Button
               variant="outline"
               className="flex items-center gap-1 rounded-md flex-1 max-w-[96px]"
@@ -115,14 +124,15 @@ const PointDetailCard = (props: {
           )}
 
           {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
-            props.userClaimedPoints !== 0 && (
+            (props.userClaimedPoints !== 0 || checkEventPoints.isSuccess) && (
               <div className="flex flex-col gap-2 items-center">
-                <Typography variant="callout">{props.userClaimedPoints}</Typography>
+                <Typography variant="callout">{props.userClaimedPoints || checkEventPoints.data?.userPoint}</Typography>
                 <Typography variant="caption2">Points</Typography>
               </div>
             )}
 
           {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
+            (props.userClaimedPoints === 0 || !checkEventPoints.isSuccess) &&
             props.userClaimedPoints === 0 && (
               <Button
                 variant="outline"

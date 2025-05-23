@@ -25,99 +25,83 @@ export const handleSingleRewardUpdate = async (
   event_id: number,
   rewardType: RewardType
 ): Promise<HandleSingleRewardUpdateResult> => {
-  // 1) Validate input
+  // 1. Validate input
   if (!activity_id || !visitor_id || !event_id || !rewardType) {
-    const errorMsg = `[Event ${event_id}] Invalid input: activity_id=${activity_id}, visitor_id=${visitor_id}, event_id=${event_id}, rewardType=${rewardType}`;
-    logger.error(errorMsg);
-    return {
-      success: false,
-      error: errorMsg,
-      tonSocietyStatus: null,
-      visitorId: null,
-    };
+    const err = `[Event ${event_id}] Invalid input: activity_id=${activity_id}, visitor_id=${visitor_id}, event_id=${event_id}, rewardType=${rewardType}`;
+    logger.error(err);
+    return { success: false, error: err, tonSocietyStatus: null, visitorId: null };
   }
 
-  // 2) Get the visitor
+  // 2. Load visitor row
   const visitorRow = await visitorsDB.findVisitorById(visitor_id);
   if (!visitorRow) {
-    const errorMsg = `[Event ${event_id}] Visitor not found for id=${visitor_id}`;
-    logger.error(errorMsg);
-    return {
-      success: false,
-      error: errorMsg,
-      tonSocietyStatus: null,
-    };
+    const err = `[Event ${event_id}] Visitor not found (id=${visitor_id})`;
+    logger.error(err);
+    return { success: false, error: err, tonSocietyStatus: null, visitorId: null };
   }
-
   const userId = visitorRow.user_id;
   if (!userId) {
-    const errorMsg = `[Event ${event_id}] Visitor row has no user_id for visitor_id=${visitor_id}`;
-    logger.error(errorMsg);
-    return {
-      success: false,
-      error: errorMsg,
-      tonSocietyStatus: null,
-    };
+    const err = `[Event ${event_id}] Visitor row missing user_id (visitor_id=${visitor_id})`;
+    logger.error(err);
+    return { success: false, error: err, tonSocietyStatus: null, visitorId: null };
   }
 
-  // 3) Fetch Ton Society's SBT claim status
-  const result = await getSBTClaimedStatus(activity_id, userId);
-  const tsStatus = result?.status as RewardTonSocietyStatusType | undefined;
-  // possible "NOT_CLAIMED", "CLAIMED", "RECEIVED", etc.
+  // 3. Check existing reward status in DB
+  const rewardRow = await rewardDB.checkExistingRewardWithType(visitor_id, rewardType);
+  const cachedStatus = rewardRow?.tonSocietyStatus as RewardTonSocietyStatusType | undefined;
 
-  // 4) If tsStatus is recognized, update local DB
-  if (tsStatus && ["NOT_CLAIMED", "CLAIMED", "RECEIVED"].includes(tsStatus)) {
-    // update the reward row
-    logger.log(
-      `[Event ${event_id}] Updating Ton Society status for visitor_id=${visitor_id}, user_id=${userId} => ${rewardType} with status=${tsStatus}`
-    );
+  let finalStatus: RewardTonSocietyStatusType | null = null;
 
-    await rewardDB.updateTonSocietyStatusByVisitorIdAndRewardType(visitor_id, tsStatus, rewardType);
+  if (cachedStatus === "CLAIMED" || cachedStatus === "RECEIVED") {
+    // Already claimed locally; skip remote check
+    finalStatus = cachedStatus;
+    logger.log(`[Event ${event_id}] Reward already ${cachedStatus} in DB — skipping Ton-Society call`);
+  } else {
+    // 4. Fetch status from Ton Society
+    const remote = await getSBTClaimedStatus(activity_id, userId);
+    const tsStatus = remote?.status as RewardTonSocietyStatusType | undefined;
 
-    // 4a) If it's "CLAIMED" or "RECEIVED", possibly insert user score
-    if (tsStatus === "CLAIMED" || tsStatus === "RECEIVED") {
-      if (rewardType === "ton_society_sbt") {
-        // maybeInsertUserScore returns e.g. { user_point, organizer_point, error }
-        const userScoreResult = await maybeInsertUserScore(userId, event_id);
-
-        // Return success with userScore data
-        return {
-          success: true,
-          error: null,
-          tonSocietyStatus: tsStatus,
-          userScore: userScoreResult,
-          visitorId: visitor_id,
-        };
-      }
-
-      if (rewardType === "ton_society_csbt_ticket") {
-        // call your method
-        await informTonfestUserClaim(userId, event_id, tsStatus === "CLAIMED" ? "addSbtFromOnton" : "setSbtPending");
-
-        return {
-          success: true,
-          error: null,
-          tonSocietyStatus: tsStatus,
-          visitorId: visitor_id,
-        };
-      }
+    if (!tsStatus || !["NOT_CLAIMED", "CLAIMED", "RECEIVED"].includes(tsStatus)) {
+      const err = `[Event ${event_id}] Unrecognized Ton-Society status '${tsStatus}'`;
+      logger.warn(err);
+      return { success: false, error: err, tonSocietyStatus: tsStatus ?? null, visitorId: visitor_id };
     }
 
-    // 4b) If status is "NOT_CLAIMED" we still updated the DB, but no user score.
-    return {
-      success: true,
-      error: null,
-      tonSocietyStatus: tsStatus,
-      visitorId: visitor_id,
-    };
+    // 4a. Persist the new status
+    await rewardDB.updateTonSocietyStatusByVisitorIdAndRewardType(visitor_id, tsStatus, rewardType);
+    finalStatus = tsStatus;
   }
 
-  // 5) If we got here, either tsStatus is undefined or not recognized
-  const errorMsg = `[Event ${event_id}] Could not update Ton Society status; unrecognized or missing status: ${tsStatus}`;
-  logger.warn(errorMsg);
+  // 5. Award points if status is CLAIMED or RECEIVED
+  if (finalStatus === "CLAIMED" || finalStatus === "RECEIVED") {
+    if (rewardType === "ton_society_sbt") {
+      const userScore = await maybeInsertUserScore(userId, event_id);
+      logger.log(`[Event ${event_id}] ssUser score: ${JSON.stringify(userScore)}`);
+      return {
+        success: true,
+        error: null,
+        tonSocietyStatus: finalStatus,
+        userScore,
+        visitorId: visitor_id,
+      };
+    }
+
+    if (rewardType === "ton_society_csbt_ticket") {
+      await informTonfestUserClaim(userId, event_id, finalStatus === "CLAIMED" ? "addSbtFromOnton" : "setSbtPending");
+      return {
+        success: true,
+        error: null,
+        tonSocietyStatus: finalStatus,
+        visitorId: visitor_id,
+      };
+    }
+  }
+
+  // 6. Status is NOT_CLAIMED (or no points to add)
   return {
-    success: false,
-    error: errorMsg,
-    tonSocietyStatus: tsStatus || null,
+    success: true,
+    error: null,
+    tonSocietyStatus: finalStatus,
+    visitorId: visitor_id,
   };
 };
