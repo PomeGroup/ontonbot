@@ -1,6 +1,7 @@
 "use client";
 
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
+import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Alert } from "@/components/ui/alert";
@@ -10,6 +11,7 @@ import { formatDateRange, formatTime } from "@/lib/DateAndTime";
 import { Skeleton } from "@mui/material";
 import { AwardIcon, CheckIcon, XIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { FaSpinner } from "react-icons/fa6";
@@ -27,6 +29,21 @@ function getTitle(type: UsersScoreActivityType) {
       return "Participated Paid In-Person Events";
     case "join_onton":
       return "Referred Users";
+  }
+}
+
+function getNotFoundTitle(type: UsersScoreActivityType) {
+  switch (type) {
+    case "free_online_event":
+      return "Have not participated a free online event yet?";
+    case "free_offline_event":
+      return "Have not participated a free in-person event yet?";
+    case "paid_online_event":
+      return "Have not participated a paid online event yet?";
+    case "paid_offline_event":
+      return "Have not participated a paid in-person event yet?";
+    case "join_onton":
+      return "Have not referred any users yet?";
   }
 }
 
@@ -83,7 +100,7 @@ const MyPointsDetailsPage = () => {
       )}
 
       {scoreDetails.isSuccess && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           {scoreDetails.data?.pages
             .flatMap((page) => page.items)
             .map((event) => (
@@ -186,8 +203,32 @@ const MyPointsDetailsPage = () => {
         </div>
       )}
 
+      {/* Empty State */}
+      {scoreDetails.isSuccess && scoreDetails.data?.pages.flatMap((page) => page.items).length === 0 && (
+        <DataStatus
+          status="not_found"
+          size="lg"
+          title={getNotFoundTitle(type as UsersScoreActivityType)}
+          description={"Earn points by enjoying various activities on ONTON"}
+          actionButton={
+            <Link
+              href="/"
+              className="w-full"
+            >
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
+              >
+                Explore Events
+              </Button>
+            </Link>
+          }
+        />
+      )}
+
       {/* Load more if there are more items */}
-      {scoreDetails.hasNextPage && (
+      {scoreDetails.isSuccess && scoreDetails.hasNextPage && (
         <Button
           variant="link"
           className="flex items-center gap-1 rounded-md flex-1 mx-auto max-w-[96px] text-primary font-medium"
