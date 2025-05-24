@@ -1,4 +1,4 @@
-import { JoinOntonAffiliateScore, ScoreItem, usersScoreDB } from "@/db/modules/usersScore.db";
+import { JoinOntonAffiliateScore, ScoreItem, userScoreDb } from "@/db/modules/userScore.db";
 import { usersScoreActivity, UsersScoreActivityType } from "@/db/schema/usersScore";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -30,7 +30,7 @@ export const UsersScoreRouter = router({
    */
   getTotalScoreByUserId: initDataProtectedProcedure.query(async (opts) => {
     try {
-      const totalScore = await usersScoreDB.getTotalScoreByUserId(opts.ctx.user.user_id);
+      const totalScore = await userScoreDb.getTotalScoreByUserId(opts.ctx.user.user_id);
       return totalScore || 0;
     } catch (error) {
       logger.error(`Error retrieving total score for user id: ${opts.ctx.user.user_id}`, error);
@@ -52,7 +52,7 @@ export const UsersScoreRouter = router({
     )
     .query(async (opts) => {
       try {
-        return await usersScoreDB.getTotalScoreByActivityTypeAndUserId(opts.ctx.user.user_id, opts.input.activityType);
+        return await userScoreDb.getTotalScoreByActivityTypeAndUserId(opts.ctx.user.user_id, opts.input.activityType);
       } catch (error) {
         logger.error(
           `Error retrieving total score by activity type for user id: ${opts.ctx.user.user_id} and activity type: ${opts.input.activityType}`,
@@ -110,7 +110,7 @@ export const UsersScoreRouter = router({
         );
 
         // 2) Fetch data with offset and limit
-        const data = await usersScoreDB.getEventsWithClaimAndScoreDBPaginated(
+        const data = await userScoreDb.getEventsWithClaimAndScoreDBPaginated(
           ctx.user.user_id,
           activityType,
           isPaid,
@@ -142,7 +142,7 @@ export const UsersScoreRouter = router({
       }
     } else if (activityType && joinOntonActivityTypes.includes(activityType)) {
       try {
-        const rows = await usersScoreDB.getUserScoresForJoinOntonAffiliatePaginated(ctx.user.user_id, limit, cursor);
+        const rows = await userScoreDb.getUserScoresForJoinOntonAffiliatePaginated(ctx.user.user_id, limit, cursor);
 
         const items: JoinOntonAffiliateScore[] = rows.map((r) => ({
           id: Number(r.id),

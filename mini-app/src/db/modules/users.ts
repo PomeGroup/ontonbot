@@ -7,11 +7,12 @@ import xss from "xss";
 import { logSQLQuery } from "@/lib/logSQLQuery";
 import { userRolesDB } from "@/db/modules/userRoles.db";
 import { ExtendedUser, InitUserData, MinimalOrganizerData } from "@/types/extendedUserTypes";
-import { usersScoreDB } from "./usersScore.db";
+import { userScoreDb } from "./userScore.db";
 import { taskUsersDB } from "./taskUsers.db";
 import { tasksDB } from "@/db/modules/tasks.db";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { AffiliationCustomDataForJoinTasks } from "@/db/schema/taskUsers";
+import { userScoreRulesDB } from "@/db/modules/userScoreRules.db";
 // User data from the init data
 
 // Cache key prefix
@@ -290,10 +291,11 @@ export const insertUser = async (initDataJson: InitUserData, joinAffiliateHash?:
         logger.error("Failed to retrieve newly inserted user after insertion");
         return null;
       }
-
+      logger.info("Join affiliate hash", { joinAffiliateHash });
       // 3) If an affiliate hash is provided, handle the affiliate logic
       if (joinAffiliateHash) {
         const link = await affiliateLinksDB.getAffiliateLinkByHash(joinAffiliateHash);
+        logger.info("Join affiliate hash", { joinAffiliateHash }, link);
         if (link && link.itemType === "onton-join-task") {
           // a) Set the new user's affiliator_user_id to the creatorUserId of the link
           await db
@@ -309,6 +311,11 @@ export const insertUser = async (initDataJson: InitUserData, joinAffiliateHash?:
           //    i.e. the affiliation task with task_type='affiliation' & item_type='join_onton'
           //    or you might do a dedicated function to find that single "join_onton" task
           const possibleTasks = await tasksDB.getTasksByType("affiliation", false);
+          const possibleCustomPoint = await userScoreRulesDB.getMatchingUserScoreRule({
+            subjectUserId: link.creatorUserId,
+            activityType: "join_onton_affiliate",
+            itemType: "task",
+          });
           const joinOntonTasks = possibleTasks.filter((t) => t.taskConnectedItemTypes === "join_onton");
           if (joinOntonTasks.length !== 1) {
             logger.error("Expected exactly 1 'join_onton' affiliation task, found ", joinOntonTasks.length);
@@ -344,10 +351,20 @@ export const insertUser = async (initDataJson: InitUserData, joinAffiliateHash?:
                 pointsPerJoin = parseFloat(checkerData.points_per_join);
               }
             }
+            if (possibleCustomPoint && possibleCustomPoint.point) {
+              logger.log(
+                `Using custom point value from rules: ${possibleCustomPoint.point} for user #${link.creatorUserId} for referring #${newUser.user_id} link #${link.id}`
+              );
+              pointsPerJoin = parseFloat(possibleCustomPoint.point);
+            }
 
             // g) If we have >0 points, create a userScore for the affiliator
             if (pointsPerJoin > 0) {
-              await usersScoreDB.createUserScore({
+              logger.log(
+                `Awarding ${pointsPerJoin} points to user #${link.creatorUserId} for referring #${newUser.user_id} link #${link.id} with creatorUserId #${link.creatorUserId}`
+              );
+
+              await userScoreDb.createUserScore({
                 userId: link.creatorUserId, // the affiliator
                 activityType: "join_onton_affiliate", // define a new activity type if needed
                 point: Math.floor(pointsPerJoin * 100) / 100, // or store as int
@@ -355,6 +372,7 @@ export const insertUser = async (initDataJson: InitUserData, joinAffiliateHash?:
                 itemId: newUser.user_id, // the new user is the "item"
                 itemType: "task", // or "join_onton_affiliate", if you have a new item type
               });
+
               logger.log(`Awarded ${pointsPerJoin} points to user #${link.creatorUserId} for referring #${newUser.user_id}`);
             }
           }

@@ -8,7 +8,7 @@ import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { JoinOntonAffiliateScore, ScoreItem } from "@/db/modules/usersScore.db";
+import { ScoreItem } from "@/db/modules/userScore.db";
 import type { UsersScoreActivityType } from "@/db/schema/usersScore";
 import { EventWithScoreAndReward } from "@/types/event.types";
 import { Skeleton } from "@mui/material";

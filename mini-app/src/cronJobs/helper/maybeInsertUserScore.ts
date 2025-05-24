@@ -1,7 +1,8 @@
 import eventDB from "@/db/modules/events";
 import { UsersScoreActivityType } from "@/db/schema/usersScore";
-import { usersScoreDB } from "@/db/modules/usersScore.db";
+import { userScoreDb } from "@/db/modules/userScore.db";
 import { logger } from "@/server/utils/logger";
+import { userScoreRulesDB } from "@/db/modules/userScoreRules.db";
 
 export type MaybeInsertUserScoreResult =
   | {
@@ -55,13 +56,31 @@ export async function maybeInsertUserScore(userId: number, eventId: number): Pro
     chosenActivityType = "free_offline_event";
     points = 10;
   }
+  /// override points if custom rule exists
+  try {
+    const rule = await userScoreRulesDB.getMatchingUserScoreRule({
+      subjectUserId: eventRow.owner, // participant id
+      activityType: chosenActivityType,
+      itemType: "event",
+      itemId: eventId,
+    });
 
+    if (rule) {
+      logger.log(
+        `[UserScore] Custom rule ${rule.id} applies: ` +
+          `${rule.point} points instead of ${chosenActivityType} for event=${eventId} by user=${userId}`
+      );
+      points = parseFloat(rule.point);
+    }
+  } catch (err) {
+    logger.error("Failed to fetch custom rule, falling back to defaults", err);
+  }
   const organizerPoints = points * 0.2;
   try {
     // 3. Insert participant score
     let participantInserted = false;
     try {
-      await usersScoreDB.createUserScore({
+      await userScoreDb.createUserScore({
         userId,
         activityType: chosenActivityType,
         point: points,
@@ -85,7 +104,7 @@ export async function maybeInsertUserScore(userId: number, eventId: number): Pro
     // 4. Insert / update organizer score ONLY if participant score actually inserted
     if (participantInserted) {
       try {
-        await usersScoreDB.upsertOrganizerScore({
+        await userScoreDb.upsertOrganizerScore({
           userId: eventRow.owner,
           activityType: chosenActivityType,
           point: organizerPoints,

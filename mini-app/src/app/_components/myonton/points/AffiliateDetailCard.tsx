@@ -2,7 +2,7 @@ import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import Typography from "@/components/Typography";
 import { formatDate, formatTime } from "@/lib/DateAndTime"; // or your helpers
 import Image from "next/image";
-import { JoinOntonAffiliateScore } from "@/db/modules/usersScore.db"; // Adjust the import path as necessary
+import { JoinOntonAffiliateScore } from "@/db/modules/userScore.db"; // Adjust the import path as necessary
 
 type AffiliateDetailCardProps = {
   data: JoinOntonAffiliateScore;

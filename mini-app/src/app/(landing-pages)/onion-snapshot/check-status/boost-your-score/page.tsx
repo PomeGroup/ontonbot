@@ -110,7 +110,7 @@ const BoostYourScorePage = () => {
           defaultPadding
           className="flex flex-col gap-4"
           title="Invite Friends"
-          description="Earn +0.2 points for every friend you incite who starts ONTON."
+          description="Earn +0.2 points for every friend you invite who starts ONTON."
         >
           {/* Referral link box */}
           <div className="w-full bg-[#EEEEF0] rounded-lg">
