@@ -125,6 +125,7 @@ const PointDetailCard = (props: {
         <div className="flex flex-col">
           {showClaimButton && (
             <Button
+              type="button"
               size="xs"
               variant="link"
               className="flex text-primary items-center gap-1 rounded-md flex-1 max-w-[96px]"
@@ -146,6 +147,7 @@ const PointDetailCard = (props: {
 
           {showRefreshButton && (
             <Button
+              type="button"
               size="xs"
               variant="link"
               className="flex text-primary items-center gap-1 rounded-md flex-1 max-w-[96px]"
