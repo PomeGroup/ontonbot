@@ -169,7 +169,7 @@ import {
   NftApiCollectionsUpdate,
 } from "./schema/nftApiCollections";
 import { nftApiItems, NftApiItems, NftApiItemsInsert } from "./schema/nftApiItems";
-
+import { userScoreRules, scoreRuleRole, UserScoreRuleRow, UserScoreRuleRoleType } from "./schema/userScoreRules";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -275,6 +275,8 @@ export {
   nftApiCollections,
   nftApiItems,
   nftStatusEnum,
+  userScoreRules,
+  scoreRuleRole,
 };
 
 // Type Exports
@@ -372,4 +374,6 @@ export type {
   NftApiItemsInsert,
   NftStatusEnum,
   NftApiCollectionsUpdate,
+  UserScoreRuleRow,
+  UserScoreRuleRoleType,
 };

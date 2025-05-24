@@ -383,7 +383,7 @@ export async function getUserScoresForJoinOntonAffiliatePaginated(
 
   return rows;
 }
-export const usersScoreDB = {
+export const userScoreDb = {
   createUserScore,
   changeUserScoreStatus,
   updateUserScore,

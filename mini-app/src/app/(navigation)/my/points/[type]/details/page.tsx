@@ -15,7 +15,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { FaSpinner } from "react-icons/fa6";
 import { IoInformationCircle } from "react-icons/io5";
-import { JoinOntonAffiliateScore, ScoreItem } from "@/db/modules/usersScore.db";
+import { JoinOntonAffiliateScore, ScoreItem } from "@/db/modules/userScore.db";
 import { AffiliateDetailCard } from "../../AffiliateDetailCard";
 function isEventItem(item: ScoreItem): item is EventWithScoreAndReward {
   return (item as any).eventId !== undefined;
