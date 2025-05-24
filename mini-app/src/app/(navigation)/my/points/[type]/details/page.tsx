@@ -3,7 +3,7 @@
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { AffiliateDetailCard } from "@/app/_components/myonton/points/AffiliateDetailCard";
 import PointDetailCard from "@/app/_components/myonton/points/PointDetailCard";
-import { getNotFoundTitle, getTitle } from "@/app/_components/myonton/points/points.utils";
+import { getNotFoundTitle, getTitle, isPointEventItem } from "@/app/_components/myonton/points/points.utils";
 import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Alert } from "@/components/ui/alert";
@@ -57,10 +57,14 @@ const MyPointsDetailsPage = () => {
             size={24}
             className="text-info-dark flex-shrink-0"
           />
-          <p>
-            Your points refresh every 3 hour for 3 weeks. If your event has just wrapped up, hang tight—you'll see your
-            points credited soon!
-          </p>
+          {isPointEventItem(type as UsersScoreActivityType) ? (
+            <p>
+              Your points refresh every 3 hour for 3 weeks. If your event has just wrapped up, hang tight—you'll see your
+              points credited soon!
+            </p>
+          ) : (
+            <p>Only new users can earn you points, if they are already joined ONTON, they will not earn you points.</p>
+          )}
         </Alert>
       </div>
       {scoreDetails.isLoading && (
