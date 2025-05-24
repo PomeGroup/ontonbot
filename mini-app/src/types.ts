@@ -502,3 +502,11 @@ export interface Channel {
   org_image: string | null;
   hosted_event_count?: number | null;
 }
+
+type OptionalKeys<T> = {
+  [K in keyof T]?: T[K];
+};
+
+export type MergeWithOptional<A, B> = OptionalKeys<Omit<A, keyof B>> &
+  OptionalKeys<Omit<B, keyof A>> &
+  Pick<A, keyof A & keyof B>;

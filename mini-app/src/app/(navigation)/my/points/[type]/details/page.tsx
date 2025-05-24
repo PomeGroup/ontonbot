@@ -1,12 +1,14 @@
 "use client";
 
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
+import { AffiliateDetailCard } from "@/app/_components/myonton/points/AffiliateDetailCard";
 import PointDetailCard from "@/app/_components/myonton/points/PointDetailCard";
-import { getNotFoundTitle, getTitle } from "@/app/_components/myonton/points/points.utils";
+import { getNotFoundTitle, getTitle, isPointEventItem } from "@/app/_components/myonton/points/points.utils";
 import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { ScoreItem } from "@/db/modules/userScore.db";
 import type { UsersScoreActivityType } from "@/db/schema/usersScore";
 import { EventWithScoreAndReward } from "@/types/event.types";
 import { Skeleton } from "@mui/material";
@@ -15,12 +17,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { FaSpinner } from "react-icons/fa6";
 import { IoInformationCircle } from "react-icons/io5";
-import { JoinOntonAffiliateScore, ScoreItem } from "@/db/modules/userScore.db";
-import { AffiliateDetailCard } from "../../AffiliateDetailCard";
+
+// @ts-expect-error - this is a type guard
 function isEventItem(item: ScoreItem): item is EventWithScoreAndReward {
   return (item as any).eventId !== undefined;
 }
 
+// @ts-expect-error - this is a type guard
 function isAffiliateItem(item: ScoreItem): item is JoinOntonAffiliateScore {
   return "id" in item && !("eventId" in item);
 }
@@ -54,10 +57,14 @@ const MyPointsDetailsPage = () => {
             size={24}
             className="text-info-dark flex-shrink-0"
           />
-          <p>
-            Your points refresh every 3 hour for 3 weeks. If your event has just wrapped up, hang tight—you'll see your
-            points credited soon!
-          </p>
+          {isPointEventItem(type as UsersScoreActivityType) ? (
+            <p>
+              Your points refresh every 3 hour for 3 weeks. If your event has just wrapped up, hang tight—you'll see your
+              points credited soon!
+            </p>
+          ) : (
+            <p>Only new users can earn you points, if they are already joined ONTON, they will not earn you points.</p>
+          )}
         </Alert>
       </div>
       {scoreDetails.isLoading && (

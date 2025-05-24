@@ -1,9 +1,9 @@
 import { db } from "@/db/db";
-import { usersScore, UsersScoreActivityType, UserScoreItemType, activityTypesArray } from "@/db/schema/usersScore";
-import { and, desc, eq, lte, not, or, sql } from "drizzle-orm";
+import { activityTypesArray, UserScoreItemType, usersScore, UsersScoreActivityType } from "@/db/schema/usersScore";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import { EventWithScoreAndReward } from "@/types/event.types";
+import { and, desc, eq, lte, not, or, sql } from "drizzle-orm";
 import { events, rewards, users, visitors } from "../schema";
 import { itemTypeEnum } from "@/db/schema/callbackTasks";
 
@@ -35,7 +35,8 @@ export type JoinOntonAffiliateScore = {
   userLastName: string | null;
   userPhotoUrl: string | null;
 };
-export type ScoreItem = EventWithScoreAndReward | JoinOntonAffiliateScore;
+
+export type ScoreItem = EventWithScoreAndReward & JoinOntonAffiliateScore;
 
 // Cache key helpers
 const getTotalScoreByUserIdCacheKey = (userId: number) => `${redisTools.cacheKeys.usersScore}total:${userId}`;
