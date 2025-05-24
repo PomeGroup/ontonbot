@@ -31,13 +31,17 @@ const PointDetailCard = (props: {
   });
 
   const showClaimButton =
-    (props.tonSocietyStatus === "NOT_CLAIMED" && props.userClaimedPoints === 0) ||
+    (props.tonSocietyStatus === "NOT_CLAIMED" &&
+      checkEventPoints.data?.tonSocietyStatus !== "CLAIMED" &&
+      checkEventPoints.data?.tonSocietyStatus !== "RECEIVED") ||
     (checkEventPoints.isSuccess && checkEventPoints.data?.tonSocietyStatus === "NOT_CLAIMED");
 
   const showRefreshButton =
     showClaimButton ||
     ((props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
       props.userClaimedPoints === 0 &&
+      checkEventPoints.data?.tonSocietyStatus !== "CLAIMED" &&
+      checkEventPoints.data?.tonSocietyStatus !== "RECEIVED" &&
       !checkEventPoints.isSuccess);
 
   const showPoints =
