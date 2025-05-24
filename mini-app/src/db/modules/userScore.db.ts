@@ -313,7 +313,7 @@ export async function getEventsWithClaimAndScoreDBPaginated(
         eq(events.event_uuid, visitors.event_uuid),
         or(eq(events.has_payment, isPaid), eq(events.ticketToCheckIn, isPaid)),
         eq(events.participationType, isOnline ? "online" : "in_person"),
-        lte(events.end_date, currentTimeSec),
+        lte(events.start_date, currentTimeSec),
         eq(events.hidden, false)
       )
     )
