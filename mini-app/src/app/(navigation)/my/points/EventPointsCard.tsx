@@ -9,7 +9,7 @@ interface EventPointsCardProps {
   tasksCount: number; // e.g. 3
   description: string; // e.g. "10 Points + 1 Point per USDT price"
   totalPoints: number; // e.g. 112
-  type: UsersScoreActivityType;
+  type?: UsersScoreActivityType;
 }
 
 export default function EventPointsCard({ eventTitle, tasksCount, description, totalPoints, type }: EventPointsCardProps) {
@@ -31,15 +31,17 @@ export default function EventPointsCard({ eventTitle, tasksCount, description, t
       {/* Black circle showing total points (right side) */}
       <div className="flex items-center gap-1.5">
         <Badge variant="outline">{totalPoints}</Badge>
-        <Link
-          href={`/my/points/${type}/details`}
-          className="text-primary"
-        >
-          <ChevronRight
-            size={20}
-            strokeWidth={3}
-          />
-        </Link>
+        {type && (
+          <Link
+            href={`/my/points/${type}/details`}
+            className="text-primary"
+          >
+            <ChevronRight
+              size={20}
+              strokeWidth={3}
+            />
+          </Link>
+        )}
       </div>
     </div>
   );

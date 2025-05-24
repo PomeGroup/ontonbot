@@ -13,28 +13,32 @@ export default function MyPointsPage() {
   const [isOpen, setIsOpen] = useState(true);
 
   const { data: paidOnlineData, isLoading: loadingPaidOnline } =
-    trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
-      activityType: "paid_online_event",
+    trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
+      activityTypes: ["paid_online_event"],
       itemType: "event",
     });
   const { data: freeOnlineData, isLoading: loadingFreeOnline } =
-    trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
-      activityType: "free_online_event",
+    trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
+      activityTypes: ["free_online_event"],
       itemType: "event",
     });
   const { data: paidOfflineData, isLoading: loadingPaidOfflineData } =
-    trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
-      activityType: "paid_offline_event",
+    trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
+      activityTypes: ["paid_offline_event"],
       itemType: "event",
     });
   const { data: freeOfflineData, isLoading: loadingFreeOffline } =
-    trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
-      activityType: "free_offline_event",
+    trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
+      activityTypes: ["free_offline_event"],
       itemType: "event",
     });
-  const joinOntonAffiliateData = trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
-    activityType: "join_onton_affiliate",
+  const joinOntonAffiliateData = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
+    activityTypes: ["join_onton_affiliate"],
     itemType: "task",
+  });
+  const eventOrganizationData = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
+    activityTypes: ["paid_online_event", "paid_offline_event", "free_online_event", "free_offline_event"],
+    itemType: "organize_event",
   });
   const { data: totalPoints, isLoading: loadingTotalPoints } = trpc.usersScore.getTotalScoreByUserId.useQuery();
   // Optionally, handle loading states here (e.g., show a spinner)
@@ -107,6 +111,14 @@ export default function MyPointsPage() {
               description="0.2 Points"
               totalPoints={Number(joinOntonAffiliateData?.data?.total ?? 0)}
               type="join_onton_affiliate"
+            />
+          </EventPointsGroup>
+          <EventPointsGroup title="Organize Events">
+            <EventPointsCard
+              eventTitle="Organize events"
+              tasksCount={Number(eventOrganizationData?.data?.count ?? 0)}
+              description="10 Points"
+              totalPoints={Number(eventOrganizationData?.data?.total ?? 0)}
             />
           </EventPointsGroup>
         </div>

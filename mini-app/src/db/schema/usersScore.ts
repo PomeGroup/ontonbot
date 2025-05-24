@@ -2,9 +2,9 @@ import { users } from "@/db/schema";
 import { InferSelectModel } from "drizzle-orm";
 import { bigint, bigserial, boolean, index, pgEnum, pgTable, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { decimal } from "drizzle-orm/pg-core/columns/numeric";
-
+export const userScoreItemArray = ["event", "task", "organize_event"] as const;
 // Define ENUM types
-export const userScoreItem = pgEnum("user_score_item_type", ["event", "task", "organize_event"]);
+export const userScoreItem = pgEnum("user_score_item_type", userScoreItemArray);
 
 export const activityTypesArray = [
   "free_online_event",

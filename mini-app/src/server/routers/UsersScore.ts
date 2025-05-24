@@ -44,28 +44,29 @@ export const UsersScoreRouter = router({
   /**
    * Get the total score for a given user filtered by a specific activity type.
    */
-  getTotalScoreByActivityTypeAndUserId: initDataProtectedProcedure
+  getTotalScoreByActivityTypesAndUserId: initDataProtectedProcedure
     .input(
       z.object({
-        activityType: z.enum(usersScoreActivity.enumValues),
+        // ⬇️  **array** (at least one) instead of a single enum value
+        activityTypes: z.array(z.enum(usersScoreActivity.enumValues)).min(1, "At least one activity type is required"),
+
         itemType: z.enum(userScoreItem.enumValues),
       })
     )
-    .query(async (opts) => {
+    .query(async ({ ctx, input }) => {
+      const { user } = ctx;
       try {
-        return await userScoreDb.getTotalScoreByActivityTypeAndUserId(
-          opts.ctx.user.user_id,
-          opts.input.activityType,
-          opts.input.itemType
-        );
+        return await userScoreDb.getTotalScoreByActivityTypesAndUserId(user.user_id, input.activityTypes, input.itemType);
       } catch (error) {
         logger.error(
-          `Error retrieving total score by activity type for user id: ${opts.ctx.user.user_id} and activity type: ${opts.input.activityType}`,
+          `Error retrieving total score for user ${user.user_id}, ` +
+            `activityTypes=[${input.activityTypes.join(",")}], ` +
+            `itemType=${input.itemType}`,
           error
         );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Error retrieving total score by activity type for user id: ${opts.ctx.user.user_id} and activity type: ${opts.input.activityType}`,
+          message: "Unable to retrieve total score for the requested activity types",
         });
       }
     }),

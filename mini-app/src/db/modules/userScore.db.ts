@@ -1,11 +1,16 @@
 import { db } from "@/db/db";
-import { activityTypesArray, UserScoreItemType, usersScore, UsersScoreActivityType } from "@/db/schema/usersScore";
+import {
+  activityTypesArray,
+  userScoreItemArray,
+  UserScoreItemType,
+  usersScore,
+  UsersScoreActivityType,
+} from "@/db/schema/usersScore";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import { EventWithScoreAndReward } from "@/types/event.types";
-import { and, desc, eq, lte, not, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lte, not, or, sql } from "drizzle-orm";
 import { events, rewards, users, visitors } from "../schema";
-import { itemTypeEnum } from "@/db/schema/callbackTasks";
 
 export type TotalScoreByActivityTypeAndUserId = {
   total: number;
@@ -40,14 +45,25 @@ export type ScoreItem = EventWithScoreAndReward & JoinOntonAffiliateScore;
 
 // Cache key helpers
 const getTotalScoreByUserIdCacheKey = (userId: number) => `${redisTools.cacheKeys.usersScore}total:${userId}`;
-const getTotalScoreByActivityTypeAndUserIdCacheKey = (userId: number, activityType: UsersScoreActivityType) =>
-  `${redisTools.cacheKeys.usersScore}${activityType}:${userId}`;
+const getTotalScoreByActivityTypeAndUserIdCacheKey = (
+  userId: number,
+  activityType: UsersScoreActivityType,
+  itemType: UserScoreItemType
+) => `${redisTools.cacheKeys.usersScore}${activityType}:${userId}:${itemType}`;
+
+const getTotalScoreByActivitiesCacheKey = (
+  userId: number,
+  activityTypes: UsersScoreActivityType[], // array
+  itemType: UserScoreItemType
+) => `${redisTools.cacheKeys.usersScore}` + `${activityTypes.sort().join("|")}:${userId}:${itemType}`;
 
 const invalidateUserScoreCache = async (userId: number) => {
   await redisTools.deleteCache(getTotalScoreByUserIdCacheKey(userId));
 
   for (const type of activityTypesArray) {
-    await redisTools.deleteCache(getTotalScoreByActivityTypeAndUserIdCacheKey(userId, type));
+    for (const itemType of userScoreItemArray) {
+      await redisTools.deleteCache(getTotalScoreByActivityTypeAndUserIdCacheKey(userId, type, itemType));
+    }
   }
 };
 /**
@@ -167,7 +183,7 @@ export const getTotalScoreByActivityTypeAndUserId = async (
   itemType: UserScoreItemType
 ): Promise<TotalScoreByActivityTypeAndUserId> => {
   try {
-    const cacheKey = getTotalScoreByActivityTypeAndUserIdCacheKey(userId, activityType);
+    const cacheKey = getTotalScoreByActivityTypeAndUserIdCacheKey(userId, activityType, itemType);
     const cachedResult = await redisTools.getCache(cacheKey);
     if (cachedResult !== null && cachedResult !== undefined) {
       return cachedResult as TotalScoreByActivityTypeAndUserId;
@@ -388,6 +404,47 @@ export async function getUserScoresForJoinOntonAffiliatePaginated(
 
   return rows;
 }
+
+export const getTotalScoreByActivityTypesAndUserId = async (
+  userId: number,
+  activityTypes: UsersScoreActivityType[], // ← array
+  itemType: UserScoreItemType
+): Promise<TotalScoreByActivityTypeAndUserId> => {
+  try {
+    /* -------- cache -------- */
+    const cacheKey = getTotalScoreByActivitiesCacheKey(userId, activityTypes, itemType);
+    const cached = await redisTools.getCache(cacheKey);
+    if (cached !== null && cached !== undefined) {
+      return cached as TotalScoreByActivityTypeAndUserId;
+    }
+
+    /* -------- query -------- */
+    const result = (
+      await db
+        .select({
+          total: sql<number>`COALESCE(SUM(${usersScore.point}), 0)`,
+          count: sql<number>`COUNT(${usersScore.point})`,
+        })
+        .from(usersScore)
+        .where(
+          and(
+            eq(usersScore.userId, userId),
+            inArray(usersScore.activityType, activityTypes), // drizzle `inArray`
+            eq(usersScore.itemType, itemType)
+          )
+        )
+        .execute()
+    ).pop();
+
+    /* -------- store & return -------- */
+    const data: TotalScoreByActivityTypeAndUserId = result || { total: 0, count: 0 };
+    await redisTools.setCache(cacheKey, data, redisTools.cacheLvl.extraLong);
+    return data;
+  } catch (error) {
+    logger.error("Error getting total score by activity types and user id:", error);
+    throw error;
+  }
+};
 export const userScoreDb = {
   createUserScore,
   changeUserScoreStatus,
@@ -397,4 +454,5 @@ export const userScoreDb = {
   upsertOrganizerScore,
   getEventsWithClaimAndScoreDBPaginated,
   getUserScoresForJoinOntonAffiliatePaginated,
+  getTotalScoreByActivityTypesAndUserId,
 };
