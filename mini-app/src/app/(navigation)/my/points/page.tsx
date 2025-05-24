@@ -117,7 +117,7 @@ export default function MyPointsPage() {
             <EventPointsCard
               eventTitle="Organize events"
               tasksCount={Number(eventOrganizationData?.data?.count ?? 0)}
-              description="10 Points"
+              description="0.2 * participation points * participant count"
               totalPoints={Number(eventOrganizationData?.data?.total ?? 0)}
             />
           </EventPointsGroup>
