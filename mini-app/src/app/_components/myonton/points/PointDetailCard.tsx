@@ -34,7 +34,7 @@ const PointDetailCard = (props: {
     (props.tonSocietyStatus === "NOT_CLAIMED" &&
       checkEventPoints.data?.tonSocietyStatus !== "CLAIMED" &&
       checkEventPoints.data?.tonSocietyStatus !== "RECEIVED") ||
-    (checkEventPoints.isSuccess && checkEventPoints.data?.tonSocietyStatus === "NOT_CLAIMED");
+    checkEventPoints.data?.tonSocietyStatus === "NOT_CLAIMED";
 
   const showRefreshButton =
     showClaimButton ||
@@ -45,10 +45,10 @@ const PointDetailCard = (props: {
       !checkEventPoints.isSuccess);
 
   const showPoints =
-    (props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
-    (props.userClaimedPoints !== 0 ||
-      checkEventPoints.data?.tonSocietyStatus === "CLAIMED" ||
-      checkEventPoints.data?.tonSocietyStatus === "RECEIVED");
+    props.tonSocietyStatus === "CLAIMED" ||
+    props.tonSocietyStatus === "RECEIVED" ||
+    checkEventPoints.data?.tonSocietyStatus === "CLAIMED" ||
+    checkEventPoints.data?.tonSocietyStatus === "RECEIVED";
 
   return (
     <CustomCard className="p-2">
