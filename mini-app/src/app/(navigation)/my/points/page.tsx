@@ -15,21 +15,26 @@ export default function MyPointsPage() {
   const { data: paidOnlineData, isLoading: loadingPaidOnline } =
     trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
       activityType: "paid_online_event",
+      itemType: "event",
     });
   const { data: freeOnlineData, isLoading: loadingFreeOnline } =
     trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
       activityType: "free_online_event",
+      itemType: "event",
     });
   const { data: paidOfflineData, isLoading: loadingPaidOfflineData } =
     trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
       activityType: "paid_offline_event",
+      itemType: "event",
     });
   const { data: freeOfflineData, isLoading: loadingFreeOffline } =
     trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
       activityType: "free_offline_event",
+      itemType: "event",
     });
   const joinOntonAffiliateData = trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
     activityType: "join_onton_affiliate",
+    itemType: "task",
   });
   const { data: totalPoints, isLoading: loadingTotalPoints } = trpc.usersScore.getTotalScoreByUserId.useQuery();
   // Optionally, handle loading states here (e.g., show a spinner)

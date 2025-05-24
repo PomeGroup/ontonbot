@@ -1,5 +1,5 @@
 import { JoinOntonAffiliateScore, ScoreItem, userScoreDb } from "@/db/modules/userScore.db";
-import { usersScoreActivity, UsersScoreActivityType } from "@/db/schema/usersScore";
+import { userScoreItem, usersScoreActivity, UsersScoreActivityType } from "@/db/schema/usersScore";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { initDataProtectedProcedure, router } from "../trpc";
@@ -48,11 +48,16 @@ export const UsersScoreRouter = router({
     .input(
       z.object({
         activityType: z.enum(usersScoreActivity.enumValues),
+        itemType: z.enum(userScoreItem.enumValues),
       })
     )
     .query(async (opts) => {
       try {
-        return await userScoreDb.getTotalScoreByActivityTypeAndUserId(opts.ctx.user.user_id, opts.input.activityType);
+        return await userScoreDb.getTotalScoreByActivityTypeAndUserId(
+          opts.ctx.user.user_id,
+          opts.input.activityType,
+          opts.input.itemType
+        );
       } catch (error) {
         logger.error(
           `Error retrieving total score by activity type for user id: ${opts.ctx.user.user_id} and activity type: ${opts.input.activityType}`,

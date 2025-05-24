@@ -5,6 +5,7 @@ import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import { EventWithScoreAndReward } from "@/types/event.types";
 import { events, rewards, users, visitors } from "../schema";
+import { itemTypeEnum } from "@/db/schema/callbackTasks";
 
 export type TotalScoreByActivityTypeAndUserId = {
   total: number;
@@ -161,7 +162,8 @@ export const getTotalScoreByUserId = async (userId: number): Promise<number> => 
  */
 export const getTotalScoreByActivityTypeAndUserId = async (
   userId: number,
-  activityType: UsersScoreActivityType
+  activityType: UsersScoreActivityType,
+  itemType: UserScoreItemType
 ): Promise<TotalScoreByActivityTypeAndUserId> => {
   try {
     const cacheKey = getTotalScoreByActivityTypeAndUserIdCacheKey(userId, activityType);
@@ -179,7 +181,9 @@ export const getTotalScoreByActivityTypeAndUserId = async (
               (${usersScore.point})`,
         })
         .from(usersScore)
-        .where(and(eq(usersScore.userId, userId), eq(usersScore.activityType, activityType)))
+        .where(
+          and(eq(usersScore.userId, userId), eq(usersScore.activityType, activityType), eq(usersScore.itemType, itemType))
+        )
         .execute()
     ).pop();
 
