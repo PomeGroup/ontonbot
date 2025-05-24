@@ -132,8 +132,8 @@ const PointDetailCard = (props: {
             )}
 
           {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
-            (props.userClaimedPoints === 0 || !checkEventPoints.isSuccess) &&
-            props.userClaimedPoints === 0 && (
+            props.userClaimedPoints === 0 &&
+            !checkEventPoints.isSuccess && (
               <Button
                 variant="outline"
                 className="flex items-center gap-1 rounded-md flex-1 max-w-[96px]"
