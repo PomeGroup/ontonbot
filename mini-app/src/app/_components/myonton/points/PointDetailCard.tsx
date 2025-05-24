@@ -30,6 +30,22 @@ const PointDetailCard = (props: {
     },
   });
 
+  const showClaimButton =
+    (props.tonSocietyStatus === "NOT_CLAIMED" && props.userClaimedPoints === 0) ||
+    (checkEventPoints.isSuccess && checkEventPoints.data?.tonSocietyStatus === "NOT_CLAIMED");
+
+  const showRefreshButton =
+    showClaimButton ||
+    ((props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
+      props.userClaimedPoints === 0 &&
+      !checkEventPoints.isSuccess);
+
+  const showPoints =
+    (props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
+    (props.userClaimedPoints !== 0 ||
+      checkEventPoints.data?.tonSocietyStatus === "CLAIMED" ||
+      checkEventPoints.data?.tonSocietyStatus === "RECEIVED");
+
   return (
     <CustomCard className="p-2">
       <div className="flex items-center gap-2">
@@ -68,7 +84,7 @@ const PointDetailCard = (props: {
 
           {/* Reward Status */}
           <>
-            {props.tonSocietyStatus === "NOT_CLAIMED" && props.userClaimedPoints === 0 && (
+            {showClaimButton && (
               <Typography
                 variant="subheadline2"
                 className="truncate text-brand-light-destructive flex items-center justify-center gap-1"
@@ -102,11 +118,12 @@ const PointDetailCard = (props: {
         </div>
 
         {/* Claim Button */}
-        <>
-          {props.tonSocietyStatus === "NOT_CLAIMED" && props.userClaimedPoints === 0 && (
+        <div className="flex flex-col">
+          {showClaimButton && (
             <Button
-              variant="outline"
-              className="flex items-center gap-1 rounded-md flex-1 max-w-[96px]"
+              size="xs"
+              variant="link"
+              className="flex text-primary items-center gap-1 rounded-md flex-1 max-w-[96px]"
               disabled={!props.rewardLink}
               onClick={() => {
                 if (props.rewardLink) {
@@ -123,32 +140,30 @@ const PointDetailCard = (props: {
             </Button>
           )}
 
-          {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
-            (props.userClaimedPoints !== 0 || checkEventPoints.isSuccess) && (
-              <div className="flex flex-col gap-2 items-center">
-                <Typography variant="callout">{props.userClaimedPoints || checkEventPoints.data?.userPoint}</Typography>
-                <Typography variant="caption2">Points</Typography>
-              </div>
-            )}
+          {showRefreshButton && (
+            <Button
+              size="xs"
+              variant="link"
+              className="flex text-primary items-center gap-1 rounded-md flex-1 max-w-[96px]"
+              isLoading={checkEventPoints.isLoading}
+              onClick={() =>
+                checkEventPoints.mutate({
+                  eventId: props.eventId,
+                })
+              }
+            >
+              <RefreshCcwIcon className="w-4 h-4 flex-shrink-0" />
+              <span>Refresh</span>
+            </Button>
+          )}
+        </div>
 
-          {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
-            props.userClaimedPoints === 0 &&
-            !checkEventPoints.isSuccess && (
-              <Button
-                variant="outline"
-                className="flex items-center gap-1 rounded-md flex-1 max-w-[96px]"
-                isLoading={checkEventPoints.isLoading}
-                onClick={() =>
-                  checkEventPoints.mutate({
-                    eventId: props.eventId,
-                  })
-                }
-              >
-                <RefreshCcwIcon className="w-4 h-4 flex-shrink-0" />
-                <span>Refresh</span>
-              </Button>
-            )}
-        </>
+        {showPoints && (
+          <div className="flex flex-col gap-2 items-center">
+            <Typography variant="callout">{props.userClaimedPoints || checkEventPoints.data?.userPoint}</Typography>
+            <Typography variant="caption2">Points</Typography>
+          </div>
+        )}
       </div>
     </CustomCard>
   );
