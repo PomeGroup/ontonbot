@@ -1,8 +1,13 @@
 "use client";
 
 import { trpc } from "@/app/_trpc/client";
+import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/context/store/user.store";
+import useWebApp from "@/hooks/useWebApp";
+import { telegramShareLink } from "@/utils";
+import { CopyIcon, SendIcon } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import ChevronDownIconAccord from "./ChevronDownIcon";
 import EventPointsCard from "./EventPointsCard";
 import EventPointsGroup from "./EventPointsGroup";
@@ -10,7 +15,11 @@ import TotalPointsBox from "./TotalPointsBox";
 
 export default function MyPointsPage() {
   const { user } = useUserStore();
+  const webapp = useWebApp();
+
   const [isOpen, setIsOpen] = useState(true);
+
+  const ontonJoinAffiliateDataQuery = trpc.task.getOntonJoinAffiliateData.useQuery();
 
   const { data: paidOnlineData, isLoading: loadingPaidOnline } =
     trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
@@ -112,6 +121,53 @@ export default function MyPointsPage() {
               totalPoints={Number(joinOntonAffiliateData?.data?.total ?? 0)}
               type="join_onton_affiliate"
             />
+            <div className="flex w-full gap-2">
+              <Button
+                className="flex-1 rounded-md border-2 flex items-center justify-center gap-2"
+                variant="outline"
+                size="lg"
+                disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
+                onClick={async () => {
+                  if (ontonJoinAffiliateDataQuery.data?.linkHash) {
+                    await navigator.clipboard.writeText(ontonJoinAffiliateDataQuery.data?.linkHash);
+                    toast.success("Link copied to clipboard");
+                  } else {
+                    toast.error("No link hash found");
+                  }
+                }}
+                type="button"
+              >
+                <CopyIcon className="w-4 h-4" />
+                <span>Copy Link</span>
+              </Button>
+              <Button
+                className="flex-1 rounded-md border-2 flex items-center justify-center gap-2"
+                variant="outline"
+                size="lg"
+                type="button"
+                disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
+                onClick={() => {
+                  if (ontonJoinAffiliateDataQuery.data?.linkHash) {
+                    webapp?.openTelegramLink(
+                      telegramShareLink(
+                        ontonJoinAffiliateDataQuery.data?.linkHash,
+                        `
+  Join ONTON Affiliate
+  
+  Check out this exclusive ONTON referral link for special tasks and bonuses:
+  
+  Good luck and see you in the ONTON world! 🏆`
+                      )
+                    );
+                  } else {
+                    toast.error("No link hash found");
+                  }
+                }}
+              >
+                <SendIcon className="w-4 h-4" />
+                <span>Share link</span>
+              </Button>
+            </div>
           </EventPointsGroup>
           <EventPointsGroup title="Organize Events">
             <EventPointsCard
