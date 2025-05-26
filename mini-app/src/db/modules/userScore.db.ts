@@ -349,7 +349,8 @@ export async function getEventsWithClaimAndScoreDBPaginated(
     eventStartDate: Number(row.eventStartDate),
     eventEndDate: Number(row.eventEndDate),
     imageUrl: row.imageUrl || null,
-    rewardLink: row.rewardData?.ok ? row.rewardData.reward_link : null,
+    rewardLink:
+      row.rewardData && "reward_link" in row.rewardData ? (row.rewardData as { reward_link: string }).reward_link : null,
     visitorId: Number(row.visitorId),
     tonSocietyStatus: row.tonSocietyStatus,
     rewardId: row.rewardId ? String(row.rewardId) : null,
