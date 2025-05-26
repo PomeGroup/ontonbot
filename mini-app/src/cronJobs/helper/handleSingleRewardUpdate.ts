@@ -27,7 +27,7 @@ export const handleSingleRewardUpdate = async (
 ): Promise<HandleSingleRewardUpdateResult> => {
   // 1. Validate input
   if (!activity_id || !visitor_id || !event_id || !rewardType) {
-    const err = `[Event ${event_id}] Invalid input: activity_id=${activity_id}, visitor_id=${visitor_id}, event_id=${event_id}, rewardType=${rewardType}`;
+    const err = `CheckSbtStatus: [Event ${event_id}] Invalid input: activity_id=${activity_id}, visitor_id=${visitor_id}, event_id=${event_id}, rewardType=${rewardType}`;
     logger.error(err);
     return { success: false, error: err, tonSocietyStatus: null, visitorId: null };
   }
@@ -35,7 +35,7 @@ export const handleSingleRewardUpdate = async (
   // 2. Load visitor row
   const visitorRow = await visitorsDB.findVisitorById(visitor_id);
   if (!visitorRow) {
-    const err = `[Event ${event_id}] Visitor not found (id=${visitor_id})`;
+    const err = `CheckSbtStatus: [Event ${event_id}] Visitor not found (id=${visitor_id})`;
     logger.error(err);
     return { success: false, error: err, tonSocietyStatus: null, visitorId: null };
   }
@@ -55,14 +55,14 @@ export const handleSingleRewardUpdate = async (
   if (cachedStatus === "CLAIMED" || cachedStatus === "RECEIVED") {
     // Already claimed locally; skip remote check
     finalStatus = cachedStatus;
-    logger.log(`[Event ${event_id}] Reward already ${cachedStatus} in DB — skipping Ton-Society call`);
+    logger.log(`CheckSbtStatus: [Event ${event_id}] Reward already ${cachedStatus} in DB — skipping Ton-Society call`);
   } else {
     // 4. Fetch status from Ton Society
     const remote = await getSBTClaimedStatus(activity_id, userId);
     const tsStatus = remote?.status as RewardTonSocietyStatusType | undefined;
 
     if (!tsStatus || !["NOT_CLAIMED", "CLAIMED", "RECEIVED"].includes(tsStatus)) {
-      const err = `[Event ${event_id}] Unrecognized Ton-Society status '${tsStatus}'`;
+      const err = `CheckSbtStatus: [Event ${event_id}] Unrecognized Ton-Society status '${tsStatus}'`;
       logger.warn(err);
       return { success: false, error: err, tonSocietyStatus: tsStatus ?? null, visitorId: visitor_id };
     }
@@ -76,7 +76,7 @@ export const handleSingleRewardUpdate = async (
   if (finalStatus === "CLAIMED" || finalStatus === "RECEIVED") {
     if (rewardType === "ton_society_sbt") {
       const userScore = await maybeInsertUserScore(userId, event_id);
-      logger.log(`[Event ${event_id}] ssUser score: ${JSON.stringify(userScore)}`);
+      logger.log(`CheckSbtStatus: [Event ${event_id}] ssUser score: ${JSON.stringify(userScore)}`);
       return {
         success: true,
         error: null,

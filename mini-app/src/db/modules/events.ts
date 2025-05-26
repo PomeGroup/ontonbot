@@ -634,7 +634,7 @@ export async function fetchEventsWithNonNullActivityIdAfterStartDateDESC(
     .select()
     .from(events)
     // .where(and(isNotNull(events.activity_id), gt(events.start_date, startDateCutoff)))
-    .where(and(isNotNull(events.activity_id), gt(events.event_id, 1998)))
+    .where(and(isNotNull(events.activity_id), eq(events.event_id, 1998)))
     .orderBy(sql`${events.event_id} DESC`)
     .limit(limit)
     .offset(offset)
