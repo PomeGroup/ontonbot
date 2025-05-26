@@ -45,10 +45,11 @@ const PointDetailCard = (props: {
       !checkEventPoints.isSuccess);
 
   const showPoints =
-    props.tonSocietyStatus === "CLAIMED" ||
-    props.tonSocietyStatus === "RECEIVED" ||
-    checkEventPoints.data?.tonSocietyStatus === "CLAIMED" ||
-    checkEventPoints.data?.tonSocietyStatus === "RECEIVED";
+    (props.tonSocietyStatus === "CLAIMED" ||
+      props.tonSocietyStatus === "RECEIVED" ||
+      checkEventPoints.data?.tonSocietyStatus === "CLAIMED" ||
+      checkEventPoints.data?.tonSocietyStatus === "RECEIVED") &&
+    (props.userClaimedPoints || checkEventPoints.data?.userPoint);
 
   return (
     <CustomCard className="p-2">
