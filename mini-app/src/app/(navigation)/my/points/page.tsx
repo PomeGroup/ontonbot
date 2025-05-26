@@ -121,11 +121,10 @@ export default function MyPointsPage() {
               totalPoints={Number(joinOntonAffiliateData?.data?.total ?? 0)}
               type="join_onton_affiliate"
             />
-            <div className="flex w-full gap-2">
+            <div className="flex w-full gap-2 flex-wrap">
               <Button
                 className="flex-1 rounded-md border-2 flex items-center justify-center gap-2"
                 variant="outline"
-                size="lg"
                 disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
                 onClick={async () => {
                   if (ontonJoinAffiliateDataQuery.data?.linkHash) {
@@ -143,7 +142,6 @@ export default function MyPointsPage() {
               <Button
                 className="flex-1 rounded-md border-2 flex items-center justify-center gap-2"
                 variant="outline"
-                size="lg"
                 type="button"
                 disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
                 onClick={() => {

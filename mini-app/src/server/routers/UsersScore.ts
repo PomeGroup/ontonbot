@@ -118,6 +118,7 @@ export const UsersScoreRouter = router({
         // 2) Fetch data with offset and limit
         const data = await userScoreDb.getEventsWithClaimAndScoreDBPaginated(
           ctx.user.user_id,
+          //  748891997,
           activityType,
           isPaid,
           isOnline,
@@ -208,7 +209,7 @@ export const UsersScoreRouter = router({
       if (!visitor) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You did not attend or are not registered for this event",
+          message: "You need to claim your SBT first",
         });
       }
 
