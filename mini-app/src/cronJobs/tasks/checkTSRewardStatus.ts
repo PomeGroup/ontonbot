@@ -104,6 +104,6 @@ export const syncTonSocietyStatusLargeScale = async (startDateCutoff: number = 0
 export const CheckSbtStatus = async () => {
   // If you need a startDateCutoff other than 0, pass it here
   // set date to one month ago
-  const startDateCutoff = Math.floor(new Date().getTime() / 1000) - 30 * 24 * 60 * 60;
+  const startDateCutoff = Math.floor(new Date().getTime() / 1000) - 90 * 24 * 60 * 60;
   await syncTonSocietyStatusLargeScale(startDateCutoff);
 };
