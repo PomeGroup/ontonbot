@@ -2,7 +2,7 @@
 
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { AffiliateDetailCard } from "@/app/_components/myonton/points/AffiliateDetailCard";
-import PointDetailCard from "@/app/_components/myonton/points/PointDetailCard";
+import EventPointDetailCard from "@/app/_components/myonton/points/PointDetailCard";
 import { getNotFoundTitle, getTitle, isPointEventItem } from "@/app/_components/myonton/points/points.utils";
 import { trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
@@ -90,9 +90,10 @@ const MyPointsDetailsPage = () => {
             .flatMap((p) => p.items) // now items is ScoreItem
             .filter(isEventItem) // type-guard
             .map((points) => (
-              <PointDetailCard
+              <EventPointDetailCard
                 key={`${points.userScoreId ?? 0}-${points.rewardId ?? "0"}-${points.eventId}`}
                 eventId={points.eventId}
+                eventUUID={points.eventUuid}
                 imageUrl={points.imageUrl}
                 eventTitle={points.eventTitle}
                 eventStartDate={points.eventStartDate}
