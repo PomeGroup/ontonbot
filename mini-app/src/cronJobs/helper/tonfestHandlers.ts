@@ -71,12 +71,12 @@ export const addSbtFromOnton = async (payload: any): Promise<{ success: boolean;
 
 /**
  * Function for setting SBT to a "pending" status from Onton.
- * Usage: calls the endpoint /onton/setSbtPending with { authorization: "...", userTelegramId: "..." }.
+ * Usage: calls the endpoint /setSbtPending with { authorization: "...", userTelegramId: "..." }.
  */
 export const setSbtPending = async (payload: any): Promise<{ success: boolean; data: any }> => {
   const BaseUrl = configProtected?.TONFEST_API?.[0] || "";
   const Authorization = configProtected?.TONFEST_API?.[1] || "";
-  const endpoint = BaseUrl + "onton/setSbtPending";
+  const endpoint = BaseUrl + "/external-partners/onton/setSbtPending";
   logger.log(`Calling TonFest endpoint: ${endpoint}`);
 
   const headers = { "Content-Type": "application/json" };
