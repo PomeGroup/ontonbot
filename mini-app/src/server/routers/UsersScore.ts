@@ -118,7 +118,7 @@ export const UsersScoreRouter = router({
         // 2) Fetch data with offset and limit
         const data = await userScoreDb.getEventsWithClaimAndScoreDBPaginated(
           ctx.user.user_id,
-          //5211021671,
+          // 5705832807,
           activityType,
           isPaid,
           isOnline,
