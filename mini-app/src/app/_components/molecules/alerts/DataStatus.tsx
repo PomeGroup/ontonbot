@@ -10,6 +10,8 @@ export type DataStatusProps = {
   size?: keyof typeof ANIMATION_SIZES;
   className?: string;
   canvasWrapperClassName?: string;
+  // Action Button
+  actionButton?: ReactNode;
 };
 
 export const DATA_STATUS_ANIMATIONS = {
@@ -35,7 +37,7 @@ export const ANIMATION_SIZES = {
 
 export default function DataStatus(props: DataStatusProps) {
   return (
-    <div className={cn("flex flex-col items-center mx-auto", props.className)}>
+    <div className={cn("flex flex-col items-center mx-auto gap-4 max-w-96", props.className)}>
       <DotLottieReact
         loop
         autoplay
@@ -50,10 +52,25 @@ export default function DataStatus(props: DataStatusProps) {
         height={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.md}
         // @ts-expect-error
         width={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.md}
-        className={cn("mx-auto mb-3", props.canvasWrapperClassName)}
+        className={cn("mx-auto", props.canvasWrapperClassName)}
       />
-      <h4 className="block text-[20px] font-semibold mb-3">{props.title}</h4>
-      <Typography className="w-[248px] text-center">{props.description}</Typography>
+      <div className="flex flex-col items-center px-4 flex-1 gap-2 text-center">
+        <Typography
+          variant="title3"
+          bold
+          className="text-balance"
+        >
+          {props.title}
+        </Typography>
+        <Typography
+          variant="subheadline1"
+          weight="medium"
+        >
+          {props.description}
+        </Typography>
+      </div>
+      {/* Action Button */}
+      {props.actionButton}
     </div>
   );
 }

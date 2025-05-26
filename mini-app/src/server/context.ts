@@ -27,6 +27,7 @@ export async function createContext({ req }: { req: Request }) {
         const startParam = initDataJson.start_param.split("-");
         joinAffiliateHash = startParam[1];
       }
+
       const user = await usersDB.insertUser(initDataJson, joinAffiliateHash);
       if (!user) {
         logger.info("User not found", { initDataJson });

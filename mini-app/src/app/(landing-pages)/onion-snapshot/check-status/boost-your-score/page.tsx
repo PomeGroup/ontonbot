@@ -152,8 +152,8 @@ const BoostYourScorePage = () => {
             <Button
               variant="primary"
               size="lg"
-              disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
               className="flex-1 bg-[#007AFF] text-white tracking-tighter"
+              disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
               onClick={() => {
                 if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                   webapp?.openTelegramLink(

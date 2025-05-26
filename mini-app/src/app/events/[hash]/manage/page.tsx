@@ -1,6 +1,5 @@
 "use client";
 
-import { Page } from "konsta/react";
 import { useParams, useRouter } from "next/navigation";
 // svg icons
 import coOrganizerIcon from "./co-organizers.svg";
@@ -61,7 +60,7 @@ export default function ManageIndexPage() {
   const hasAdminOrOrganizerAccess = CheckAdminOrOrganizer(user?.role);
   // The main “Manage” page
   return (
-    <Page>
+    <div>
       {/* Show an EventCard with the event data */}
       <div className="bg-white rounded-2lg mx-4 my-4 pb-3">
         <EventCard
@@ -214,6 +213,6 @@ export default function ManageIndexPage() {
           />
         )}
       </div>
-    </Page>
+    </div>
   );
 }

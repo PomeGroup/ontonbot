@@ -4,7 +4,7 @@
 import {MyContext} from "../types/MyContext";
 import {pool} from "./db";
 import {logger} from "../utils/logger";
-import {sleep} from "src/utils/utils";
+import {sleep} from "../utils/utils";
 
 async function createInviteLinkWithRetry(
     api: MyContext["api"],

@@ -101,10 +101,6 @@ section {
   display: block;
 }
 
-body {
-  line-height: 1;
-}
-
 ol,
 ul {
   list-style: none;
@@ -134,7 +130,7 @@ table {
 
 @layer base {
   :root {
-    --shadcn-background: #ffffff;
+    --shadcn-background: 240, 19%, 95%;
     --shadcn-shadcn-foreground: 222.2 84% 4.9%;
 
     --shadcn-card: 0 0% 100%;
@@ -201,8 +197,7 @@ table {
 
 @layer base {
   body {
-    @apply dark:bg-[#1C1C1E] bg-white;
-    @apply box-border;
+    @apply dark:bg-[#1C1C1E] !bg-cn-background text-cn-foreground box-border;
   }
 }
 
@@ -214,12 +209,6 @@ table {
 .hide-scrollbar {
   -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
   scrollbar-width: none; /* Hide scrollbar for Firefox */
-}
-
-@layer base {
-  body {
-    @apply bg-cn-background text-cn-foreground;
-  }
 }
 
 @layer utilities {

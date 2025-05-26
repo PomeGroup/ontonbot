@@ -89,10 +89,13 @@ export default function ProfilePage() {
 
       {hasEventOrganizer && (
         <div
-          className="fixed text-primary drop-shadow rounded-full right-4 pt-1  bottom-24 z-50 cursor-pointer"
+          className="fixed text-primary drop-shadow rounded-full right-4 pt-1 z-50 cursor-pointer"
           onClick={() => {
             setSection("event_setup_form_general_step");
             router.push("/events/create");
+          }}
+          style={{
+            bottom: `calc(90px + var(--tg-safe-area-inset-bottom))`,
           }}
         >
           <FabPlusIcon />
