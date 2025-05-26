@@ -100,7 +100,7 @@ const PointDetailCard = (props: {
             )}
 
             {(props.tonSocietyStatus === "CLAIMED" || props.tonSocietyStatus === "RECEIVED") &&
-              props.userClaimedPoints === 0 && (
+              props.userClaimedPoints !== 0 && (
                 <Typography
                   variant="subheadline2"
                   className="truncate text-brand-green flex items-center justify-center gap-1"
@@ -110,7 +110,7 @@ const PointDetailCard = (props: {
                 </Typography>
               )}
 
-            {props.tonSocietyStatus === "NOT_ELIGIBLE" && props.userClaimedPoints === 0 && (
+            {props.tonSocietyStatus === "NOT_ELIGIBLE" && (
               <Typography
                 variant="subheadline2"
                 className="truncate text-brand-muted flex items-center justify-center gap-1"
