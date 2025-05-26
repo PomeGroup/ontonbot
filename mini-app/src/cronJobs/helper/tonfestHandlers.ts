@@ -77,7 +77,7 @@ export const addSbtFromOnton = async (payload: any): Promise<{ success: boolean;
 export const setSbtPending = async (payload: any): Promise<{ success: boolean; data: any }> => {
   const BaseUrl = configProtected?.TONFEST_API?.[0] || "";
   const Authorization = configProtected?.TONFEST_API?.[1] || "";
-  const endpoint = BaseUrl + "/external-partners/onton/setSbtPending";
+  const endpoint = BaseUrl + "external-partners/onton/setSbtPending";
   logger.log(`Calling TonFest endpoint: ${endpoint}`);
 
   const headers = { "Content-Type": "application/json" };
