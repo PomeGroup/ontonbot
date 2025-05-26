@@ -6,6 +6,7 @@ import { useUserStore } from "@/context/store/user.store";
 import useWebApp from "@/hooks/useWebApp";
 import { telegramShareLink } from "@/utils";
 import { CopyIcon, SendIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import ChevronDownIconAccord from "./ChevronDownIcon";
@@ -81,46 +82,71 @@ export default function MyPointsPage() {
           className={`overflow-hidden flex flex-col gap-4 transition-all duration-300 ${isOpen ? "max-h-[1000px]" : "max-h-0"}`}
         >
           <EventPointsGroup title="Online Events">
-            <EventPointsCard
-              eventTitle="Attend paid online events"
-              tasksCount={Number(paidOnlineData?.count ?? 0)}
-              description="10 Points"
-              totalPoints={Number(paidOnlineData?.total ?? 0)}
-              type="paid_online_event"
-            />
-            <EventPointsCard
-              eventTitle="Attend free online events"
-              tasksCount={Number(freeOnlineData?.count ?? 0)}
-              description="1 Points"
-              totalPoints={Number(freeOnlineData?.total ?? 0)}
-              type="free_online_event"
-            />
+            <Link
+              href={`/my/points/paid_online_event/details`}
+              className="w-full"
+            >
+              <EventPointsCard
+                eventTitle="Attend paid online events"
+                tasksCount={Number(paidOnlineData?.count ?? 0)}
+                description="10 Points"
+                totalPoints={Number(paidOnlineData?.total ?? 0)}
+                type="paid_online_event"
+              />
+            </Link>
+            <Link
+              href={`/my/points/free_online_event/details`}
+              className="w-full"
+            >
+              <EventPointsCard
+                eventTitle="Attend free online events"
+                tasksCount={Number(freeOnlineData?.count ?? 0)}
+                description="1 Points"
+                totalPoints={Number(freeOnlineData?.total ?? 0)}
+                type="free_online_event"
+              />
+            </Link>
           </EventPointsGroup>
 
           <EventPointsGroup title="In-Person Events">
-            <EventPointsCard
-              eventTitle="Attend paid in-person events"
-              tasksCount={Number(paidOfflineData?.count ?? 0)}
-              description="20 Points"
-              totalPoints={Number(paidOfflineData?.total ?? 0)}
-              type="paid_offline_event"
-            />
-            <EventPointsCard
-              eventTitle="Attend free in-person events"
-              tasksCount={Number(freeOfflineData?.count ?? 0)}
-              description="10 Points"
-              totalPoints={Number(freeOfflineData?.total ?? 0)}
-              type="free_offline_event"
-            />
+            <Link
+              href={`/my/points/paid_offline_event/details`}
+              className="w-full"
+            >
+              <EventPointsCard
+                eventTitle="Attend paid in-person events"
+                tasksCount={Number(paidOfflineData?.count ?? 0)}
+                description="20 Points"
+                totalPoints={Number(paidOfflineData?.total ?? 0)}
+                type="paid_offline_event"
+              />
+            </Link>
+            <Link
+              href={`/my/points/free_offline_event/details`}
+              className="w-full"
+            >
+              <EventPointsCard
+                eventTitle="Attend free in-person events"
+                tasksCount={Number(freeOfflineData?.count ?? 0)}
+                description="10 Points"
+                totalPoints={Number(freeOfflineData?.total ?? 0)}
+                type="free_offline_event"
+              />
+            </Link>
           </EventPointsGroup>
           <EventPointsGroup title="Referals">
-            <EventPointsCard
-              eventTitle="Join ONTON Affiliate"
-              tasksCount={Number(joinOntonAffiliateData?.data?.count ?? 0)}
-              description="0.2 Points"
-              totalPoints={Number(joinOntonAffiliateData?.data?.total ?? 0)}
-              type="join_onton_affiliate"
-            />
+            <Link
+              href={`/my/points/join_onton_affiliate/details`}
+              className="w-full"
+            >
+              <EventPointsCard
+                eventTitle="Join ONTON Affiliate"
+                tasksCount={Number(joinOntonAffiliateData?.data?.count ?? 0)}
+                description="0.2 Points"
+                totalPoints={Number(joinOntonAffiliateData?.data?.total ?? 0)}
+                type="join_onton_affiliate"
+              />
+            </Link>
             <div className="flex w-full gap-2 flex-wrap">
               <Button
                 className="flex-1 rounded-md border-2 flex items-center justify-center gap-2"
