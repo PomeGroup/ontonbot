@@ -62,7 +62,7 @@ export const handleSingleRewardUpdate = async (
     const tsStatus = remote?.status as RewardTonSocietyStatusType | undefined;
 
     if (!tsStatus || !["NOT_CLAIMED", "CLAIMED", "RECEIVED"].includes(tsStatus)) {
-      const err = `CheckSbtStatus: [Event ${event_id}] Unrecognized Ton-Society status '${tsStatus}'`;
+      const err = `CheckSbtStatus: [Event ${event_id}] userId=${userId} activity_id=${activity_id} returned invalid status from Ton Society: ${tsStatus}`;
       logger.warn(err);
       return { success: false, error: err, tonSocietyStatus: tsStatus ?? null, visitorId: visitor_id };
     }
