@@ -1,5 +1,12 @@
 import { NonVerifiedHubsIds } from "@/constants";
 import { db } from "@/db/db";
+import eventCategoriesDB from "@/db/modules/eventCategories.db";
+import eventFieldsDB from "@/db/modules/eventFields.db";
+import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
+import eventDB from "@/db/modules/events.db";
+import { organizerTsVerified, userHasModerationAccess } from "@/db/modules/userFlags.db";
+import { userRolesDB } from "@/db/modules/userRoles.db";
+import { getUserCacheKey, usersDB } from "@/db/modules/users.db";
 import { EventCategoryRow, eventFields, eventPayment, events, orders } from "@/db/schema";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { hashPassword } from "@/lib/bcrypt";
@@ -17,12 +24,8 @@ import {
 import { registerActivity, tonSocietyClient, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { tgBotModerationMenu } from "@/moderationBot/menu";
-import eventFieldsDB from "@/db/modules/eventFields.db";
-import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
-import eventDB from "@/db/modules/events.db";
-import { userRolesDB } from "@/db/modules/userRoles.db";
-import { CreateTonSocietyDraft } from "@/services/tonSocietyService";
 import { logger } from "@/server/utils/logger";
+import { CreateTonSocietyDraft } from "@/services/tonSocietyService";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
@@ -34,8 +37,6 @@ import { Message } from "grammy/types";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { config, configProtected } from "../config";
-import { organizerTsVerified, userHasModerationAccess } from "@/db/modules/userFlags.db";
-import { getUserCacheKey, usersDB } from "@/db/modules/users.db";
 import {
   adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure as eventManagerPP,
@@ -43,7 +44,6 @@ import {
   router,
 } from "../trpc";
 import { internal_server_error } from "../utils/error_utils";
-import eventCategoriesDB from "@/db/modules/eventCategories.db";
 
 dotenv.config();
 
@@ -53,6 +53,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const event_uuid = opts.input.event_uuid;
   let eventData = {
     payment_details: {} as Partial<EventPaymentSelectType>,
+    category: {} as EventCategoryRow,
     ...(await eventDB.selectEventByUuid(event_uuid)),
   };
   let capacity_filled = false;
@@ -85,8 +86,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   if (eventData.category_id) {
     const fetchedCategory = await eventCategoriesDB.fetchCategoryById(eventData.category_id);
     if (fetchedCategory) {
-      // Add the category to eventData as `category?: EventCategoryRow`
-      (eventData as { category?: EventCategoryRow }).category = fetchedCategory;
+      eventData.category = fetchedCategory;
     }
   }
   //    Fetch user data for event owner
