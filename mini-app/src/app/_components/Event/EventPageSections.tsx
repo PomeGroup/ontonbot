@@ -94,10 +94,7 @@ const EventCategory = React.memo(() => {
     <EventKeyValue
       variant="link"
       label="Category"
-      href={
-        "/search?" +
-        new URLSearchParams({ selected_category: eventData.data.category_id.toString(), eventStatus: "upcoming" }).toString()
-      }
+      href={"/search?" + new URLSearchParams({ selected_category: eventData.data.category_id.toString() }).toString()}
       value={eventData.data.category.name}
     />
   );
