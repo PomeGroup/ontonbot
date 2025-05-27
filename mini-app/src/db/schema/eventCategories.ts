@@ -37,8 +37,8 @@ export const eventCategories = pgTable(
     sort_order: integer("sort_order").default(0),
 
     // Timestamps and auditing info
-    created_at: timestamp("created_at").defaultNow(),
-    updated_at: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),
+    created_at: timestamp("created_at", { mode: "string" }).defaultNow(),
+    updated_at: timestamp("updated_at", { mode: "string" }).$onUpdate(() => new Date().toString()),
     updated_by: text("updated_by").default("system").notNull(),
   },
   (table) => ({

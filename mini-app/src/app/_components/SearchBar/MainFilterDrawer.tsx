@@ -27,6 +27,8 @@ interface MainFilterDrawerProps {
   setSortBy: (_s: SortByType) => void;
   setFilter: (eventStatus: (typeof eventStatusValues)[number] | undefined) => void;
   filter: (typeof eventStatusValues)[number] | undefined;
+  categoryText: string;
+  setIsCategoryDrawerOpen: (open: boolean) => void;
 }
 
 const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
@@ -40,6 +42,9 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
   filter,
   setSortBy,
   setFilter,
+  categoryText,
+  setIsCategoryDrawerOpen,
+
   // applyingFilters,
   // setApplyingFilters,
 }) => {
@@ -82,7 +87,16 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               </div>
               <IoIosArrowForward className="text-sm ml-2 mt-8" />
             </div>
-
+            <div
+              className="flex items-center cursor-pointer border-b pb-1"
+              onClick={() => setIsCategoryDrawerOpen(true)} // <-- We'll define this state soon
+            >
+              <div className="flex-1 space-y-3">
+                <p className="font-medium">Categories</p>
+                <div className="text-sm line-clamp-1 w-11/12 overflow-hidden">{categoryText}</div>
+              </div>
+              <IoIosArrowForward className="text-sm ml-2 mt-8" />
+            </div>
             {/* SORT BY */}
             <div className="space-y-4">
               <p className="text-sm font-medium pt-2">Sort By</p>
