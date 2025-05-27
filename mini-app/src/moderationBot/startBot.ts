@@ -3,7 +3,7 @@ import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 import { Bot, GrammyError } from "grammy";
 import { userHasModerationAccess } from "@/db/modules/userFlags.db";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import { handleApproveInit } from "./handlers/handleApproveInit";
 import { handleApproveConfirm } from "./handlers/handleApproveConfirm";
 import { handleApproveCancel } from "./handlers/handleApproveCancel";

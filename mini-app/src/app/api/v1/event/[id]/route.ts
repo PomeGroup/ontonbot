@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { nftItems, orders } from "@/db/schema";
+import { EventCategoryRow, nftItems, orders } from "@/db/schema";
 import { OrderRow } from "@/db/schema/orders";
 import "@/lib/gracefullyShutdown";
 import { removeKey } from "@/lib/utils";
@@ -8,15 +8,16 @@ import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { couponItemsDB } from "@/db/modules/couponItems.db";
 import { getByEventUuidAndUserId } from "@/db/modules/eventRegistrants.db";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import ordersDB from "@/db/modules/orders.db";
 import { userRolesDB } from "@/db/modules/userRoles.db";
-import { usersDB } from "@/db/modules/users";
+import { usersDB } from "@/db/modules/users.db";
 import tonCenter, { NFTItem } from "@/services/tonCenter";
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { logger } from "@/server/utils/logger";
 import { and, eq } from "drizzle-orm";
 import { type NextRequest } from "next/server";
+import eventCategoriesDB from "@/db/modules/eventCategories.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -182,11 +183,17 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         isSoldOut = iso;
       }
     }
+    // NEW STEP: Fetch the category if you have a category_id
+    let category: EventCategoryRow | null = null;
+    if (eventData.category_id) {
+      category = await eventCategoriesDB.fetchCategoryById(eventData.category_id);
+    }
 
     if (dataOnly === "true") {
       return Response.json(
         {
           ...eventData,
+          category,
           organizer,
           eventTicket: event_payment_info,
           isSoldOut,
@@ -317,6 +324,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const data = {
       ...eventData,
+      category,
       userHasTicket: userHasTicket,
       needToUpdateTicket: userHasTicket && needToUpdateTicket,
       chosenNFTaddress,

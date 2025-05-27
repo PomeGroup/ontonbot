@@ -1,4 +1,4 @@
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import moderationLogDB from "@/db/modules/moderationLogger.db";
 import { tgBotModerationMenu } from "@/moderationBot/menu";
 import { getNoticeEmoji } from "@/moderationBot/helpers";

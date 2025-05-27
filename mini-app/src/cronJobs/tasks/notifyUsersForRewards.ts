@@ -1,5 +1,5 @@
 import { sleep } from "@/utils";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import telegramService from "@/services/telegramService";
 import rewardDB from "@/db/modules/rewards.db";
 import { logger } from "@/server/utils/logger";

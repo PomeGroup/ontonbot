@@ -1,6 +1,6 @@
 import { logger } from "@/server/utils/logger";
 // DB & Models
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import rewardDB from "@/db/modules/rewards.db";
 // Helpers
 import { extendEndDateIfNeeded, processRewardsBatch, revertEndDateIfNeeded } from "@/cronJobs/helper/createRewards.helpers";

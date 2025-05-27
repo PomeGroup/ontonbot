@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { logger } from "@/server/utils/logger";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import { eventRegistrants, orders } from "@/db/schema";
 import { db } from "@/db/db";
 import ordersDB from "@/db/modules/orders.db";
-import { usersDB } from "@/db/modules/users";
+import { usersDB } from "@/db/modules/users.db";
 import { OrderTypeValues } from "@/db/schema/orders";
 import rewardService from "@/services/rewardsService";
 import { PaymentTypes } from "@/db/enum";

@@ -1,7 +1,7 @@
 import { tokenCampaignOrdersDB } from "@/db/modules/tokenCampaignOrders.db";
 import { userWalletBalancesDB } from "@/db/modules/userWalletBalances.db";
 import ordersDB from "@/db/modules/orders.db";
-import { usersDB } from "@/db/modules/users";
+import { usersDB } from "@/db/modules/users.db";
 import { getAccountBalance } from "@/services/tonCenter";
 import { db } from "@/db/db";
 import { PlaceOfWalletConnection } from "@/db/schema/userWalletBalances";

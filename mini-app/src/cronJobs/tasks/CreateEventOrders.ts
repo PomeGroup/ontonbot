@@ -4,7 +4,7 @@ import { eventPayment } from "@/db/schema/eventPayment";
 import { events } from "@/db/schema/events";
 import { eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import { registerActivity } from "@/lib/ton-society-api";
 import type { OrderRow } from "@/db/schema/orders";
 import type { EventRow } from "@/db/schema/events";

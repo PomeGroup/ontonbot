@@ -4,7 +4,7 @@ import {
   initDataProtectedProcedure,
 } from "@/server/trpc";
 import { z } from "zod";
-import eventDB, { getEventByUuid } from "@/db/modules/events";
+import eventDB, { getEventByUuid } from "@/db/modules/events.db";
 import { logger } from "@/server/utils/logger";
 import telegramService from "@/services/telegramService";
 import { TRPCError } from "@trpc/server";
@@ -14,11 +14,11 @@ import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { users } from "@/db/schema/users";
 import { and, eq, or } from "drizzle-orm";
 import Papa from "papaparse";
-import { selectVisitorsByEventUuid } from "@/db/modules/visitors";
+import { selectVisitorsByEventUuid } from "@/db/modules/visitors.db";
 import { VisitorsWithDynamicFields } from "@/db/modules/dynamicType/VisitorsWithDynamicFields";
 import axios from "axios";
 import { getSBTClaimedStatus } from "@/lib/ton-society-api";
-import { usersDB } from "@/db/modules/users";
+import { usersDB } from "@/db/modules/users.db";
 import couponSchema from "@/zodSchema/couponSchema";
 import { couponDefinitionsDB } from "@/db/modules/couponDefinitions.db";
 import { couponItemsDB } from "@/db/modules/couponItems.db";

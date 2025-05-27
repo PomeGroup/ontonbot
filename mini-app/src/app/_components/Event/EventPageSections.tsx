@@ -86,6 +86,21 @@ const EventLink = React.memo(() => {
 });
 EventLink.displayName = "EventLink";
 
+const EventCategory = React.memo(() => {
+  const { eventData } = useEventData();
+  if (!eventData.data?.category_id) return null;
+
+  return (
+    <EventKeyValue
+      variant="link"
+      label="Category"
+      href={"/search?" + new URLSearchParams({ selected_category: eventData.data.category_id.toString() }).toString()}
+      value={eventData.data.category.name}
+    />
+  );
+});
+EventCategory.displayName = "EventWebsiteLink";
+
 const EventWebsiteLink = React.memo(() => {
   const { eventData } = useEventData();
   if (!eventData.data?.website) return null;
@@ -98,7 +113,7 @@ const EventWebsiteLink = React.memo(() => {
     />
   );
 });
-EventWebsiteLink.displayName = "EventWebsiteLink";
+EventCategory.displayName = "EventWebsiteLink";
 
 const EventTicketPrice = React.memo(() => {
   return (
@@ -179,6 +194,7 @@ const EventAttributes = React.memo(() => {
       <EventTicketPrice />
       <EventDatesComponent />
       <EventWebsiteLink />
+      <EventCategory />
     </div>
   );
 });

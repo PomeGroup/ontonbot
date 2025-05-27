@@ -3,7 +3,7 @@ import { eventRegistrants, orders } from "@/db/schema";
 import "@/lib/gracefullyShutdown";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import ordersDB from "@/db/modules/orders.db";
 import { Address } from "@ton/core";
 import { and, eq } from "drizzle-orm";

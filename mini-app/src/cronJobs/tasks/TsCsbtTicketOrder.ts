@@ -6,14 +6,14 @@ import { Address } from "@ton/core";
 import { eventPayment } from "@/db/schema/eventPayment";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { CsbtTicket } from "@/services/rewardsService";
-import { selectUserById } from "@/db/modules/users";
+import { selectUserById } from "@/db/modules/users.db";
 import { sendLogNotification } from "@/lib/tgBot";
 import { callTonfestForOnOntonPayment } from "@/cronJobs/helper/callTonfestForOnOntonPayment";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { callPridipieForOnOntonPayment } from "@/cronJobs/helper/callPridipieForOnOntonPayment";
 import { couponItemsDB } from "@/db/modules/couponItems.db";
 import { is_mainnet } from "@/services/tonCenter";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted

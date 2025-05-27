@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { selectVisitorsByEventUuid } from "@/db/modules/visitors";
+import { selectVisitorsByEventUuid } from "@/db/modules/visitors.db";
 import { eventManagementProtectedProcedure, router } from "../trpc";
 
 export const visitorsRouter = router({

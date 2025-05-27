@@ -1,7 +1,7 @@
 import { eventPoaTriggersDB } from "@/db/modules/eventPoaTriggers.db";
 import { notificationsDB } from "@/db/modules/notifications.db";
 import { EventTriggerStatus, NotificationItemType, NotificationStatus, NotificationType } from "@/db/schema";
-import { getEventById, fetchOngoingEvents } from "@/db/modules/events";
+import { getEventById, fetchOngoingEvents } from "@/db/modules/events.db";
 import { fetchApprovedUsers } from "@/db/modules/eventRegistrants.db";
 import { ACTION_TIMEOUTS, PASSWORD_RETRY_LIMIT, WORKER_INTERVAL, PAGE_SIZE } from "@/sockets/constants";
 import { logger } from "@/server/utils/logger";

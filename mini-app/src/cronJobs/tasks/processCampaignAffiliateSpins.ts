@@ -7,7 +7,7 @@ import { AffiliateItemTypeEnum } from "@/db/schema/affiliateLinks";
 import { TokenCampaignUserSpinsInsert } from "@/db/schema/tokenCampaignUserSpins";
 import { notifyUserOfAffiliateReward } from "../helper/notifyUserOfAffiliateReward";
 import { sendLogNotification } from "@/lib/tgBot";
-import { usersDB } from "@/db/modules/users";
+import { usersDB } from "@/db/modules/users.db";
 
 /**
  * Cron job: awarding spins for onion1-campaign affiliates
