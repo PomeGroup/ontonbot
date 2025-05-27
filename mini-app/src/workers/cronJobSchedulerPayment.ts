@@ -37,6 +37,20 @@ async function MainCronJob() {
   new CronJob("*/9 * * * * *", cronJobRunner(cronJobs.MintNFTForPaidOrders), null, true);
   new CronJob("*/11 * * * * *", cronJobRunner(cronJobs.TsCsbtTicketOrder), null, true);
   new CronJob("*/21 * * * * *", cronJobs.OrganizerPromoteProcessing, null, true);
+  //runPendingCallbackTasks
+  new CronJob(
+    "*/60 * * * * *",
+    cronJobs.runPendingCallbackTasks, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
+
   // new CronJob(
   //   "*/2 * * * * *",
   //   cronJobs.processCampaignOrders, // The function to run
