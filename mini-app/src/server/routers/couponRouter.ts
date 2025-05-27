@@ -5,7 +5,7 @@ import { couponItemsDB } from "@/db/modules/couponItems.db";
 import couponSchema from "@/zodSchema/couponSchema";
 import { db } from "@/db/db";
 import { logger } from "@/server/utils/logger";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import Papa from "papaparse";
 import axios from "axios";
 

@@ -14,6 +14,14 @@ export interface OrganizerType {
   hosted_event_count: number;
 }
 
+export interface EventCategoryType {
+  category_id: number;
+  name: string;
+  description?: string;
+  icon_url?: string;
+  sort_order?: number;
+  enabled: boolean;
+}
 export interface EventDataOnlyType {
   website?: {
     label: string;
@@ -56,6 +64,7 @@ export interface EventDataOnlyType {
   created_at: string;
   accessRoles: Array<{ user_id: number; role: string }> | undefined;
   hasActiveCoupon: boolean;
+  category?: EventCategoryType;
 }
 
 export interface EventType extends EventDataOnlyType {

@@ -1,7 +1,7 @@
 import { logger } from "@/server/utils/logger";
 import { callCreateInviteLink, callDeleteInviteLink, callCheckBotAdmin, sendTelegramMessage } from "@/lib/tgBot";
 
-import { fetchUpcomingEventsWithGroup } from "@/db/modules/events";
+import { fetchUpcomingEventsWithGroup } from "@/db/modules/events.db";
 import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
 import { sleep } from "@/utils";
 import { AxiosError } from "axios";

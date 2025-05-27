@@ -5,7 +5,7 @@ import { eventPoaResultsDB } from "@/db/modules/eventPoaResults.db";
 import { eventPoaTriggersDB } from "@/db/modules/eventPoaTriggers.db";
 import { NOTIFICATION_TIMEOUT_MARGIN, PASSWORD_RETRY_LIMIT } from "@/sockets/constants";
 import { validateNotificationReply } from "@/sockets/helpers/validateNotificationReply";
-import { getEventById } from "@/db/modules/events";
+import { getEventById } from "@/db/modules/events.db";
 import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
 import eventFieldsDB from "@/db/modules/eventFields.db";
 import bcryptLib from "@/lib/bcrypt";
@@ -14,7 +14,7 @@ import { logger } from "@/server/utils/logger";
 
 import { getCache, setCache, deleteCache, cacheKeys } from "@/lib/redisTools";
 import { Server } from "socket.io";
-import visitorsDB from "@/db/modules/visitors";
+import visitorsDB from "@/db/modules/visitors.db";
 import rewardDB from "@/db/modules/rewards.db";
 
 type CallbackFunction = (response: { status: string; message: string }) => void;

@@ -1,4 +1,4 @@
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import { parseRejectReason } from "@/moderationBot/menu";
 import moderationLogDB from "@/db/modules/moderationLogger.db";
 import { InlineKeyboard } from "grammy";

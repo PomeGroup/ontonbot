@@ -582,6 +582,27 @@
       "when": 1748103588563,
       "tag": "0082_watery_makkari",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1748346167314,
+      "tag": "0083_lean_skullbuster",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1748349409302,
+      "tag": "0084_slippery_the_enforcers",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1748351545744,
+      "tag": "0085_third_black_knight",
+      "breakpoints": true
     }
   ]
 }

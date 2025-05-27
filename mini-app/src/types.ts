@@ -1,6 +1,6 @@
 import { Address } from "@ton/core";
 import { z } from "zod";
-import { ticketTypes } from "./db/schema";
+import { EventCategoryRow, ticketTypes } from "./db/schema";
 
 export type OntonEvent = {
   eventUuid: string;
@@ -23,6 +23,7 @@ export type OntonEvent = {
   city?: string;
   country?: string;
   participationType?: string;
+  category?: EventCategoryRow;
 };
 
 export type InputField = {
@@ -268,7 +269,11 @@ export const EventDataSchema = z
 
     /* ------------------------------- Paid Event Creation ------------------------------- */
     paid_event: PaidEventSchema.optional(),
-    /* ------------------------------- Paid Event Creation ------------------------------- */
+    /* -------------------------- Event Category ------------------------- */
+    category_id: z
+      .number({ required_error: "category_id is required" }) // mandatory
+      .int()
+      .positive(),
   })
   .superRefine((data, ctx) => {
     // Validate secret_phrase is required for non-paid events
@@ -350,7 +355,8 @@ export const UpdateEventDataSchema = z.object({
 
   /* ------------------------------- Paid Event Update ------------------------------- */
   paid_event: PaidEventSchema.optional(),
-  /* ------------------------------- Paid Event Update ------------------------------- */
+  /* -------------------------- Event Category ------------------------- */
+  category_id: z.number({ required_error: "category_id is required" }).int().positive(),
 });
 
 export const EventRegisterSchema = z.object({

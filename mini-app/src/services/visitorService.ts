@@ -1,6 +1,6 @@
 // Helper function to validate and retrieve visitor
-import visitorsDB from "@/db/modules/visitors";
-import eventDB from "@/db/modules/events";
+import visitorsDB from "@/db/modules/visitors.db";
+import eventDB from "@/db/modules/events.db";
 import { TRPCError } from "@trpc/server";
 import userEventFieldsDB from "@/db/modules/userEventFields.db";
 import { logger } from "@/server/utils/logger";

@@ -1,7 +1,7 @@
 import rewardDB from "@/db/modules/rewards.db";
 import pLimit from "p-limit";
 import { logger } from "@/server/utils/logger";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import { handleSingleRewardUpdate } from "@/cronJobs/helper/handleSingleRewardUpdate";
 import eventPaymentDB from "@/db/modules/eventPayment.db";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";

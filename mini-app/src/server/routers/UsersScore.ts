@@ -6,8 +6,8 @@ import { initDataProtectedProcedure, router } from "../trpc";
 
 import { handleSingleRewardUpdate } from "@/cronJobs/helper/handleSingleRewardUpdate";
 import { RewardType } from "@/db/enum";
-import eventDB from "@/db/modules/events";
-import visitorsDB from "@/db/modules/visitors";
+import eventDB from "@/db/modules/events.db";
+import visitorsDB from "@/db/modules/visitors.db";
 import { RewardTonSocietyStatusType } from "@/db/schema/rewards";
 import { logger } from "@/server/utils/logger";
 

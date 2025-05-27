@@ -1,10 +1,10 @@
 import { db } from "@/db/db";
 import { eventFields, events, rewards, specialGuests, tickets, userEventFields, users, visitors } from "@/db/schema";
 import { and, between, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
-import { checkEventTicketToCheckIn } from "@/db/modules/events";
+import { checkEventTicketToCheckIn } from "@/db/modules/events.db";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
-import { getUserCacheKey } from "@/db/modules/users";
+import { getUserCacheKey } from "@/db/modules/users.db";
 import { VisitorsRow } from "@/db/schema/visitors";
 
 const getVisitorCacheKey = (user_id: number, event_uuid: string) => `visitor:${user_id}:${event_uuid}`;

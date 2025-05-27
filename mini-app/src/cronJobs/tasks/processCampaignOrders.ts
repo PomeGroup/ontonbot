@@ -4,7 +4,7 @@ import { tokenCampaignUserSpinsDB } from "@/db/modules/tokenCampaignUserSpins.db
 import { TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
 import { logger } from "@/server/utils/logger";
 import { sendLogNotification } from "@/lib/tgBot";
-import { usersDB } from "@/db/modules/users";
+import { usersDB } from "@/db/modules/users.db";
 import { tokenCampaignSpinPackagesDB } from "@/db/modules/tokenCampaignSpinPackages.db";
 import { is_mainnet } from "@/services/tonCenter";
 import { attemptSendTelegramWithRetries } from "@/cronJobs/helper/attemptSendTelegramWithRetries";

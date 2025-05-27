@@ -1,4 +1,4 @@
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import { z } from "zod";
 import { logger } from "@/server/utils/logger";
 import { getAuthenticatedUserApi } from "@/server/auth";

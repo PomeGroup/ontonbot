@@ -3,7 +3,7 @@ import { logger } from "@/server/utils/logger";
 import { getAuthenticatedUser } from "@/server/auth";
 import { couponItemsDB } from "@/db/modules/couponItems.db";
 import { couponDefinitionsDB } from "@/db/modules/couponDefinitions.db";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import { checkRateLimit } from "@/lib/checkRateLimit";
 import { NextResponse } from "next/server";
 import { db } from "@/db/db";

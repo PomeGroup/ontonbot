@@ -1,6 +1,13 @@
 import { NonVerifiedHubsIds } from "@/constants";
 import { db } from "@/db/db";
-import { eventFields, eventPayment, events, orders } from "@/db/schema";
+import eventCategoriesDB from "@/db/modules/eventCategories.db";
+import eventFieldsDB from "@/db/modules/eventFields.db";
+import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
+import eventDB from "@/db/modules/events.db";
+import { organizerTsVerified, userHasModerationAccess } from "@/db/modules/userFlags.db";
+import { userRolesDB } from "@/db/modules/userRoles.db";
+import { getUserCacheKey, usersDB } from "@/db/modules/users.db";
+import { EventCategoryRow, eventFields, eventPayment, events, orders } from "@/db/schema";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { hashPassword } from "@/lib/bcrypt";
 import { timestampToIsoString } from "@/lib/DateAndTime";
@@ -17,12 +24,8 @@ import {
 import { registerActivity, tonSocietyClient, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { tgBotModerationMenu } from "@/moderationBot/menu";
-import eventFieldsDB from "@/db/modules/eventFields.db";
-import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
-import eventDB from "@/db/modules/events";
-import { userRolesDB } from "@/db/modules/userRoles.db";
-import { CreateTonSocietyDraft } from "@/services/tonSocietyService";
 import { logger } from "@/server/utils/logger";
+import { CreateTonSocietyDraft } from "@/services/tonSocietyService";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
@@ -34,8 +37,6 @@ import { Message } from "grammy/types";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { config, configProtected } from "../config";
-import { organizerTsVerified, userHasModerationAccess } from "@/db/modules/userFlags.db";
-import { getUserCacheKey, usersDB } from "@/db/modules/users";
 import {
   adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure as eventManagerPP,
@@ -52,6 +53,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const event_uuid = opts.input.event_uuid;
   let eventData = {
     payment_details: {} as Partial<EventPaymentSelectType>,
+    category: {} as EventCategoryRow,
     ...(await eventDB.selectEventByUuid(event_uuid)),
   };
   let capacity_filled = false;
@@ -80,7 +82,13 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       throw new TRPCError({ code: "UNPROCESSABLE_CONTENT", message: "event is not published yet" });
     }
   }
-
+  // If event is not enabled, we don't need to fetch the category
+  if (eventData.category_id) {
+    const fetchedCategory = await eventCategoriesDB.fetchCategoryById(eventData.category_id);
+    if (fetchedCategory) {
+      eventData.category = fetchedCategory;
+    }
+  }
   //    Fetch user data for event owner
   //    We'll rename org_* fields to 'organizer: { ... }' in the returned object.
   const ownerUserId = eventData.owner; // This is the user_id who created the event
@@ -228,7 +236,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
   const is_ts_verified = await organizerTsVerified(user_id);
   if (!is_ts_verified && !NonVerifiedHubsIds.includes(input_event_data.society_hub.id))
     throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid HUBS for non verified organizer" });
-
+  const category = await eventCategoriesDB.fetchCategoryById(input_event_data.category_id);
+  if (!category || !category.enabled) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid or disabled category" });
+  }
   try {
     const result = await db.transaction(async (trx) => {
       const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
@@ -257,6 +268,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       const newEvent = await trx
         .insert(events)
         .values({
+          category_id: input_event_data.category_id,
           type: input_event_data.type,
           event_uuid: uuidv4(),
           title: input_event_data.title,
@@ -537,6 +549,10 @@ const updateEvent = eventManagerPP
     const eventUuid = opts.ctx.event.event_uuid;
     const eventId = opts.ctx.event.event_id;
     const user_id = opts.ctx.user.user_id;
+    const category = await eventCategoriesDB.fetchCategoryById(eventData.category_id);
+    if (!category || !category.enabled) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid or disabled category" });
+    }
 
     try {
       return await db.transaction(async (trx) => {
@@ -643,6 +659,7 @@ const updateEvent = eventManagerPP
         const updatedEvent = await trx
           .update(events)
           .set({
+            category_id: eventData.category_id,
             type: eventData.type,
             title: eventData.title,
             subtitle: eventData.subtitle,
@@ -947,6 +964,18 @@ export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(sea
     nextCursor,
   };
 });
+
+const getCategories = initDataProtectedProcedure.query(async () => {
+  try {
+    return await eventCategoriesDB.fetchAllCategories(true);
+  } catch (error) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Error fetching enabled categories",
+      cause: error,
+    });
+  }
+});
 /* -------------------------------------------------------------------------- */
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
@@ -957,4 +986,5 @@ export const eventsRouter = router({
   updateEvent, //private
   getEventsWithFilters,
   getEventsWithFiltersInfinite,
+  getCategories,
 });

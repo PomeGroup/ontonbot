@@ -5,8 +5,8 @@ import { adminOrganizerProtectedProcedure, router } from "../trpc";
 import { logger } from "../utils/logger";
 import { accessRoleItemTypeSchema } from "@/db/schema/userRoles";
 import { userRolesBulkUpsertInputSchema } from "@/zodSchema/userRoles";
-import eventDB from "@/db/modules/events";
-import { usersDB } from "@/db/modules/users";
+import eventDB from "@/db/modules/events.db";
+import { usersDB } from "@/db/modules/users.db";
 import { UserRolesBulkUpsertInput } from "@/types/ActiveUserRole.types";
 
 export const userRolesRouter = router({

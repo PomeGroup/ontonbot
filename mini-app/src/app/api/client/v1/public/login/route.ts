@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { redisTools } from "@/lib/redisTools";
-import { usersDB } from "@/db/modules/users";
+import { usersDB } from "@/db/modules/users.db";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.CLIENT_API_JWT_SECRET!;

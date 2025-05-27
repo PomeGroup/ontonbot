@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useLayoutEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import { Block } from "konsta/react";
+import { useParams } from "next/navigation";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 import { type RouterOutput } from "@/server";
 
@@ -13,10 +13,10 @@ import { useSectionStore } from "@/zustand/useSectionStore";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 
 // The 4-step components
-import { GeneralStep } from "./GeneralStep";
-import { TimePlaceStep } from "./TimePlaceStep";
 import RegistrationStep from "../../Event/steps/EventRegistration";
+import { GeneralStep } from "./GeneralStep";
 import { RewardStep } from "./RewardStep";
+import { TimePlaceStep } from "./TimePlaceStep";
 
 type ManageEventProps = {
   event?: RouterOutput["events"]["getEvent"];
@@ -72,6 +72,7 @@ function ManageEvent({ event }: ManageEventProps) {
           start_date: event.start_date || undefined,
           end_date: event.end_date || undefined,
           location: event.location || undefined,
+          category_id: event.category_id || undefined,
           // @ts-ignore
           society_hub: event.society_hub
             ? {
@@ -149,4 +150,3 @@ function ManageEvent({ event }: ManageEventProps) {
 }
 
 export default ManageEvent;
-

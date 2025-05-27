@@ -8,7 +8,7 @@ import { uploadJsonToMinio } from "@/lib/minioTools";
 import { nftItems } from "@/db/schema/nft_items";
 import { mintNFT } from "@/lib/nft";
 import { is_mainnet } from "@/services/tonCenter";
-import { selectUserById } from "@/db/modules/users";
+import { selectUserById } from "@/db/modules/users.db";
 import { sendLogNotification } from "@/lib/tgBot";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
