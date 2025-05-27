@@ -7,7 +7,7 @@ import { findActivity } from "@/lib/ton-society-api";
 import { removeKey } from "@/lib/utils";
 import eventFieldsDB from "@/db/modules/eventFields.db";
 import { organizerTsVerified } from "@/db/modules/userFlags.db";
-import { selectUserById } from "@/db/modules/users";
+import { selectUserById } from "@/db/modules/users.db";
 import { is_prod_env } from "@/server/utils/evnutils";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";

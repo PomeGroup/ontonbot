@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import ticketDB from "@/db/modules/ticket.db";
 import rewardsService from "@/services/rewardsService";
 import { validateJwtFromRequest } from "@/app/api/client/v1/authService";
-import { selectUserById } from "@/db/modules/users";
+import { selectUserById } from "@/db/modules/users.db";
 
 // Zod schema to validate the request body
 const checkInTicketSchema = z.object({

@@ -1,7 +1,7 @@
 import { eventManagementProtectedProcedure, router } from "../trpc";
 import { addEventPoaTrigger, getPoaByEventId, EventPoaTrigger } from "@/db/modules/eventPoaTriggers.db";
 import { EventTriggerStatus, eventTriggerType, EventTriggerType } from "@/db/enum";
-import { getEventByUuid } from "@/db/modules/events";
+import { getEventByUuid } from "@/db/modules/events.db";
 import { POA_CREATION_LIMIT, POA_CREATION_TIME_DISTANCE } from "@/sockets/constants";
 import { z } from "zod";
 import { logger } from "@/server/utils/logger";

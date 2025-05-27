@@ -170,6 +170,7 @@ import {
 } from "./schema/nftApiCollections";
 import { nftApiItems, NftApiItems, NftApiItemsInsert } from "./schema/nftApiItems";
 import { userScoreRules, scoreRuleRole, UserScoreRuleRow, UserScoreRuleRoleType } from "./schema/userScoreRules";
+import { eventCategories, EventCategoryRow } from "./schema/eventCategories";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -228,6 +229,7 @@ export {
   eventRegistrants,
   eventRegistrantStatus,
   events,
+  eventCategories,
   giataCity,
   moderationLog,
   nftItems,
@@ -286,6 +288,7 @@ export type {
   EventPoaResultStatus,
   EventTriggerStatus,
   EventTriggerType,
+  EventCategoryRow,
   ModerationLogActionType,
   NotificationItemType,
   NotificationStatus,

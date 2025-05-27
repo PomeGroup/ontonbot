@@ -5,7 +5,7 @@ import { sanitizeInput } from "@/lib/sanitizer";
 import { notificationsDB } from "@/db/modules/notifications.db";
 import { eventPoaTriggersDB } from "@/db/modules/eventPoaTriggers.db";
 import { eventPoaResultsDB } from "@/db/modules/eventPoaResults.db";
-import { getEventById } from "@/db/modules/events";
+import { getEventById } from "@/db/modules/events.db";
 import { NotificationItemType, NotificationStatus, NotificationType } from "@/db/enum"; // Ensure this import is present
 import { logger } from "@/server/utils/logger";
 

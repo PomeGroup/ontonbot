@@ -4,9 +4,9 @@ import ticketDB from "@/db/modules/ticket.db";
 import { TRPCError } from "@trpc/server";
 import rewardsService from "@/services/rewardsService";
 import { logger } from "../utils/logger";
-import visitorsDB from "@/db/modules/visitors";
+import visitorsDB from "@/db/modules/visitors.db";
 import rewardDB from "@/db/modules/rewards.db";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 
 // Type guard to check if result is alreadyCheckedIn type
 function isAlreadyCheckedIn(result: any): result is { alreadyCheckedIn: boolean } {

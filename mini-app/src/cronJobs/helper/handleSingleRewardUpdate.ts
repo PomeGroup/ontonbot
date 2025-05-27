@@ -1,4 +1,4 @@
-import visitorsDB from "@/db/modules/visitors";
+import visitorsDB from "@/db/modules/visitors.db";
 import { getSBTClaimedStatus } from "@/lib/ton-society-api";
 import { RewardTonSocietyStatusType } from "@/db/schema/rewards";
 import { logger } from "@/server/utils/logger";

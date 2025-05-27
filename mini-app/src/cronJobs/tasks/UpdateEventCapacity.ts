@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { orders } from "@/db/schema/orders";
 import { and, eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
-import eventDB from "@/db/modules/events";
+import eventDB from "@/db/modules/events.db";
 import { eventPayment } from "@/db/schema/eventPayment";
 import { events } from "@/db/schema/events";
 
