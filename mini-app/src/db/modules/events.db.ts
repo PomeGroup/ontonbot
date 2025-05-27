@@ -397,7 +397,9 @@ export const getEventsWithFilters = async (
       conditions.push(inArray(event_details_search_list.eventUuid, validEventUuids));
     }
   }
-
+  if (filter?.category_id && filter.category_id.length > 0) {
+    conditions.push(inArray(event_details_search_list.categoryId, filter.category_id));
+  }
   // Add ongoing events filter
   if (filter?.eventStatus === "ongoing") {
     const currentTime = Math.floor(Date.now() / 1000);
