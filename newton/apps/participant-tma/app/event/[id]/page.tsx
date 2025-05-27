@@ -120,7 +120,9 @@ const Event = async ({ params, searchParams }: EventParams) => {
   if (eventData.eventTicket) {
     attributes.push(["Ticket Price", `${eventData.eventTicket?.price} ${eventData.eventTicket.payment_type}`]);
   }
-
+  if (eventData.category) {
+    attributes.push(["Category", eventData.category.name]);
+  }
   if (eventData?.website && websiteLabel && websiteLink) {
     attributes.push([
       "Website",
