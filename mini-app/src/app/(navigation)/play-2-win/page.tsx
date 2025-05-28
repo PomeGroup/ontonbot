@@ -135,7 +135,6 @@ const TournamentFilter: React.FC<{
                 key={o}
                 onClick={(e) => {
                   e.preventDefault();
-                  e.stopPropagation();
                   setSelected(o);
                 }}
                 className={cn("flex justify-between items-center px-0", selected === o && "text-primary")}
@@ -193,7 +192,6 @@ const TournamentFilter: React.FC<{
                 key={game.id}
                 onClick={(e) => {
                   e.preventDefault();
-                  e.stopPropagation();
                   setSelectedGame(game.id);
                 }}
                 className={cn("flex justify-between items-center px-0", selectedGame === game.id && "text-primary")}

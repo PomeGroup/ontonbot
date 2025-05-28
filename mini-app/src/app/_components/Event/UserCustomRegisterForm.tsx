@@ -192,9 +192,7 @@ const UserCustomRegisterForm = () => {
           <CustomButton
             variant="primary"
             isLoading={registerUser.isLoading}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+            onClick={() => {
               registrationForm.current?.requestSubmit();
             }}
           >

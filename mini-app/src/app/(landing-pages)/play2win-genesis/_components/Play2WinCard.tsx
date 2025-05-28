@@ -19,7 +19,6 @@ const Play2WinCard: React.FC = () => {
       <Play2WinGenesisButton
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();
           handleClick();
         }}
         disabled={contest.noGame || clicked}

@@ -100,7 +100,6 @@ export default function DatePickerRow({
                     <IconButton
                       onClick={(e) => {
                         e.preventDefault();
-                        e.stopPropagation();
                         handleOpen();
                       }}
                       size="small"

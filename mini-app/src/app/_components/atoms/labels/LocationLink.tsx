@@ -23,9 +23,7 @@ const WebsiteLink = ({ location, className }: Props) => {
   return (
     <Link
       href={"#"}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
+      onClick={() => {
         webApp?.openLink(location);
       }}
       className={cn(

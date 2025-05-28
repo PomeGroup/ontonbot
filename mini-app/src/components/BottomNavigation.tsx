@@ -84,7 +84,6 @@ export default function BottomNavigation(props: { children: ReactNode }) {
               )}
               onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 router.push(tab.urls[0]);
               }}
             >

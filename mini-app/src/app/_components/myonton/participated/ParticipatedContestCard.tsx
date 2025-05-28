@@ -69,7 +69,6 @@ const ParticipatedContestCard: React.FC<ParticipatedContestCardProps> = (props) 
     <div
       onClick={(e) => {
         e.preventDefault();
-        e.stopPropagation();
         handleEventClick();
       }}
       className={cn(!props.noClick && "cursor-pointer")}

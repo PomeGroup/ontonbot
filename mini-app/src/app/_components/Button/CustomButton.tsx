@@ -46,8 +46,6 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     itemType="button"
     disabled={isLoading}
     onClick={(e) => {
-      e.preventDefault();
-      e.stopPropagation();
       onClick?.(e);
     }}
     className={cn(customButtonVariants({ size }), buttonClassName)}

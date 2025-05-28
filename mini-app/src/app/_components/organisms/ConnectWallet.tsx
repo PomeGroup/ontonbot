@@ -68,7 +68,6 @@ export function ConnectWalletCard() {
               <DropdownMenuItem
                 onClick={(e) => {
                   e.preventDefault();
-                  e.stopPropagation();
                   tonconnect.disconnect();
                   toast.success("Wallet disconnected");
                 }}

@@ -134,7 +134,6 @@ function EventCard({ event, afterTitle, timeOnly, noClick }: EventCardProps, ref
     <div
       onClick={(e) => {
         e.preventDefault();
-        e.stopPropagation();
         handleEventClick();
       }}
       className={cn(!noClick && "cursor-pointer")}

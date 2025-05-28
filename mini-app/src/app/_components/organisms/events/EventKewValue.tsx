@@ -52,7 +52,6 @@ const EventKeyValue = (props: EventKeyValueProps) => {
         })}
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();
 
           if (props.href?.startsWith("/")) {
             router.push(props.href);

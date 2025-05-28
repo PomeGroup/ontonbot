@@ -28,8 +28,6 @@ const CustomCard: React.FC<CustomCardProps> = ({
   return (
     <div
       onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
         onClick?.(e);
       }}
       className={cn("h-full bg-white rounded-2lg", defaultPadding && "p-4", className)}

@@ -26,8 +26,6 @@ export const ManageEventButton = () => {
     <CustomCard defaultPadding>
       <CustomButton
         onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
           router.push(`/events/${eventHash}/manage`);
         }}
         variant="outline"

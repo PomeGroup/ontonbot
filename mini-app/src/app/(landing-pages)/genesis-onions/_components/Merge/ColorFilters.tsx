@@ -17,7 +17,6 @@ export const ColorFilters: React.FC = () => {
           key={color}
           onClick={(e) => {
             e.preventDefault();
-            e.stopPropagation();
             webapp?.openLink(getFilterUrl(color));
           }}
           className="border border-white p-2 flex flex-col gap-0.5 justify-center items-center bg-white/10 rounded-md backdrop-blur-lg w-full"

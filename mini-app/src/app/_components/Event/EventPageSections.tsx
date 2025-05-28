@@ -299,7 +299,6 @@ const OrganizerCard = React.memo(() => {
           className="cursor-pointer"
           onClick={(e) => {
             e.preventDefault();
-            e.stopPropagation();
             router.push(`/channels/${eventData.data?.owner}/`);
           }}
           title={
@@ -363,7 +362,6 @@ const SbtCollectionLink = React.memo(() => {
         className="!mt-0 mb-4 cursor-pointer"
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();
           window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank");
         }}
       >

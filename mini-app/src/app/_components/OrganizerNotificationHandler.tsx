@@ -146,7 +146,6 @@ const OrganizerNotificationHandler: React.FC = () => {
         <Button
           onClick={(e) => {
             e.preventDefault();
-            e.stopPropagation();
             handleCloseDialog();
           }}
         >

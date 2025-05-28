@@ -179,7 +179,6 @@ export default function CreatePromotionForm({ eventUuid, onDone }: CreatePromoti
                   <div
                     onClick={(e) => {
                       e.preventDefault();
-                      e.stopPropagation();
                       alert("You must select start date first!");
                     }}
                     className="bg-gray-100 p-3 rounded shadow-sm text-sm text-gray-500 cursor-pointer"

@@ -114,7 +114,6 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
         )}
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();
           !props.disabled && setIsSheetOpen(true);
         }}
         type="button"

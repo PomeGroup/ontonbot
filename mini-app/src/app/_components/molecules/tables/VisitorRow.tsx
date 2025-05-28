@@ -54,7 +54,6 @@ const VisitorRow: FC<VisitorRowProps> = ({ visitor, refProp, webApp, index, isLa
               className="cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 if (visitor?.wallet_address) {
                   webApp?.openLink(`https://tonviewer.com/${visitor?.wallet_address}`);
                 }

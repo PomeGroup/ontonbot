@@ -23,7 +23,6 @@ export default function ActionCard({ onClick, iconSrc, title, subtitle, classNam
     <CustomCard
       onClick={(e) => {
         e.preventDefault();
-        e.stopPropagation();
         onClick(e);
       }}
       className={cn(className, !!onClick && "cursor-pointer")}

@@ -48,8 +48,6 @@ export default function ActionCardWithMenu({
   return (
     <CustomCard
       onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
         onCardClick?.();
       }}
       className="cursor-pointer"

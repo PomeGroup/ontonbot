@@ -32,7 +32,6 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
             <li
               onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 index < currentStep && setCurrentStep(index + 1);
               }}
               className={cn(

@@ -121,7 +121,6 @@ export const UploadVideoFile = (props: UploadFileProps) => {
         )}
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();
           !props.disabled && setIsSheetOpen(true);
         }}
         type="button"
@@ -165,7 +164,6 @@ export const UploadVideoFile = (props: UploadFileProps) => {
           opened={isSheetOpen}
           onBackdropClick={(e) => {
             e.preventDefault();
-            e.stopPropagation();
             setIsSheetOpen(false);
           }}
           className={cn("w-full")}
@@ -209,7 +207,6 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               disabled={isUploading || props.disabled}
               onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 videoInputRef.current?.click();
               }}
             >
@@ -222,7 +219,6 @@ export const UploadVideoFile = (props: UploadFileProps) => {
                 className="w-16 h-10 mx-auto rounded-full mt-4"
                 onClick={(e) => {
                   e.preventDefault();
-                  e.stopPropagation();
                   setIsSheetOpen(false);
                   if (props.onDone) props.onDone(videoPreview);
                 }}

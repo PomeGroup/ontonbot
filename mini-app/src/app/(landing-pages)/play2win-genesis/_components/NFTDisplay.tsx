@@ -16,7 +16,6 @@ export default function NFTDisplay() {
         tabIndex={0}
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();
           if (reachedMaxScore) setShowNFTDialog(true);
         }}
         onKeyDown={(e) => {

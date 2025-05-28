@@ -71,7 +71,6 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
           className="flex justify-between items-center cursor-pointer p-0 px-10"
           onClick={(e) => {
             e.preventDefault();
-            e.stopPropagation();
             allSelected ? deselectAllHubs : selectAllHubs;
           }}
         >
@@ -90,7 +89,6 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
               className={`flex justify-between items-center border-b-2 border-b-gray-800 px-6 cursor-pointer h-12`}
               onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 toggleHubSelection(hub.id);
               }}
             >

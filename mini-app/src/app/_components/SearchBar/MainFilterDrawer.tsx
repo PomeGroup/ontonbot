@@ -54,7 +54,6 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
         <button
           onClick={(e) => {
             e.preventDefault();
-            e.stopPropagation();
             setOpen(true);
           }}
           className="p-[6px] rounded-md text-gray-500 hover:text-gray-700 bg-[#7474801F]"
@@ -71,7 +70,6 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               className="space-y-3 border-b-[1px] pb-1"
               onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 setIsEventTypeDrawerOpen(true);
               }}
             >
@@ -89,7 +87,6 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               className="flex items-center cursor-pointer border-b pb-1"
               onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 setIsHubDrawerOpen(true);
               }}
             >
@@ -103,7 +100,6 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               className="flex items-center cursor-pointer border-b pb-1"
               onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 setIsCategoryDrawerOpen(true);
               }} // <-- We'll define this state soon
             >

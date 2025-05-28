@@ -100,8 +100,6 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
             <CustomButton
               variant={allTasksDone ? undefined : "outline"}
               onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
                 closeTasksOpen();
               }}
             >

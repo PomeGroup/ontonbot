@@ -58,8 +58,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
               <CustomButton
                 variant="outline"
                 size="md"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   tournament.tournamentLink && webApp?.openTelegramLink(tournament.tournamentLink);
                 }}
               >

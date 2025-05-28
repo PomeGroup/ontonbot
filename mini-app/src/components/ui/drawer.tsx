@@ -160,7 +160,6 @@ export const KSheet = (props: KSheeProps) => {
         <Sheet
           onBackdropClick={(e) => {
             e.preventDefault();
-            e.stopPropagation();
             props.onOpenChange?.(false);
             setOpen(false);
           }}

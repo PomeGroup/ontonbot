@@ -21,7 +21,6 @@ export const Prize = ({ prize, onClose }: Props) => {
       )}
       onClick={(e) => {
         e.preventDefault();
-        e.stopPropagation();
         onClose();
       }}
     >

@@ -67,7 +67,6 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
             className={`flex justify-between items-center cursor-pointer p-2 border-b-2 border-b-gray-800`}
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation();
               handleToggleType("online");
             }}
           >
@@ -83,7 +82,6 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
             className={`flex justify-between items-center cursor-pointer p-2`}
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation();
               handleToggleType("in_person");
             }}
           >

@@ -23,7 +23,6 @@ const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({ src, hubName, collectionI
       ref={ref}
       onClick={(e) => {
         e.preventDefault();
-        e.stopPropagation();
         onClick();
       }}
       className={`p-2 rounded-lg cursor-pointer transition-shadow ${selected ? "font-bold" : "font-light"}`}

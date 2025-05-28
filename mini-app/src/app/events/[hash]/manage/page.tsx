@@ -108,8 +108,6 @@ export default function ManageIndexPage() {
             {eventData.participationType === "online" ? (
               <CustomButton
                 onClick={async (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
                   if (eventData.event_uuid) {
                     requestSendQRCode.mutateAsync({
                       url: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,

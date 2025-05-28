@@ -85,7 +85,6 @@ const ModalDialog: React.FC<ModalDialogProps> = ({ isVisible, onClose, descripti
         style={backdropStyle}
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();
           onClose();
         }}
       ></div>

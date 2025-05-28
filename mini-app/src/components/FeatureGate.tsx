@@ -61,7 +61,6 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({ featureName, children 
             size="lg"
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation();
               webApp?.openTelegramLink("https://onton.com/support");
             }}
             className="w-full"

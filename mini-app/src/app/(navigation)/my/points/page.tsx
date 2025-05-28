@@ -70,8 +70,6 @@ export default function MyPointsPage() {
           <button
             className="ml-2 text-gray-700"
             onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
               setIsOpen((prev) => !prev);
             }}
           >

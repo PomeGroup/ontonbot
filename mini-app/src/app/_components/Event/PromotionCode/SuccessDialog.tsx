@@ -21,7 +21,6 @@ export default function SuccessDialog({ opened, onBackdropClick, onDone }: Succe
             className="w-full text-sm"
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation();
               onDone();
             }}
           >

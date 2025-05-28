@@ -51,9 +51,7 @@ const ScanRegistrantQRCode: React.FC<ScanRegistrantQRCodeProps> = ({ children })
 
   return children ? (
     <div
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
+      onClick={() => {
         handleOnClick();
       }}
     >

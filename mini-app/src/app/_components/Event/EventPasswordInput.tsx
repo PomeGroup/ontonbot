@@ -122,8 +122,6 @@ export const EventPasswordAndWalletInput = () => {
           <div className="pt-0 space-y-3">
             <CustomButton
               onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
                 formRef.current?.requestSubmit();
               }}
               isLoading={upsertUserEventFieldMutation.isLoading}

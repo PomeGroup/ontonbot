@@ -46,7 +46,6 @@ export const ONIONConnectWallet = () => {
       <DropdownMenuContent
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();
           disconnectWallet();
         }}
         className="cursor-pointer !bg-navy rounded-2lg p-3 flex items-center gap-2 border border-solid border-brand-divider-dark text-onion-extraLight"

@@ -34,7 +34,6 @@ export default function ConfirmDialog({
             disabled={isSubmitting}
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation();
               onConfirm();
             }}
           >
@@ -45,7 +44,6 @@ export default function ConfirmDialog({
             disabled={isSubmitting}
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation();
               onBack();
             }}
           >

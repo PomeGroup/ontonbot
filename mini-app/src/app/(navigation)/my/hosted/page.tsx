@@ -115,9 +115,7 @@ export default function MyHostedPage() {
             />
             {!eventsInfinite.isFetching && eventsInfinite.data?.pages.at(-1)?.nextCursor && (
               <CustomButton
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onClick={() => {
                   eventsInfinite.fetchNextPage();
                 }}
                 variant="link"
@@ -166,8 +164,6 @@ export default function MyHostedPage() {
             {!contestsInfinite.isFetching && contestsInfinite.data?.pages.at(-1)?.nextCursor && (
               <CustomButton
                 onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
                   contestsInfinite.fetchNextPage();
                 }}
                 variant="link"

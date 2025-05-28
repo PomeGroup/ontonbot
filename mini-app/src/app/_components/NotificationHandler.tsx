@@ -279,7 +279,6 @@ const NotificationHandler: React.FC = () => {
                 <DialogButton
                   onClick={(e) => {
                     e.preventDefault();
-                    e.stopPropagation();
                     handleNo();
                   }}
                   className="w-1/2"
@@ -290,7 +289,6 @@ const NotificationHandler: React.FC = () => {
                   strong
                   onClick={(e) => {
                     e.preventDefault();
-                    e.stopPropagation();
                     handleYes();
                   }}
                   className="w-1/2"
@@ -306,7 +304,6 @@ const NotificationHandler: React.FC = () => {
                   className="bg-blue-500 text-white text-sm w-full"
                   onClick={(e) => {
                     e.preventDefault();
-                    e.stopPropagation();
                     hasExceededAttempts ? handleClose() : handleConfirmPassword();
                   }}
                   disabled={!hasExceededAttempts && !password}
@@ -360,7 +357,6 @@ const NotificationHandler: React.FC = () => {
                 className="bg-blue-500 text-white text-sm w-full"
                 onClick={(e) => {
                   e.preventDefault();
-                  e.stopPropagation();
                   closeSuccessDialogAndRedirect();
                 }}
               >

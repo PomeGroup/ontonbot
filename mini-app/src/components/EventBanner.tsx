@@ -51,7 +51,6 @@ export default function EventBanner({ skeleton, event }: Props) {
       className="relative isolate w-[220px] h-[220px]"
       onClick={(e) => {
         e.preventDefault();
-        e.stopPropagation();
         handleEventClick();
       }}
       key={`detailed-${eventUuid}`}

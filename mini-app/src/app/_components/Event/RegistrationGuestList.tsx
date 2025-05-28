@@ -242,8 +242,6 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
             variant="secondary"
             size="md"
             onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
               setShowRegistrantInfo(null);
             }}
           >
@@ -287,8 +285,6 @@ const Button: React.FC<ButtonProps> = ({ variant, icon, label, onClick, isLoadin
       tonal
       small
       onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
         onClick?.();
       }}
       disabled={isLoading}
@@ -458,8 +454,6 @@ const RegistrationGuestList = () => {
         <div className="flex gap-3 items-center">
           <Filter
             onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
               openFilterSheet();
             }}
             className={cn(
