@@ -40,7 +40,11 @@ export const SnapshotConnectWallet = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        onClick={disconnectWallet}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          disconnectWallet();
+        }}
         className="cursor-pointer rounded-2lg p-3 flex items-center gap-2 border border-solid border-brand-divider-dark text-black bg-red-500"
       >
         <UnplugIcon />

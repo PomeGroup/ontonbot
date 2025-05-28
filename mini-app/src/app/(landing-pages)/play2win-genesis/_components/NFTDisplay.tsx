@@ -14,7 +14,9 @@ export default function NFTDisplay() {
       <div
         className="play-2-win-reward-button-border rounded-2lg backdrop-blur-md p-[9px] py-2 flex items-center gap-2 w-fit mx-auto cursor-pointer"
         tabIndex={0}
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           if (reachedMaxScore) setShowNFTDialog(true);
         }}
         onKeyDown={(e) => {

@@ -224,7 +224,9 @@ const CheckStatusPage = () => {
               variant="primary"
               size="lg"
               className="w-full bg-[#007AFF] text-white"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 webapp?.openLink("https://getgems.io/genesisonions");
               }}
             >
@@ -250,7 +252,9 @@ const CheckStatusPage = () => {
               variant="primary"
               size="lg"
               className="w-full bg-[#007AFF] text-white"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 webapp?.openLink(
                   "https://docs.google.com/forms/d/e/1FAIpQLSfJQMGN8yBgTA2EdQ2aqwKBXdAvs9pwaa-Mc8-C7bU8RfFxsg/viewform"
                 );

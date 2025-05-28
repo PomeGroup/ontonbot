@@ -21,7 +21,11 @@ export default function ChannelPage({ params }: Props) {
 
       <div className="px-4">
         <ActionCard
-          onClick={() => router.push(`/channels/${params.id}/events`)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            router.push(`/channels/${params.id}/events`);
+          }}
           iconSrc={ticketIcon}
           subtitle="Visit organizer events"
           title="Events"

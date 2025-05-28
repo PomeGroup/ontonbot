@@ -1,11 +1,11 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
-import { FaChevronRight } from "react-icons/fa6";
 import Typography from "@/components/Typography";
-import { COLORS, getFilterUrl, getImageUrl } from "./constants";
 import useWebApp from "@/hooks/useWebApp";
+import Image from "next/image";
+import React from "react";
+import { FaChevronRight } from "react-icons/fa6";
+import { COLORS, getFilterUrl, getImageUrl } from "./constants";
 
 export const ColorFilters: React.FC = () => {
   const webapp = useWebApp();
@@ -15,7 +15,11 @@ export const ColorFilters: React.FC = () => {
       {COLORS.map((color) => (
         <button
           key={color}
-          onClick={() => webapp?.openLink(getFilterUrl(color))}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            webapp?.openLink(getFilterUrl(color));
+          }}
           className="border border-white p-2 flex flex-col gap-0.5 justify-center items-center bg-white/10 rounded-md backdrop-blur-lg w-full"
         >
           <Image
@@ -37,4 +41,3 @@ export const ColorFilters: React.FC = () => {
     </div>
   );
 };
-

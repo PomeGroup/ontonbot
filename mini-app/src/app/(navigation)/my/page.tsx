@@ -45,7 +45,11 @@ export default function ProfilePage() {
     <div className="relative isolate">
       {hasEventOrganizer ? <InlineChannelCard data={user} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <ActionCard
-        onClick={() => router.push("/my/participated")}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          router.push("/my/participated");
+        }}
         iconSrc={ticketIcon}
         title="Participated"
         subtitle="Your Activity"
@@ -57,7 +61,9 @@ export default function ProfilePage() {
         ]}
       />
       <ActionCard
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           if (!hasEventOrganizer) {
             toast.error("Only organizers can host events");
             return;
@@ -75,7 +81,9 @@ export default function ProfilePage() {
       />
 
       <ActionCard
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           router.push("/my/points/");
         }}
         iconSrc={solarCupOutline}
@@ -90,7 +98,9 @@ export default function ProfilePage() {
       {hasEventOrganizer && (
         <div
           className="fixed text-primary drop-shadow rounded-full right-4 pt-1 z-50 cursor-pointer"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setSection("event_setup_form_general_step");
             router.push("/events/create");
           }}
@@ -112,7 +122,9 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
   return (
     <Card
       className="!m-0 w-full cursor-pointer"
-      onClick={() => {
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
         router.push(`/my/edit`);
       }}
     >

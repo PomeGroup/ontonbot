@@ -1,15 +1,15 @@
-import Typography from "@/components/Typography";
-import { TokenCampaignOrders, TokenCampaignSpinPackages } from "@/db/schema";
-import { SPIN_PRICE_IN_TON } from "../../GenesisOnions.constants";
-import { Button } from "@/components/ui/button";
-import { ListItem } from "./ListItem";
-import Image from "next/image";
-import { useTonAddress } from "@tonconnect/ui-react";
-import { useWallet } from "../../hooks/useWallet";
-import { useOrder } from "../../hooks/useOrder";
-import RaffleImage from "../../_assets/images/raffle.svg";
-import { useState } from "react";
 import useTransferPayment from "@/app/(navigation)/sample/useTransferPayment";
+import Typography from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { TokenCampaignOrders, TokenCampaignSpinPackages } from "@/db/schema";
+import { useTonAddress } from "@tonconnect/ui-react";
+import Image from "next/image";
+import { useState } from "react";
+import RaffleImage from "../../_assets/images/raffle.svg";
+import { SPIN_PRICE_IN_TON } from "../../GenesisOnions.constants";
+import { useOrder } from "../../hooks/useOrder";
+import { useWallet } from "../../hooks/useWallet";
+import { ListItem } from "./ListItem";
 
 interface Props {
   pkg: TokenCampaignSpinPackages;
@@ -31,7 +31,10 @@ export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed, allowBuy }: Pro
   const { walletModal } = useWallet();
   const { updateStatusMutation, submitOrder } = useOrder();
 
-  const handlePay = async () => {
+  const handlePay = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     setIsPaying(true);
 
     if (!hasWallet) {

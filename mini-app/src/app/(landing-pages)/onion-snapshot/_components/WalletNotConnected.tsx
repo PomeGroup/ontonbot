@@ -52,7 +52,11 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({ children }) => 
           variant="primary"
           size="lg"
           className="w-full"
-          onClick={() => tonConnectModal.open()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            tonConnectModal.open();
+          }}
         >
           Connect Wallet
         </Button>

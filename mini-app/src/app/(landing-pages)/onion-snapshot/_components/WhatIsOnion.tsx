@@ -148,7 +148,11 @@ const WhatIsOnion = () => {
             variant="info"
             size="lg"
             className="w-full bg-[#E5F2FF] h-[50px] text-[17px] font-semibold"
-            onClick={() => webapp?.openLink("https://Onion.tg/lightpaper")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              webapp?.openLink("https://Onion.tg/lightpaper");
+            }}
           >
             📄 Read LightPaper
           </Button>
@@ -157,7 +161,11 @@ const WhatIsOnion = () => {
             variant="info"
             size="lg"
             className="w-full bg-[#E5F2FF] h-[50px] text-[17px] font-semibold"
-            onClick={() => webapp?.openLink("https://Onion.tg/docs")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              webapp?.openLink("https://Onion.tg/docs");
+            }}
           >
             📚 Visit Docs
           </Button>
@@ -166,7 +174,11 @@ const WhatIsOnion = () => {
             variant="info"
             size="lg"
             className="w-full bg-[#E5F2FF] h-[50px] text-[17px] font-semibold"
-            onClick={() => webapp?.openLink("https://Onion.tg/explainer")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              webapp?.openLink("https://Onion.tg/explainer");
+            }}
           >
             🎥 Watch Explainer Video
           </Button>
