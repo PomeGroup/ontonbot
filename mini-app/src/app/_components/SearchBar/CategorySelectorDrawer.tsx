@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { KSheet } from "@/components/ui/drawer";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
+import { KSheet } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Block, BlockTitle, Button } from "konsta/react";
+import { Separator } from "@/components/ui/separator";
 import { EventCategoryRow } from "@/db/schema/eventCategories";
+import { Block, BlockTitle, Button } from "konsta/react";
+import React, { useEffect, useState } from "react";
 
 interface CategorySelectorDrawerProps {
   isOpen: boolean;
@@ -67,7 +67,11 @@ const CategorySelectorDrawer: React.FC<CategorySelectorDrawerProps> = ({
       <Block className="my-0 space-y-2">
         <div
           className="flex justify-between items-center cursor-pointer p-0 px-10"
-          onClick={allSelected ? deselectAllCategories : selectAllCategories}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            allSelected ? deselectAllCategories() : selectAllCategories();
+          }}
         >
           <span className="text-zinc-400">Select All</span>
           <Checkbox
@@ -87,7 +91,11 @@ const CategorySelectorDrawer: React.FC<CategorySelectorDrawerProps> = ({
               <div
                 key={category.category_id}
                 className="flex justify-between items-center border-b-2 border-b-gray-800 px-6 cursor-pointer h-12"
-                onClick={() => toggleCategory(catIdString)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleCategory(catIdString);
+                }}
               >
                 <span>{category.name}</span>
                 <Checkbox
@@ -99,7 +107,15 @@ const CategorySelectorDrawer: React.FC<CategorySelectorDrawerProps> = ({
           })}
         </ScrollArea>
 
-        <Button onClick={handleDoneClick}>Done</Button>
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleDoneClick();
+          }}
+        >
+          Done
+        </Button>
       </Block>
     </KSheet>
   );

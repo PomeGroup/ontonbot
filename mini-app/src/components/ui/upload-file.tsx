@@ -112,7 +112,11 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
           props.isError ? "border-red-300 bg-red-400/10" : "border-cn-primary",
           props.disabled && "cursor-not-allowed opacity-50"
         )}
-        onClick={() => !props.disabled && setIsSheetOpen(true)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          !props.disabled && setIsSheetOpen(true);
+        }}
         type="button"
         variant={props.isError ? "destructive" : "outline"}
       >

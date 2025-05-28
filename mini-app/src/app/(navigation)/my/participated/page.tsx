@@ -120,7 +120,9 @@ export default function MyParticipatedEventsPage() {
             />
             {!eventsInfinite.isFetching && eventsInfinite.data?.pages.at(-1)?.nextCursor && (
               <CustomButton
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   eventsInfinite.fetchNextPage();
                 }}
                 variant="link"
@@ -168,7 +170,9 @@ export default function MyParticipatedEventsPage() {
             />
             {!contestsInfinite.isFetching && contestsInfinite.data?.pages.at(-1)?.nextCursor && (
               <CustomButton
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   contestsInfinite.fetchNextPage();
                 }}
                 variant="link"

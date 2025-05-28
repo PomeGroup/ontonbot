@@ -82,7 +82,11 @@ export default function BottomNavigation(props: { children: ReactNode }) {
                 "flex-1 flex flex-col gap-0.5 items-center justify-center cursor-pointer text-[#6D6D72]",
                 tab.urls.includes(pathname) && "text-primary"
               )}
-              onClick={() => router.push(tab.urls[0])}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                router.push(tab.urls[0]);
+              }}
             >
               {tab.icon}
               <Typography

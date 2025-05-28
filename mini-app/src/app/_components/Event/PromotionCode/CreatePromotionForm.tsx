@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
-import { z } from "zod";
-import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { trpc } from "@/app/_trpc/client";
 import couponSchema from "@/zodSchema/couponSchema";
 
 import NavigationButtons, { NavAction } from "@/components/NavigationButtons";
-import SuccessDialog from "./SuccessDialog";
 import ConfirmDialog from "./ConfirmDialog";
-import PlusMinusInput from "./PlusMinusInput";
 import DatePickerRow from "./DatePickerRow"; // Our MUI-based date/time row
+import PlusMinusInput from "./PlusMinusInput";
+import SuccessDialog from "./SuccessDialog";
 
 type AddCouponsFormValues = z.infer<typeof couponSchema.addCouponsSchema>;
 
@@ -21,10 +21,7 @@ interface CreatePromotionFormProps {
   onDone?: () => void;
 }
 
-export default function CreatePromotionForm({
-                                              eventUuid,
-                                              onDone,
-                                            }: CreatePromotionFormProps) {
+export default function CreatePromotionForm({ eventUuid, onDone }: CreatePromotionFormProps) {
   const {
     control,
     handleSubmit,
@@ -87,13 +84,21 @@ export default function CreatePromotionForm({
   const actions: NavAction[] = [
     {
       label: "Generate Codes",
-      onClick: handleGenerateCodesClick,
+      onClick: (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleGenerateCodesClick();
+      },
     },
     {
       label: "Cancel",
-      colors: { textIos :'text-primary', textMaterial: 'text-primary' },
+      colors: { textIos: "text-primary", textMaterial: "text-primary" },
       outline: true,
-      onClick: handleCancelClick,
+      onClick: (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleCancelClick();
+      },
     },
   ];
 
@@ -105,8 +110,7 @@ export default function CreatePromotionForm({
 
       <div className="px-4 pt-4">
         <p className="text-sm text-gray-700 mb-4">
-          One-time codes are automatically generated and you can download them
-          to share with your audience.
+          One-time codes are automatically generated and you can download them to share with your audience.
         </p>
 
         {/* 1) Count */}
@@ -170,14 +174,12 @@ export default function CreatePromotionForm({
             if (!startValue) {
               return (
                 <div className="mb-4">
-                  <label className="text-sm text-gray-500 mb-1 block">
-                    Deactivate at
-                  </label>
-                  <p className="text-xs text-gray-400 mb-1">
-                    It is set to the event start time by default.
-                  </p>
+                  <label className="text-sm text-gray-500 mb-1 block">Deactivate at</label>
+                  <p className="text-xs text-gray-400 mb-1">It is set to the event start time by default.</p>
                   <div
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       alert("You must select start date first!");
                     }}
                     className="bg-gray-100 p-3 rounded shadow-sm text-sm text-gray-500 cursor-pointer"
@@ -205,7 +207,10 @@ export default function CreatePromotionForm({
         />
       </div>
 
-      <NavigationButtons layout="vertical" actions={actions} />
+      <NavigationButtons
+        layout="vertical"
+        actions={actions}
+      />
 
       {/* Confirmation Dialog */}
       <ConfirmDialog

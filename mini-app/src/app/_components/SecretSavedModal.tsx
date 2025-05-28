@@ -60,13 +60,7 @@ const descriptionStyle: React.CSSProperties = {
   color: "#fff",
 };
 
-const ModalDialog: React.FC<ModalDialogProps> = ({
-  isVisible,
-  onClose,
-  description,
-  closeButtonText,
-  icon,
-}) => {
+const ModalDialog: React.FC<ModalDialogProps> = ({ isVisible, onClose, description, closeButtonText, icon }) => {
   const [show, setShow] = useState(isVisible);
 
   useEffect(() => {
@@ -89,7 +83,11 @@ const ModalDialog: React.FC<ModalDialogProps> = ({
     >
       <div
         style={backdropStyle}
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
       ></div>
       <div
         style={{

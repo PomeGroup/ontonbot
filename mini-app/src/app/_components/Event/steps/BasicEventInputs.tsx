@@ -162,7 +162,9 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
               <div className="mt-6">
                 <Button
                   className="py-5 rounded-3xl"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     setTermsChecked(true);
                     setOpen(false);
                   }}

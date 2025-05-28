@@ -1,10 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { KSheet } from "@/components/ui/drawer";
-import { z } from "zod";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { Button } from "konsta/react";
+import React, { useEffect, useState } from "react";
+import { z } from "zod";
 
 // Extract the participationType from the Zod schema
 type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
@@ -65,7 +65,11 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
           {/* Online event row */}
           <div
             className={`flex justify-between items-center cursor-pointer p-2 border-b-2 border-b-gray-800`}
-            onClick={() => handleToggleType("online")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleToggleType("online");
+            }}
           >
             <span>Online</span>
             <Checkbox
@@ -77,7 +81,11 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
           {/* In-person event row */}
           <div
             className={`flex justify-between items-center cursor-pointer p-2`}
-            onClick={() => handleToggleType("in_person")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleToggleType("in_person");
+            }}
           >
             <span>In-person</span>
             <Checkbox

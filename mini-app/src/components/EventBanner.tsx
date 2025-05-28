@@ -49,7 +49,11 @@ export default function EventBanner({ skeleton, event }: Props) {
   ) : (
     <div
       className="relative isolate w-[220px] h-[220px]"
-      onClick={handleEventClick}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleEventClick();
+      }}
       key={`detailed-${eventUuid}`}
     >
       <LoadableImage

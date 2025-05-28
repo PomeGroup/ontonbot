@@ -67,7 +67,11 @@ const ParticipatedContestCard: React.FC<ParticipatedContestCardProps> = (props) 
 
   return (
     <div
-      onClick={handleEventClick}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleEventClick();
+      }}
       className={cn(!props.noClick && "cursor-pointer")}
     >
       <CustomCard className="p-2">

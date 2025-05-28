@@ -132,7 +132,11 @@ function EventCard({ event, afterTitle, timeOnly, noClick }: EventCardProps, ref
 
   return (
     <div
-      onClick={handleEventClick}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleEventClick();
+      }}
       className={cn(!noClick && "cursor-pointer")}
     >
       <CustomCard className="p-2">

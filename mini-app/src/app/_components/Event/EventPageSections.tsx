@@ -297,7 +297,11 @@ const OrganizerCard = React.memo(() => {
       <List className="!mb-0 !-mt-2">
         <ListItem
           className="cursor-pointer"
-          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            router.push(`/channels/${eventData.data?.owner}/`);
+          }}
           title={
             <Typography
               variant="headline"
@@ -357,7 +361,11 @@ const SbtCollectionLink = React.memo(() => {
     >
       <Block
         className="!mt-0 mb-4 cursor-pointer"
-        onClick={() => window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank")}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank");
+        }}
       >
         <div className="w-full flex gap-2 items-stretch bg-brand-fill-bg/10 p-2 rounded-lg">
           {eventData.data?.tsRewardImage && (
@@ -420,9 +428,9 @@ const MainButtonHandler = React.memo(() => {
       return (
         <MainButton
           text="Check In"
-          onClick={() =>
-            router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)
-          }
+          onClick={() => {
+            router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`);
+          }}
         />
       );
     }

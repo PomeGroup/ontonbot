@@ -1,9 +1,9 @@
-import { MouseEventHandler } from "react";
-import { ArrowRight } from "lucide-react";
-import Typography from "./Typography";
-import Image from "next/image";
-import { cn } from "@/utils";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
+import { cn } from "@/utils";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { MouseEventHandler } from "react";
+import Typography from "./Typography";
 
 interface Props {
   onClick: MouseEventHandler<HTMLElement>;
@@ -21,7 +21,11 @@ interface Props {
 export default function ActionCard({ onClick, iconSrc, title, subtitle, className, footerTexts }: Props) {
   return (
     <CustomCard
-      onClick={onClick}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick(e);
+      }}
       className={cn(className, !!onClick && "cursor-pointer")}
       defaultPadding
     >
@@ -61,4 +65,3 @@ export default function ActionCard({ onClick, iconSrc, title, subtitle, classNam
     </CustomCard>
   );
 }
-

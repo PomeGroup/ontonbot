@@ -1,13 +1,11 @@
 "use client";
 import { trpc } from "@/app/_trpc/client";
-import { ListInput, List } from "konsta/react";
+import { CustomEventRegisterSchema } from "@/types";
+import { List, ListInput } from "konsta/react";
 import { useParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
-import { CustomEventRegisterSchema } from "@/types";
-import CustomSheet from "../Sheet/CustomSheet";
 import CustomButton from "../Button/CustomButton";
-import MainButton from "../atoms/buttons/web-app/MainButton";
 
 const UserCustomRegisterForm = () => {
   const params = useParams<{ hash: string }>();
@@ -196,6 +194,7 @@ const UserCustomRegisterForm = () => {
             isLoading={registerUser.isLoading}
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               registrationForm.current?.requestSubmit();
             }}
           >

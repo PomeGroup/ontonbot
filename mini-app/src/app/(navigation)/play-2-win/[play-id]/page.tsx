@@ -136,7 +136,9 @@ const TournamentHeader = React.memo(() => {
           size="md"
           icon={<PrizeCupIcon />}
           fontSize={"subheadline1"}
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             router.push(`/play-2-win/${tournament.data?.id}/leaderboard`);
           }}
         >
@@ -159,7 +161,11 @@ const OrganizerCard = React.memo(() => {
   return (
     <CustomCard title="Organizer">
       <div
-        onClick={() => router.push(`/channels/${tournament.data?.organizer?.user_id}/`)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          router.push(`/channels/${tournament.data?.organizer?.user_id}/`);
+        }}
         className="flex items-center justify-between cursor-pointer p-4 pt-0"
       >
         <div className="flex items-center gap-3">

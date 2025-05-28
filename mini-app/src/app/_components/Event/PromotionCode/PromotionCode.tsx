@@ -156,7 +156,11 @@ export default function PromotionCode() {
           actions={[
             {
               label: "Create Promotion",
-              onClick: handleCreatePromotion,
+              onClick: (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCreatePromotion();
+              },
             },
           ]}
         />

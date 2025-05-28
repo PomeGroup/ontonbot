@@ -50,7 +50,10 @@ const EventKeyValue = (props: EventKeyValueProps) => {
         className={eventKeyValueCva({
           variant: props.variant,
         })}
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
           if (props.href?.startsWith("/")) {
             router.push(props.href);
           } else {

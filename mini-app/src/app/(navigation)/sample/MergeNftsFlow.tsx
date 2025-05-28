@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { trpc } from "@/app/_trpc/client";
-import { useTonConnectUI } from "@tonconnect/ui-react";
-import { beginCell, Address, toNano } from "@ton/ton";
-import { toast } from "sonner";
 import MergeTransactionsList from "@/app/(navigation)/sample/MergeTransactionsList";
+import { trpc } from "@/app/_trpc/client";
+import { Address, beginCell, toNano } from "@ton/ton";
+import { useTonConnectUI } from "@tonconnect/ui-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const ONTON_WALLET_ADDRESS = Address.parse("UQDMJeQqQSW7tmt-aspG9BNEMCj9RiENnwTSx0L-62Sjr9Te");
 
@@ -165,7 +165,11 @@ export function MergeNftsFlow({ walletAddress }: MergeNftsFlowProps) {
       <button
         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-400"
         disabled={!hasAllThree}
-        onClick={handleMergeNfts}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleMergeNfts();
+        }}
       >
         {hasAllThree ? "Merge one set now" : "Cannot Merge (need Gold/Silver/Bronze)"}
       </button>

@@ -18,6 +18,8 @@ export default function OntonDialog({
   return (
     <div
       onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (innerRef.current?.contains(e.target as any)) return;
         onClose();
       }}

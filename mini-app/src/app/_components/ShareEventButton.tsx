@@ -27,7 +27,9 @@ const ShareEventButton = ({
         shareEventMutation.isLoading && Boolean(initData) && "opacity-50"
       )}
       disabled={!initData || shareEventMutation.isLoading || !activity_id || !!hidden}
-      onClick={async () => {
+      onClick={async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (!initData) return;
 
         await shareEventMutation.mutateAsync({

@@ -107,7 +107,9 @@ export default function ManageIndexPage() {
           <div className="grid xs:grid-cols-2 gap-3 mx-3 mt-3">
             {eventData.participationType === "online" ? (
               <CustomButton
-                onClick={async () => {
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (eventData.event_uuid) {
                     requestSendQRCode.mutateAsync({
                       url: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
