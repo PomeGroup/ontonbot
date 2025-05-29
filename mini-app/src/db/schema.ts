@@ -171,6 +171,7 @@ import {
 import { nftApiItems, NftApiItems, NftApiItemsInsert } from "./schema/nftApiItems";
 import { userScoreRules, scoreRuleRole, UserScoreRuleRow, UserScoreRuleRoleType } from "./schema/userScoreRules";
 import { eventCategories, EventCategoryRow } from "./schema/eventCategories";
+import { snapshotCollections, SnapshotCollectionRow, SnapshotCollectionInsert } from "./schema/snapshotCollections";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -208,6 +209,7 @@ export {
   taskUserPointStatusEnum,
   taskUserStatusEnum,
   userScoreItem,
+  snapshotCollections,
 };
 
 // export all the tables and relations
@@ -379,4 +381,6 @@ export type {
   NftApiCollectionsUpdate,
   UserScoreRuleRow,
   UserScoreRuleRoleType,
+  SnapshotCollectionRow,
+  SnapshotCollectionInsert,
 };
