@@ -79,7 +79,7 @@ export const runCollectionSnapshot = async (collectionAddress = ONION_RAW_COLLEC
 
   if (!protoRows.length) {
     logger.warn(`Snapshot job: collection ${collectionAddress} returned zero items`);
-    return { nftRows: 0, scoreRows: 0 };
+    return;
   }
 
   /* =========================================================
