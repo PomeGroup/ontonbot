@@ -516,7 +516,12 @@ export const EventSections = () => {
   const { eventData } = useEventData();
 
   return (
-    <div className="flex flex-col gap-3 p-4">
+    <div
+      className="flex flex-col gap-3 p-4"
+      style={{
+        paddingBottom: "calc(var(--tg-safe-area-inset-bottom) + 4rem)",
+      }}
+    >
       <EventHeader />
       <EventDescription />
       <OnionBanner />
