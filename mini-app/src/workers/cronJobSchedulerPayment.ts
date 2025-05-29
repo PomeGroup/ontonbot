@@ -50,7 +50,18 @@ async function MainCronJob() {
     false, // unrefTimeout => false
     true // waitForCompletion => true
   );
-
+  new CronJob(
+    "0 0 0 * * *", // second 0, minute 0, hour 0 → every midnight UTC
+    cronJobs.runCollectionSnapshot,
+    null, // onComplete
+    true, // start immediately
+    "UTC", // <<— run in UTC
+    null, // context
+    false, // runOnInit
+    null, // utcOffset (deprecated; keep null)
+    false, // unrefTimeout
+    true // waitForCompletion
+  );
   // new CronJob(
   //   "*/2 * * * * *",
   //   cronJobs.processCampaignOrders, // The function to run

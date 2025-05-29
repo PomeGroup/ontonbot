@@ -72,7 +72,14 @@ import {
   userRolesRelations,
   userRoleStatusEnum,
 } from "./schema/userRoles";
-import { UserScoreItemType, usersScore, UsersScoreActivityType, UsersScoreType, userScoreItem } from "./schema/usersScore";
+import {
+  UserScoreItemType,
+  usersScore,
+  UsersScoreActivityType,
+  usersScoreActivity,
+  UsersScoreType,
+  userScoreItem,
+} from "./schema/usersScore";
 
 import { callbackTaskRuns, CallbackTaskRunsRow, callbackTaskRunStatusType } from "./schema/callbackTaskRuns";
 import { gameLeaderboard, GameLeaderboardRow, GameLeaderboardRowInsert } from "./schema/gameLeaderboard";
@@ -172,6 +179,7 @@ import { nftApiItems, NftApiItems, NftApiItemsInsert } from "./schema/nftApiItem
 import { userScoreRules, scoreRuleRole, UserScoreRuleRow, UserScoreRuleRoleType } from "./schema/userScoreRules";
 import { eventCategories, EventCategoryRow } from "./schema/eventCategories";
 import { snapshotCollections, SnapshotCollectionRow, SnapshotCollectionInsert } from "./schema/snapshotCollections";
+import { userScoreSnapshots, UserScoreSnapshotRow, UserScoreSnapshotInsert } from "./schema/userScoreSnapshots";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -281,6 +289,8 @@ export {
   nftStatusEnum,
   userScoreRules,
   scoreRuleRole,
+  usersScoreActivity,
+  userScoreSnapshots,
 };
 
 // Type Exports
@@ -383,4 +393,6 @@ export type {
   UserScoreRuleRoleType,
   SnapshotCollectionRow,
   SnapshotCollectionInsert,
+  UserScoreSnapshotRow,
+  UserScoreSnapshotInsert,
 };
