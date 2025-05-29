@@ -147,7 +147,11 @@ const MyPointsDetailsPage = () => {
         <Button
           variant="link"
           className="flex items-center gap-1 rounded-md flex-1 mx-auto max-w-[96px] text-primary font-medium"
-          onClick={() => scoreDetails.fetchNextPage()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            scoreDetails.fetchNextPage();
+          }}
           disabled={scoreDetails.isFetchingNextPage}
         >
           {scoreDetails.isFetchingNextPage ? (

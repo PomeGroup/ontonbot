@@ -94,7 +94,11 @@ export function MergeTransactionsList(props: { setHasPendingTrx: (pending: boole
               type="button"
               size="lg"
               className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
-              onClick={() => setOpenDialog(false)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpenDialog(false);
+              }}
             >
               <Typography
                 variant="headline"
@@ -184,7 +188,11 @@ export function MergeTransactionsList(props: { setHasPendingTrx: (pending: boole
             type="button"
             size="lg"
             className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
-            onClick={() => setOpenDialog(false)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpenDialog(false);
+            }}
           >
             <Typography
               variant="headline"

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { trpc } from "@/app/_trpc/client";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import useTransferPayment from "./useTransferPayment";
 
 interface PaymentFlowProps {
@@ -132,7 +132,11 @@ export default function PaymentFlow({
         </div>
       ) : (
         <button
-          onClick={handlePay}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handlePay();
+          }}
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           disabled={isPaying}
         >

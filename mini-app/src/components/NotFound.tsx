@@ -52,7 +52,11 @@ export const NotFound: React.FC<NotFoundProps> = () => {
         <Button
           variant="info"
           size="lg"
-          onClick={() => webApp?.openTelegramLink("https://onton.com/support")}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            webApp?.openTelegramLink("https://onton.com/support");
+          }}
           className="w-full"
         >
           Need Help?

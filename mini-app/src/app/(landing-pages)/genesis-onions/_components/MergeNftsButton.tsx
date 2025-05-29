@@ -40,5 +40,15 @@ export const MergeNftsButton = () => {
     });
   };
 
-  return <CustomButton onClick={() => mergeThreeNFTs()}>Merge NFTS</CustomButton>;
+  return (
+    <CustomButton
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        mergeThreeNFTs();
+      }}
+    >
+      Merge NFTS
+    </CustomButton>
+  );
 };

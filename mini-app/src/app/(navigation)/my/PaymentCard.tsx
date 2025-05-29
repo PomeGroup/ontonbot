@@ -51,7 +51,11 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
           Organizer Payment
         </Typography>
         <Button
-          onClick={() => setConfirmPayDialogOpen(true)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setConfirmPayDialogOpen(true);
+          }}
           className="py-6 rounded-[10px]"
         >
           Pay 10 TON
@@ -130,14 +134,22 @@ function ConfirmPayDialog({ open, onClose, onPay }: { open: boolean; onClose: ()
       </Typography>
       <Button
         className="py-6 rounded-[10px] mb-3"
-        onClick={onPay}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onPay();
+        }}
       >
         Pay 10 TON
       </Button>
       <Button
         className="py-6 rounded-[10px]"
         outline
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
       >
         Maybe Later
       </Button>
@@ -177,7 +189,11 @@ function CongratsDrawer({ open, onClose }: { open: boolean; onClose: () => void 
         </Typography>
         <Button
           outline
-          onClick={onClose}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}
           className="w-auto py-5 rounded-[10px] mx-auto px-6"
         >
           Let’s Go!

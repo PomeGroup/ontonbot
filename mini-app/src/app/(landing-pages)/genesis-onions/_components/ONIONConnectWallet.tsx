@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { useTonAddress, useTonConnectUI } from "@tonconnect/ui-react";
 import Typography from "@/components/Typography";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useTonAddress, useTonConnectUI } from "@tonconnect/ui-react";
 import { UnplugIcon } from "lucide-react";
 import { FaAngleDown } from "react-icons/fa";
 
@@ -20,7 +20,11 @@ export const ONIONConnectWallet = () => {
   if (!walletAddress) {
     return (
       <Button
-        onClick={connectWallet}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          connectWallet();
+        }}
         variant="primary-onion"
       >
         Connect Wallet
@@ -40,7 +44,10 @@ export const ONIONConnectWallet = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        onClick={disconnectWallet}
+        onClick={(e) => {
+          e.preventDefault();
+          disconnectWallet();
+        }}
         className="cursor-pointer !bg-navy rounded-2lg p-3 flex items-center gap-2 border border-solid border-brand-divider-dark text-onion-extraLight"
       >
         <UnplugIcon />

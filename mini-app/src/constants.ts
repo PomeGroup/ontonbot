@@ -727,3 +727,5 @@ export const PLAY2WIN_CAMPAIGN_MIN_DATE = new Date("2025-04-18T00:00:00Z");
 export const PLAY2WIN_CAMPAIGN_TARGET_GAME_ID = 1;
 export const PLAY2WIN_DEFAULT_CAMPAIGN_TYPE: Play2WinCampaignType = "genesis_onion";
 export const PLAY2WIN_DEFAULT_MIN_POINTS = 1500;
+
+export const ONION_RAW_COLLECTION_ADDRESS = "0:826678a6c2e4ca8addef714c05ec9476ea22eed5fea8b005c05ad60d4bd73e43";

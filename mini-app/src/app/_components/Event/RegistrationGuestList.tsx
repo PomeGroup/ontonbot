@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
 import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
 import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
 import { trpc } from "@/app/_trpc/client";
+import Typography from "@/components/Typography";
 import { KButton } from "@/components/ui/button";
 import StatusChip from "@/components/ui/status-chips";
 import { EventTriggerType } from "@/db/enum";
@@ -15,12 +15,12 @@ import { cva } from "class-variance-authority";
 import { Block, BlockFooter, BlockHeader, BlockTitle, Checkbox, List, ListItem, Sheet } from "konsta/react";
 import { Check, FileUser, Filter, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
-import DataStatus from "../molecules/alerts/DataStatus";
-import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
-import CustomSheet from "../Sheet/CustomSheet";
 import CustomButton from "../Button/CustomButton";
-import Typography from "@/components/Typography";
+import DataStatus from "../molecules/alerts/DataStatus";
+import CustomSheet from "../Sheet/CustomSheet";
+import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
 
 interface CustomListItemProps {
   name: string;
@@ -241,7 +241,9 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
           <CustomButton
             variant="secondary"
             size="md"
-            onClick={() => setShowRegistrantInfo(null)}
+            onClick={(e) => {
+              setShowRegistrantInfo(null);
+            }}
           >
             Close
           </CustomButton>
@@ -282,7 +284,9 @@ const Button: React.FC<ButtonProps> = ({ variant, icon, label, onClick, isLoadin
       className={cn(variantStyles({ variant, className }))}
       tonal
       small
-      onClick={onClick}
+      onClick={(e) => {
+        onClick?.();
+      }}
       disabled={isLoading}
     >
       {icon && <span>{icon}</span>}
@@ -449,7 +453,9 @@ const RegistrationGuestList = () => {
         <span>Guest List</span>
         <div className="flex gap-3 items-center">
           <Filter
-            onClick={openFilterSheet}
+            onClick={(e) => {
+              openFilterSheet();
+            }}
             className={cn(
               "rounded cursor-pointer",
               filters.length ? "text-primary bg-primary/10" : "text-cn-muted-foreground"
@@ -526,12 +532,24 @@ const RegistrationGuestList = () => {
           {filters.length > 0 && (
             <KButton
               clear
-              onClick={removeFilters}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                removeFilters();
+              }}
             >
               Clear Filters
             </KButton>
           )}
-          <KButton onClick={applyFilters}>Apply</KButton>
+          <KButton
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              applyFilters();
+            }}
+          >
+            Apply
+          </KButton>
         </BlockFooter>
       </Sheet>
 

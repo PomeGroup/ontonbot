@@ -148,7 +148,10 @@ export default function GenesisOnions() {
     };
   }
 
-  function handleMainButtonClick(): void {
+  function handleMainButtonClick(e: React.MouseEvent<HTMLButtonElement>): void {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (!walletAddress) {
       return;
     }

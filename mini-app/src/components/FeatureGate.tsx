@@ -59,7 +59,10 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({ featureName, children 
           <Button
             variant="info"
             size="lg"
-            onClick={() => webApp?.openTelegramLink("https://onton.com/support")}
+            onClick={(e) => {
+              e.preventDefault();
+              webApp?.openTelegramLink("https://onton.com/support");
+            }}
             className="w-full"
           >
             Need Help?

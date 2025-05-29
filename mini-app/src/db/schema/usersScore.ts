@@ -13,6 +13,8 @@ export const activityTypesArray = [
   "paid_offline_event",
   "join_onton",
   "join_onton_affiliate",
+  "free_play2win",
+  "paid_play2win",
 ] as const;
 export const usersScoreActivity = pgEnum("users_score_activity_type", activityTypesArray);
 

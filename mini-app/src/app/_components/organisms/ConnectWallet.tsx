@@ -66,7 +66,8 @@ export function ConnectWalletCard() {
               borderRadius="lg"
             >
               <DropdownMenuItem
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   tonconnect.disconnect();
                   toast.success("Wallet disconnected");
                 }}
@@ -88,7 +89,11 @@ export function ConnectWalletCard() {
         ) : (
           <CustomButton
             variant="primary"
-            onClick={handleConnectClick}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleConnectClick();
+            }}
             icon={
               <Image
                 className="mr-1"
@@ -159,14 +164,22 @@ function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () =>
       </Typography>
       <Button
         className="py-6 rounded-[10px] mb-3"
-        onClick={handleConnect}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleConnect();
+        }}
       >
         Connect Wallet
       </Button>
       <Button
         className="py-6 rounded-[10px]"
         outline
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
       >
         Maybe Later
       </Button>

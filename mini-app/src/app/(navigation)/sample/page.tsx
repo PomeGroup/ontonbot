@@ -1,18 +1,17 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import PaymentFlow from "@/app/(navigation)/sample/PaymentFlow";
 import { trpc } from "@/app/_trpc/client"; // your TRPC client
-import { CampaignType, campaignTypes, paymentTypes, TokenCampaignOrders } from "@/db/schema";
-import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
-import { toast } from "sonner"; // or any toast library
-import { useUserStore } from "@/context/store/user.store"; // adjust path
-import { Button } from "konsta/react";
-import Image from "next/image";
 import tonIcon from "@/components/icons/ton.svg";
 import OntonDialog from "@/components/OntonDialog";
-import { Card } from "konsta/react";
 import Typography from "@/components/Typography";
-import PaymentFlow from "@/app/(navigation)/sample/PaymentFlow";
 import { useConfig } from "@/context/ConfigContext";
+import { useUserStore } from "@/context/store/user.store"; // adjust path
+import { CampaignType, campaignTypes, paymentTypes, TokenCampaignOrders } from "@/db/schema";
+import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
+import { Button, Card } from "konsta/react";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner"; // or any toast library
 
 // IMPORTANT: Import your MergeNftsFlow component
 import { MergeNftsFlow } from "./MergeNftsFlow"; // <-- adjust to correct import path
@@ -45,7 +44,11 @@ function ConnectWalletCard() {
       ) : (
         <Button
           className="py-4 rounded-[10px] w-full bg-blue-600 text-white hover:bg-blue-700"
-          onClick={() => setOpen(true)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(true);
+          }}
         >
           <Image
             className="mr-2 inline-block"
@@ -109,14 +112,22 @@ function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () =>
       </Typography>
       <Button
         className="py-4 rounded-[10px] mb-3 bg-blue-600 text-white w-full"
-        onClick={handleConnect}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleConnect();
+        }}
       >
         Connect Wallet
       </Button>
       <Button
         className="py-4 rounded-[10px] w-full"
         outline
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
       >
         Maybe Later
       </Button>

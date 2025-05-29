@@ -52,7 +52,10 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
     <KSheet
       trigger={(open, setOpen) => (
         <button
-          onClick={() => setOpen(true)}
+          onClick={(e) => {
+            e.preventDefault();
+            setOpen(true);
+          }}
           className="p-[6px] rounded-md text-gray-500 hover:text-gray-700 bg-[#7474801F]"
         >
           <IoOptionsOutline className="w-7 h-7" />
@@ -65,7 +68,10 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             {/* EVENT TYPE */}
             <div
               className="space-y-3 border-b-[1px] pb-1"
-              onClick={() => setIsEventTypeDrawerOpen(true)}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsEventTypeDrawerOpen(true);
+              }}
             >
               <p className=" font-medium">Event Type</p>
               <div className="cursor-pointer text-sm flex items-center">
@@ -79,7 +85,10 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             {/* HUB SELECTOR */}
             <div
               className="flex items-center cursor-pointer border-b pb-1"
-              onClick={() => setIsHubDrawerOpen(true)}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsHubDrawerOpen(true);
+              }}
             >
               <div className="flex-1 space-y-3">
                 <p className="font-medium">Ton Hub</p>
@@ -89,7 +98,10 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             </div>
             <div
               className="flex items-center cursor-pointer border-b pb-1"
-              onClick={() => setIsCategoryDrawerOpen(true)} // <-- We'll define this state soon
+              onClick={(e) => {
+                e.preventDefault();
+                setIsCategoryDrawerOpen(true);
+              }} // <-- We'll define this state soon
             >
               <div className="flex-1 space-y-3">
                 <p className="font-medium">Categories</p>
@@ -168,7 +180,9 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           <div className="flex gap-1 pt-0 p-4 flex-col">
             <KButton
               className="py-5 rounded-3xl"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 applyFilters();
                 setOpen(false);
               }}
@@ -178,7 +192,9 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             <KButton
               tonal
               className="py-5 rounded-3xl"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 resetFilters();
                 setOpen(false);
               }}

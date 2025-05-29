@@ -105,7 +105,11 @@ const DateCard = ({
               {(linkAfter && !timeLeft) || link ? (
                 <Button
                   variant="link"
-                  onClick={() => handleLinkClilck(timeLeft && link ? link : linkAfter || "")}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleLinkClilck(timeLeft && link ? link : linkAfter || "");
+                  }}
                   className="flex items-center align-middle text-primary p-0"
                 >
                   <Typography weight="medium">{!timeLeft ? linkTextAfter : linkText}</Typography>
@@ -167,7 +171,11 @@ const ItemModal = ({
     <>
       <Button
         variant="link"
-        onClick={() => setIsOpen(true)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOpen(true);
+        }}
         className="flex items-center align-middle text-primary p-0"
       >
         <Typography weight="medium">{linkText}</Typography>
@@ -215,7 +223,11 @@ const ItemModal = ({
           )}
           <Button
             variant="primary"
-            onClick={() => setIsOpen(false)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsOpen(false);
+            }}
             className="w-full"
             size="lg"
           >

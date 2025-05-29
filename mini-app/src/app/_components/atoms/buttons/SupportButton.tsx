@@ -34,7 +34,7 @@ const SupportButtons: React.FC<SupportButtonsProps> = ({ orgSupportTelegramUserN
       <CustomButton
         variant="outline"
         fontWeight={"semibold"}
-        onClick={() => {
+        onClick={(e) => {
           hapticfeedback?.impactOccurred("medium");
           webApp?.openTelegramLink(TG_SUPPORT_GROUP);
         }}
@@ -53,7 +53,7 @@ const SupportButtons: React.FC<SupportButtonsProps> = ({ orgSupportTelegramUserN
           <CustomButton
             variant="outline"
             fontWeight={"semibold"}
-            onClick={() => {
+            onClick={(e) => {
               hapticfeedback?.impactOccurred("medium");
               webApp?.openTelegramLink(`https://t.me/${trimmedOrgSupport}`);
               sleep(100).then(() => {

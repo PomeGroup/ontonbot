@@ -37,7 +37,9 @@ const TournamentSlide: React.FC<TournamentCardProps> = ({ tournament }) => {
         key={tournament.id}
         width={220}
         height={220}
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           router.push(`/play-2-win/${tournament.id}`);
         }}
         className="w-[220px] h-[220px] rounded-md hover:cursor-pointer"
@@ -131,7 +133,10 @@ const TournamentFilter: React.FC<{
             return (
               <DropdownMenuItem
                 key={o}
-                onClick={() => setSelected(o)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSelected(o);
+                }}
                 className={cn("flex justify-between items-center px-0", selected === o && "text-primary")}
               >
                 <Typography
@@ -185,7 +190,10 @@ const TournamentFilter: React.FC<{
             return (
               <DropdownMenuItem
                 key={game.id}
-                onClick={() => setSelectedGame(game.id)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSelectedGame(game.id);
+                }}
                 className={cn("flex justify-between items-center px-0", selectedGame === game.id && "text-primary")}
               >
                 <Typography
@@ -255,7 +263,9 @@ const DiscoverTournaments: React.FC = () => {
               {(selectedGame !== -1 || sortSelected !== "timeRemaining") && (
                 <CustomButton
                   variant="outline"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     setSelectedGame(-1);
                     setSortSelected("timeRemaining");
                   }}

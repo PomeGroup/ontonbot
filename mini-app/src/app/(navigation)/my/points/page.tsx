@@ -69,7 +69,9 @@ export default function MyPointsPage() {
           <h1 className="text-lg font-semibold">Event Participation</h1>
           <button
             className="ml-2 text-gray-700"
-            onClick={() => setIsOpen((prev) => !prev)}
+            onClick={(e) => {
+              setIsOpen((prev) => !prev);
+            }}
           >
             <ChevronDownIconAccord isOpen={isOpen} />
           </button>
@@ -152,7 +154,9 @@ export default function MyPointsPage() {
                 className="flex-1 rounded-md border-2 flex items-center justify-center gap-2"
                 variant="outline"
                 disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
-                onClick={async () => {
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                     await navigator.clipboard.writeText(ontonJoinAffiliateDataQuery.data?.linkHash);
                     toast.success("Link copied to clipboard");
@@ -170,7 +174,9 @@ export default function MyPointsPage() {
                 variant="outline"
                 type="button"
                 disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                     webapp?.openTelegramLink(
                       telegramShareLink(

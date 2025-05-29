@@ -137,7 +137,9 @@ const BoostYourScorePage = () => {
               variant="primary"
               size="lg"
               className="flex-1 bg-[#007AFF] text-white tracking-tighter"
-              onClick={async () => {
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                   await navigator.clipboard.writeText(ontonJoinAffiliateDataQuery.data?.linkHash);
                   toast.success("Link copied to clipboard");
@@ -154,7 +156,9 @@ const BoostYourScorePage = () => {
               size="lg"
               className="flex-1 bg-[#007AFF] text-white tracking-tighter"
               disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (ontonJoinAffiliateDataQuery.data?.linkHash) {
                   webapp?.openTelegramLink(
                     telegramShareLink(
