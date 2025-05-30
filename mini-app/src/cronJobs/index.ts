@@ -30,6 +30,7 @@ import { burnMergedNfts } from "@/cronJobs/tasks/burnMergedNfts";
 import { deployNFTApiCollections } from "@/cronJobs/tasks/deployNFTApiCollections";
 import { mintNFTApiCollections } from "@/cronJobs/tasks/mintNFTApiCollections";
 import { runCollectionSnapshot } from "@/cronJobs/tasks/runCollectionSnapshot";
+import { syncPlay2WinScores } from "@/cronJobs/tasks/syncPlay2WinScores";
 
 const cronJobs = {
   CheckTransactions,
@@ -63,6 +64,7 @@ const cronJobs = {
   deployNFTApiCollections,
   mintNFTApiCollections,
   runCollectionSnapshot,
+  syncPlay2WinScores,
 };
 export { cronJobRunner };
 export default cronJobs;
