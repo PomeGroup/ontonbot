@@ -55,7 +55,7 @@ async function MainCronJob() {
     cronJobs.runCollectionSnapshot,
     null, // onComplete
     true, // start immediately
-    "UTC", // <<— run in UTC
+    "Europe/Helsinki", // <<— run in   Helsinki time
     null, // context
     false, // runOnInit
     null, // utcOffset (deprecated; keep null)
