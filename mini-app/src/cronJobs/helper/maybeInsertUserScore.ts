@@ -42,20 +42,25 @@ export async function maybeInsertUserScore(userId: number, eventId: number): Pro
 
   let chosenActivityType: UsersScoreActivityType;
   let points: number;
-
+  let organizerPoints = 0.2; // Default organizer points percentage
   if (isPaid && isOnline) {
     chosenActivityType = "paid_online_event";
     points = 10;
+    organizerPoints = points * 0.2; // 20% of user points for organizer
   } else if (isPaid && !isOnline) {
     chosenActivityType = "paid_offline_event";
     points = 20;
+    organizerPoints = points * 0.2; // 20% of user points for organizer
   } else if (!isPaid && isOnline) {
     chosenActivityType = "free_online_event";
     points = 1;
+    organizerPoints = points * 0.02; // 2% of user points for organizer
   } else {
     chosenActivityType = "free_offline_event";
     points = 10;
+    organizerPoints = points * 0.2; // 20% of user points for organizer
   }
+
   /// override points if custom rule exists
   try {
     const rule = await userScoreRulesDB.getMatchingUserScoreRule({
@@ -75,7 +80,7 @@ export async function maybeInsertUserScore(userId: number, eventId: number): Pro
   } catch (err) {
     logger.error("Failed to fetch custom rule, falling back to defaults", err);
   }
-  const organizerPoints = points * 0.2;
+
   try {
     // 3. Insert participant score
     let participantInserted = false;
