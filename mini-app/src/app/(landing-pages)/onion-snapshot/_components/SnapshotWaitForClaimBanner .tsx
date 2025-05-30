@@ -5,14 +5,13 @@ import { useConfig } from "@/context/ConfigContext";
 import { useConfigDate } from "@/hooks/useConfigDate";
 import Image from "next/image";
 import Link from "next/link";
-import SnapShotWaitForClaimBanner from "./SnapshotWaitForClaimBanner ";
 
-const SnapShotBanner = () => {
-  const timeLeft = useConfigDate("snapshot_date");
+const SnapShotWaitForClaimBanner = () => {
+  const claimPointsTimeLeft = useConfigDate("snapshot_claim_points_date");
   const config = useConfig();
   const disable = config["disable_snapshot_banner"];
 
-  if (timeLeft?.isEnded || disable) return <SnapShotWaitForClaimBanner />;
+  if (claimPointsTimeLeft?.isEnded || disable) return null;
 
   return (
     <CustomCard
@@ -20,7 +19,7 @@ const SnapShotBanner = () => {
       className="relative overflow-hidden flex flex-col items-center justify-center gap-3 rounded-xl p-4 bg-cover bg-center isolate"
     >
       <Image
-        src="https://storage.onton.live/ontonimage/onion_airdrop_cm.jpg"
+        src="https://storage.onton.live/ontonimage/bg_snapshot_closed.jpg"
         alt="Banner BG"
         width={600}
         height={200}
@@ -36,13 +35,13 @@ const SnapShotBanner = () => {
               weight="semibold"
               className="text-white"
             >
-              Genesis
+              Snapshot ONIONs
             </Typography>
             <Typography
               variant="subheadline2"
               className="text-white/80 text-balance"
             >
-              comes to an end in:
+              Results in:
             </Typography>
           </div>
           <Typography
@@ -61,7 +60,7 @@ const SnapShotBanner = () => {
               weight="bold"
               className="text-white"
             >
-              {timeLeft?.days}
+              {claimPointsTimeLeft?.days}
             </Typography>
             <Typography
               variant="caption2"
@@ -83,7 +82,7 @@ const SnapShotBanner = () => {
               weight="bold"
               className="text-white"
             >
-              {timeLeft?.hours}
+              {claimPointsTimeLeft?.hours}
             </Typography>
             <Typography
               variant="caption2"
@@ -105,7 +104,7 @@ const SnapShotBanner = () => {
               weight="bold"
               className="text-white"
             >
-              {timeLeft?.minutes}
+              {claimPointsTimeLeft?.minutes}
             </Typography>
             <Typography
               variant="caption2"
@@ -127,7 +126,7 @@ const SnapShotBanner = () => {
               weight="bold"
               className="text-white"
             >
-              {timeLeft?.seconds}
+              {claimPointsTimeLeft?.seconds}
             </Typography>
             <Typography
               variant="caption2"
@@ -147,7 +146,7 @@ const SnapShotBanner = () => {
             variant="outline-onion"
             className="text-white px-3 py-2 rounded-md w-full bg-white/5 backdrop-blur-xl border-[#FF8F37] border-2"
           >
-            Secure Your Airdrop
+            Know More
           </Button>
         </Link>
       </div>
@@ -155,4 +154,4 @@ const SnapShotBanner = () => {
   );
 };
 
-export default SnapShotBanner;
+export default SnapShotWaitForClaimBanner;

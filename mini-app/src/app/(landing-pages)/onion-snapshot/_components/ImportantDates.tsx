@@ -1,9 +1,12 @@
 "use client";
 
 import Typography from "@/components/Typography";
+import { useConfigDate } from "@/hooks/useConfigDate";
 import DateCard from "./DateCard";
 
 const ImportantDates = () => {
+  const snapshotTimeLeft = useConfigDate("snapshot_date");
+
   return (
     <div className="bg-brand-bg p-4 flex flex-col gap-4 min-h-screen">
       {/* Header Section */}
@@ -23,14 +26,16 @@ const ImportantDates = () => {
       </div>
 
       {/* Snapshot Date Card */}
-      <DateCard
-        iconSrc="/images/snapshot.svg"
-        title="Snapshot Date"
-        endDateKey="snapshot_date"
-        link="/onion-snapshot/check-status"
-        linkText="Check Status"
-        showCountdown={true}
-      />
+      {!snapshotTimeLeft?.isEnded && (
+        <DateCard
+          iconSrc="/images/snapshot.svg"
+          title="Snapshot Date"
+          endDateKey="snapshot_date"
+          link="/onion-snapshot/check-status"
+          linkText="Check Status"
+          showCountdown={true}
+        />
+      )}
 
       {/* Claim Portal Opens Card */}
       <DateCard
