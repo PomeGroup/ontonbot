@@ -11,7 +11,7 @@ const SnapShotWaitForClaimBanner = () => {
   const config = useConfig();
   const disable = config["disable_snapshot_banner"];
 
-  if (claimPointsTimeLeft?.isEnded || disable) return null;
+  if (!claimPointsTimeLeft || claimPointsTimeLeft?.isEnded || disable) return null;
 
   return (
     <CustomCard

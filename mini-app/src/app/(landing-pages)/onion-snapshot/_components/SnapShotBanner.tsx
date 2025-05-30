@@ -12,7 +12,7 @@ const SnapShotBanner = () => {
   const config = useConfig();
   const disable = config["disable_snapshot_banner"];
 
-  if (timeLeft?.isEnded || disable) return <SnapShotWaitForClaimBanner />;
+  if (!timeLeft || timeLeft?.isEnded || disable) return <SnapShotWaitForClaimBanner />;
 
   return (
     <CustomCard
