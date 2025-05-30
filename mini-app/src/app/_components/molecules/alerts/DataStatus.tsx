@@ -23,6 +23,7 @@ export const DATA_STATUS_ANIMATIONS = {
   pending: "https://storage.onton.live/ontonimage/pending_duck.lottie",
   sent: "https://storage.onton.live/ontonimage/send-flying-paper-dart.lottie",
   searching: "https://storage.onton.live/ontonimage/duck-searching.json",
+  search_list: "https://storage.onton.live/ontonimage/search_list_duck.json",
   blocked: "https://storage.onton.live/ontonimage/tea_drinking_green_frog.json",
   map_looking: "https://storage.onton.live/ontonimage/duck_looking_at_map.json",
   archive_duck: "https://storage.onton.live/ontonimage/archive_duck.json",
