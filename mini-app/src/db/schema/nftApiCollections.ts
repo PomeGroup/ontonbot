@@ -2,7 +2,7 @@ import { pgTable, serial, varchar, text, bigint, timestamp, json, index, numeric
 import { InferSelectModel } from "drizzle-orm";
 
 // Import the enum for NFT statuses
-import { nftStatusEnum, NftStatusEnum } from "../enum";
+import { claimStatusEnum, nftStatusEnum, NftStatusEnum } from "../enum";
 
 // Shared enum for collection/NFT statuses
 export const nftApiCollections = pgTable(
@@ -25,6 +25,7 @@ export const nftApiCollections = pgTable(
     status: nftStatusEnum("status").notNull().default("CREATING"),
     royalties: numeric("royalties", { precision: 5, scale: 2 }), // 5% = 5.00
     lastRegisteredIndex: bigint("last_registered_index", { mode: "number" }).default(-1).notNull(),
+    claimStatus: claimStatusEnum("claim_status").default("not_claimed").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 })
       .$onUpdate(() => new Date())
