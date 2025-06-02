@@ -1,11 +1,16 @@
 "use client";
 
 import Typography from "@/components/Typography";
+import { useConfigDate } from "@/hooks/useConfigDate";
 import Image from "next/image";
 import { SnapshotConnectWallet } from "../_components/SnapshotConnectWallet";
 import WalletNotConnected from "../_components/WalletNotConnected";
 
 const CheckStatusLayout = ({ children }: { children: React.ReactNode }) => {
+  const snapshotTimeLeft = useConfigDate("snapshot_date");
+  const claimPointsTimeLeft = useConfigDate("snapshot_claim_points_date");
+
+  const claimAndSnapshotEnded = claimPointsTimeLeft?.isEnded && snapshotTimeLeft?.isEnded;
   return (
     <WalletNotConnected>
       <div className="bg-brand-bg min-h-screen">
@@ -28,7 +33,7 @@ const CheckStatusLayout = ({ children }: { children: React.ReactNode }) => {
                 NION Airdrop
               </Typography>
             </div>
-            <Typography variant="subheadline2">Your share ?</Typography>
+            {!claimAndSnapshotEnded && <Typography variant="subheadline2">Your share ?</Typography>}
           </div>
 
           {/* Wallet Button */}
