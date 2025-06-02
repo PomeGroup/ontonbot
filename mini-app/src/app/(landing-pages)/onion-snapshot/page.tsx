@@ -13,6 +13,8 @@ const OnionSnapshotPage = () => {
   const snapshotTimeLeft = useConfigDate("snapshot_date");
   const claimPointsTimeLeft = useConfigDate("snapshot_claim_points_date");
 
+  const claimAndSnapshotEnded = claimPointsTimeLeft?.isEnded && snapshotTimeLeft?.isEnded;
+
   return (
     <div className="bg-brand-bg p-4 flex flex-col gap-4 min-h-screen">
       {!snapshotTimeLeft?.isEnded ? (
@@ -67,6 +69,26 @@ const OnionSnapshotPage = () => {
                 </Link>
               </div>
             </>
+          )}
+
+          {/* Claim Points */}
+          {claimAndSnapshotEnded && (
+            <div className="flex flex-col gap-2">
+              <Typography variant="callout">Let’s check the ONIONs you&apos;ve gathered</Typography>
+
+              <Link
+                href="/onion-snapshot/check-status/claim-points"
+                className="w-full"
+              >
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                >
+                  Claim Points
+                </Button>
+              </Link>
+            </div>
           )}
 
           <div className="flex flex-col gap-2">
