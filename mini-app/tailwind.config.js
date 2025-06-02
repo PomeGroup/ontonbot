@@ -55,7 +55,7 @@ module.exports = konstaConfig({
       screens: {
         xxs: "320px",
         xs: "375px",
-        xsm: "400px",
+        xsm: "420px",
       },
       borderRadius: {
         "2lg": "10px",
