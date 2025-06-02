@@ -43,6 +43,7 @@ const ImportantDates = () => {
         title="Claim Portal Opens"
         link="https://onion.tg/docs/"
         description="Use / Claim ONIONs to receive your ONION tokens and be a part of the governance power of TON Ecosystem."
+        date="June 10, 2025"
       />
 
       <DateCard

@@ -26,7 +26,7 @@ const SnapShotWaitForClaimBanner = () => {
         className="absolute inset-0 w-full h-full object-cover -z-10"
       />
       {/* another overlay only color background: #00000052; */}
-      <div className="absolute inset-0 w-full h-full bg-black/40" />
+      <div className="absolute inset-0 w-full h-full bg-black/70" />
       <div className="flex gap-4 items-center w-full z-10">
         <div className="flex flex-col w-full">
           <div className="flex items-center gap-2">
@@ -35,7 +35,7 @@ const SnapShotWaitForClaimBanner = () => {
               weight="semibold"
               className="text-white"
             >
-              Snapshot ONIONs
+              Snapshot
             </Typography>
             <Typography
               variant="subheadline2"
@@ -49,12 +49,12 @@ const SnapShotWaitForClaimBanner = () => {
             weight="bold"
             className="text-white"
           >
-            Season
+            ONIONs
           </Typography>
         </div>
         <div className="flex items-center gap-1 w-full justify-center">
           {/* Days */}
-          <div className="flex flex-col items-center bg-white/5 backdrop-blur-xl rounded-md px-2 py-1 min-w-[40px]">
+          <div className="flex flex-col items-center bg-white/15 backdrop-blur-md rounded-md px-2 py-1 min-w-[40px]">
             <Typography
               variant="title2"
               weight="bold"
@@ -76,7 +76,7 @@ const SnapShotWaitForClaimBanner = () => {
             :
           </Typography>
           {/* Hours */}
-          <div className="flex flex-col items-center bg-white/5 backdrop-blur-xl rounded-md px-2 py-1 min-w-[40px]">
+          <div className="flex flex-col items-center bg-white/15 backdrop-blur-md rounded-md px-2 py-1 min-w-[40px]">
             <Typography
               variant="title2"
               weight="bold"
@@ -98,7 +98,7 @@ const SnapShotWaitForClaimBanner = () => {
             :
           </Typography>
           {/* Minutes */}
-          <div className="flex flex-col items-center bg-white/5 backdrop-blur-xl rounded-md px-2 py-1 min-w-[40px]">
+          <div className="flex flex-col items-center bg-white/15 backdrop-blur-md rounded-md px-2 py-1 min-w-[40px]">
             <Typography
               variant="title2"
               weight="bold"
@@ -120,7 +120,7 @@ const SnapShotWaitForClaimBanner = () => {
             :
           </Typography>
           {/* Seconds */}
-          <div className="flex-col items-center bg-white/5 backdrop-blur-xl rounded-md px-2 py-1 min-w-[40px] hidden xsm:flex">
+          <div className="flex-col items-center bg-white/15 backdrop-blur-md rounded-md px-2 py-1 min-w-[40px] hidden xsm:flex">
             <Typography
               variant="title2"
               weight="bold"
@@ -144,7 +144,7 @@ const SnapShotWaitForClaimBanner = () => {
         >
           <Button
             variant="outline-onion"
-            className="text-white px-3 py-2 rounded-md w-full bg-white/5 backdrop-blur-xl border-[#FF8F37] border-2"
+            className="text-white px-3 py-2 rounded-md w-full bg-white/15 backdrop-blur-md border-[#FF8F37] border-2"
           >
             Know More
           </Button>
