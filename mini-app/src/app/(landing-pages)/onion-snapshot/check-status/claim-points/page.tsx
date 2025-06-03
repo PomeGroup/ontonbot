@@ -149,7 +149,15 @@ function ClaimPointsModal() {
       centerTitle
       hideClose
     >
-      <OnionBenefitsCard />
+      <div className="flex flex-col gap-4">
+        <OnionBenefitsCard />
+        <Button
+          variant="primary"
+          className="w-full"
+        >
+          Close
+        </Button>
+      </div>
     </CustomSheet>
   );
 }
