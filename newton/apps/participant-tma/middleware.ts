@@ -42,6 +42,8 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL(`/sample/`, req.nextUrl.origin));
           case "task_sample":
             return NextResponse.redirect(new URL(`/task-sample/`, req.nextUrl.origin));
+          case "claim_sample":
+            return NextResponse.redirect(new URL(`/claim-sample/`, req.nextUrl.origin));
 
           // 🪨 Deprecated campaign/redirects: redirect to home page
           // case "play2win_campaign":
