@@ -729,3 +729,17 @@ export const PLAY2WIN_DEFAULT_CAMPAIGN_TYPE: Play2WinCampaignType = "genesis_oni
 export const PLAY2WIN_DEFAULT_MIN_POINTS = 1500;
 
 export const ONION_RAW_COLLECTION_ADDRESS = "0:826678a6c2e4ca8addef714c05ec9476ea22eed5fea8b005c05ad60d4bd73e43";
+
+// onionConversion
+export const POINTS_PER_ONION = 10;
+
+export const NFT_POINTS: Record<"platinum" | "gold" | "silver" | "bronze", number> = {
+  platinum: 40,
+  gold: 30,
+  silver: 20,
+  bronze: 10,
+};
+
+export const toOnionFromPoints = (pts: number) => pts / POINTS_PER_ONION;
+
+export const SNAPSHOT_DATE = new Date("2025-05-29 20:50:30.7+00");
