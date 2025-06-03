@@ -743,3 +743,11 @@ export const NFT_POINTS: Record<"platinum" | "gold" | "silver" | "bronze", numbe
 export const toOnionFromPoints = (pts: number) => pts / POINTS_PER_ONION;
 
 export const SNAPSHOT_DATE = new Date("2025-05-29 20:50:30.7+00");
+
+export const TON_PROOF_STORAGE_KEY = "onton-mini-app-proof-auth";
+export const PROOF_PAYLOAD_TTL_MS = 1_000 * 60 * 60 * 24 * 7; // 1 week
+export const WalletNetCHAIN_MAP: Record<number | string, "-239" | "-3"> = {
+  0: "-239",
+  "-239": "-239",
+  "-3": "-3",
+};

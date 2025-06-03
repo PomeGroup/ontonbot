@@ -516,3 +516,5 @@ type OptionalKeys<T> = {
 export type MergeWithOptional<A, B> = OptionalKeys<Omit<A, keyof B>> &
   OptionalKeys<Omit<B, keyof A>> &
   Pick<A, keyof A & keyof B>;
+
+export type TonProofSavedSession = { token: string; proof: string };

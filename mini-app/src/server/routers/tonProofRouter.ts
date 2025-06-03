@@ -2,116 +2,155 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import crypto from "crypto";
 import { initDataProtectedProcedure, router } from "@/server/trpc";
-// ^ adapt to your local naming
-import { Address } from "@ton/core";
 
+import { Address, Cell, loadStateInit, contractAddress } from "@ton/core";
+import { TonClient4 } from "@ton/ton";
+
+import {
+  TON_PROOF_PREFIX,
+  TON_CONNECT_PREFIX,
+  ALLOWED_DOMAINS,
+  VALID_AGE_SEC,
+  tryParsePublicKey,
+  be32,
+  le32,
+  le64,
+  hexToU8,
+  b64ToU8,
+  buildSignedBody,
+  ed25519Verify,
+  u8eq,
+} from "@/server/utils/ton-proof-hash";
+
+import { createAuthToken } from "@/server/utils/jwt";
 import { redisTools } from "@/lib/redisTools";
+import { utf8ToBytes } from "@noble/hashes/utils";
 
-// ^ placeholder, you must implement your own Redis or remove
-
-/**
- * Minimal shape of the proof from the TonConnect wallet
- * (Matches your `TonProofItem` in the question)
- */
-type TonProofItem = {
-  address: string;
-  timestamp: number;
-  payload: string;
-  signature: string;
-};
-
-//
-// Simplified verify function (like your `verifyTonProof`)
-//
-function verifyTonProof(raw: string, expectedWallet: string, expectedUserId: number, ttlSeconds = 60) {
-  if (!raw) throw new Error("Missing tonProof");
-
-  let proof: TonProofItem;
-  try {
-    proof = JSON.parse(raw);
-  } catch {
-    throw new Error("Invalid tonProof JSON");
-  }
-
-  // 1) Compare addresses
-  const normExpected = Address.parse(expectedWallet).toString({ bounceable: false });
-  const normGot = Address.parse(proof.address).toString({ bounceable: false });
-  if (normExpected !== normGot) {
-    throw new Error("tonProof: wallet mismatch");
-  }
-
-  // 2) Check payload prefix — e.g. "onton-claim:<userId>:<challenge>:<timestamp>"
-  const mustPrefix = `onton-claim:${expectedUserId}:`;
-  if (!proof.payload.startsWith(mustPrefix)) {
-    throw new Error("tonProof: payload mismatch");
-  }
-
-  // 3) Freshness check
-  const now = Math.floor(Date.now() / 1000);
-  if (Math.abs(now - proof.timestamp) > ttlSeconds) {
-    throw new Error("tonProof: proof too old");
-  }
-
-  // 4) Signature-level check is omitted in your example
-  //    Ideally you’d do an ed25519 verify using the wallet’s public key
-}
-
+const proofSchema = z.object({
+  address: z.string(),
+  timestamp: z.number(),
+  domain: z.object({
+    lengthBytes: z.number(),
+    value: z.string(),
+  }),
+  payload: z.string(),
+  signature: z.string(),
+  state_init: z.string().optional(),
+});
+/* ------------------------------------------------------------------ */
+/*  Router                                                            */
+/* ------------------------------------------------------------------ */
 export const tonProofRouter = router({
-  /**
-   *  1) Generate a unique payload for TON Proof
-   *     The front-end calls this before opening wallet modal
-   */
+  /* -------------------------------------------------------------- */
+  /* 1. Create payload                                              */
   generatePayload: initDataProtectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.user_id;
     if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-    // 1️⃣ Generate a random “challenge”
     const challenge = crypto.randomUUID();
-    // 2️⃣ Optionally store in Redis (with 60s TTL) so we can confirm later
     await redisTools.setCache(`tp:${challenge}`, String(userId), 60);
 
-    // 3️⃣ Include a timestamp, so we can do a time-based freshness check
-    const timestamp = Math.floor(Date.now() / 1000);
+    const timestamp = Math.floor(Date.now() / 1e3);
+    const payload = `onton:${userId}:${challenge}:${timestamp}`;
 
-    // 4️⃣ The wallet will sign this string
-    //     Format:   "onton-claim:<userId>:<challenge>:<timestamp>"
-    const payload = `onton-claim:${userId}:${challenge}:${timestamp}`;
-
-    return { payload };
+    return { payload }; // plain string
   }),
 
-  /**
-   * 2) Verify the proof returned by the wallet
-   *    Return a JWT or session token if valid
-   */
+  /* -------------------------------------------------------------- */
+  /* 2. Verify proof                                                */
   verifyProof: initDataProtectedProcedure
     .input(
       z.object({
-        address: z.string(), // wallet addr (bounceable uf)
-        network: z.enum(["-239", "-3"]), // main- / test-net
-        public_key: z.string(), // extracted by TC
-        proof: z.object({
-          timestamp: z.number(),
-          domain: z.object({
-            lengthBytes: z.number(),
-            value: z.string(),
-          }),
-          payload: z.string(),
-          signature: z.string(),
-          state_init: z.string().optional(),
-        }),
+        address: z.string(),
+        network: z.enum(["-239", "-3"]),
+        public_key: z.string(), // hex, as provided by Ton-Connect
+        proof: proofSchema,
       })
     )
     .mutation(async ({ input, ctx }) => {
+      /* ─────────────────────────────── quick / structural checks */
       const userId = ctx.user.user_id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-      /* 1️⃣  stringify and do the minimal checks */
-      const rawProof = JSON.stringify(input.proof);
-      verifyTonProof(rawProof, input.address, userId);
+      /* 1) same bounce-false address in params & inside proof */
+      const addrReq = Address.parse(input.address).toString({ bounceable: false });
+      const addrPro = Address.parse(input.proof.address).toString({ bounceable: false });
+      if (addrReq !== addrPro) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "address mismatch" });
+      }
 
-      /* 2️⃣  (later) cryptographically validate signature, create real JWT … */
-      const token = `FAKE-JWT-${Math.random().toString(36).slice(2)}`;
+      /* 2) allowed domain + freshness (±60 s) */
+      if (!ALLOWED_DOMAINS.includes(input.proof.domain.value)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "domain not allowed" });
+      }
+      const age = Math.floor(Date.now() / 1e3) - input.proof.timestamp;
+      if (Math.abs(age) > VALID_AGE_SEC) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "proof too old" });
+      }
+
+      /* ─────────────────────────────── public-key discovery      */
+      let pubKey: Uint8Array | null = null;
+
+      /* a) fast path – key inside state-init supplied by wallet  */
+      if (input.proof.state_init) {
+        const st = loadStateInit(Cell.fromBase64(input.proof.state_init).beginParse());
+        pubKey = tryParsePublicKey(st) ?? null;
+      }
+
+      /* b) fallback – invoke ‘get_public_key’ on-chain           */
+      if (!pubKey) {
+        const endpoint = input.network === "-239" ? "https://mainnet-v4.tonhubapi.com" : "https://testnet-v4.tonhubapi.com";
+        const api = new TonClient4({ endpoint });
+
+        try {
+          const blk = await api.getLastBlock();
+          const res = await api.runMethod(blk.last.seqno, Address.parse(input.address), "get_public_key", []);
+          pubKey = hexToU8(res.reader.readBigNumber().toString(16).padStart(64, "0"));
+        } catch {
+          /* ignore – some wallets aren’t deployed yet             */
+        }
+      }
+
+      if (!pubKey) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "pub-key not found" });
+      }
+
+      /* c) compare with key Ton-Connect gave us                  */
+      const supplied = hexToU8(input.public_key);
+      if (!u8eq(pubKey, supplied)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "pub-key mismatch" });
+      }
+
+      /* d) optional: state-init ↔ address hash check             */
+      if (input.proof.state_init) {
+        const st = loadStateInit(Cell.fromBase64(input.proof.state_init).beginParse());
+        const calcAddr = contractAddress(Address.parse(input.address).workChain, st);
+        if (!calcAddr.equals(Address.parse(input.address))) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "state_init mismatch" });
+        }
+      }
+
+      /* ─────────────────────────────── cryptographic signature   */
+      const body = buildSignedBody({
+        address: Address.parse(input.address),
+        domainLength: input.proof.domain.lengthBytes,
+        domainValue: utf8ToBytes(input.proof.domain.value),
+        timestamp: input.proof.timestamp,
+        payload: utf8ToBytes(input.proof.payload),
+      });
+
+      if (!ed25519Verify(body, input.proof.signature, input.public_key)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Invalid TON-Proof signature",
+        });
+      }
+
+      /* ─────────────────────────────── success → real JWT        */
+      const token = await createAuthToken({
+        address: input.address,
+        network: input.network,
+      });
 
       return { token };
     }),
