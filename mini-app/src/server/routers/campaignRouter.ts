@@ -1,10 +1,15 @@
+import { SNAPSHOT_DATE } from "@/constants";
 import { db } from "@/db/db";
 import { campaignTypes } from "@/db/enum";
-import { TokenCampaignOrdersInsert, TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
-import { checkRateLimit } from "@/lib/checkRateLimit";
-import { generateRandomHash } from "@/lib/generateRandomHash";
-import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
+import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
+import {
+  buildClaimOverview,
+  insertClaimRowTx,
+  markNftRowsClaimedTx,
+  markScoreRowsClaimedTx,
+} from "@/db/modules/claimOnion.db";
+import tokenCampaignClaimOnionDB from "@/db/modules/tokenCampaignClaimOnion.db";
 import userEligibilityDB from "@/db/modules/tokenCampaignEligibleUsers.db";
 import tokenCampaignMergeTransactionsDB from "@/db/modules/tokenCampaignMergeTransactions.db";
 import { tokenCampaignNftCollectionsDB } from "@/db/modules/tokenCampaignNftCollections.db";
@@ -12,26 +17,20 @@ import { tokenCampaignNftItemsDB } from "@/db/modules/tokenCampaignNftItems.db";
 import { tokenCampaignOrdersDB } from "@/db/modules/tokenCampaignOrders.db";
 import { tokenCampaignSpinPackagesDB } from "@/db/modules/tokenCampaignSpinPackages.db";
 import { tokenCampaignUserSpinsDB } from "@/db/modules/tokenCampaignUserSpins.db";
-import tonCenter, { NFTItem } from "@/services/tonCenter";
+import { TokenCampaignClaimOnionInsert } from "@/db/schema/tokenCampaignClaimOnion";
+import { TokenCampaignOrdersInsert, TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
+import { checkRateLimit } from "@/lib/checkRateLimit";
+import { generateRandomHash } from "@/lib/generateRandomHash";
+import { redisTools } from "@/lib/redisTools";
+import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
 import { is_prod_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
+import tonCenter, { NFTItem } from "@/services/tonCenter";
 import { CampaignNFT } from "@/types/campaign.types";
 import { Address } from "@ton/core";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
 import { initDataProtectedProcedure, router } from "../trpc";
-import {
-  buildClaimOverview,
-  insertClaimRowTx,
-  markNftRowsClaimedTx,
-  markScoreRowsClaimedTx,
-} from "@/db/modules/claimOnion.db";
-import { SNAPSHOT_DATE } from "@/constants";
-import tokenCampaignClaimOnionDB from "@/db/modules/tokenCampaignClaimOnion.db";
-import { TokenCampaignClaimOnionInsert } from "@/db/schema/tokenCampaignClaimOnion";
-import { redisTools } from "@/lib/redisTools";
-import { verifyTonProof } from "@/server/utils/tonProof";
 export const campaignRouter = router({
   /**
    * Get Campaign Collections by Type
@@ -551,7 +550,7 @@ export const campaignRouter = router({
         tonProof: z.string().optional(), // required now
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .query(async ({ input, ctx }) => {
       const userId = ctx.user.user_id;
 
       /* 1️⃣  Verify TON-Proof (throws on failure) */
