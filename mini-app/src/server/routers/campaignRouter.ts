@@ -638,22 +638,4 @@ export const campaignRouter = router({
 
       return { success: true, claim: claimRow };
     }),
-
-  getTonProofChallenge: initDataProtectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.user.user_id;
-
-    // 1️⃣  generate a secure random UUID v4
-    const challenge = crypto.randomUUID(); // e.g. "86b20a5d-…"
-
-    // 2️⃣  store it in Redis with a 60-second TTL
-    //     key: tp:<uuid>  value: userId
-    await redisTools.setCache(
-      `tp:${challenge}`,
-      String(userId),
-      60 // 60 seconds TTL
-    );
-
-    // 3️⃣  hand it back to the front-end
-    return { challenge };
-  }),
 });
