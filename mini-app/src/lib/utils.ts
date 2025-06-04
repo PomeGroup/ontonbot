@@ -51,3 +51,13 @@ export const removeSecretKey = (changes: any) =>
 export type InferArrayType<T> = T extends (infer U)[] ? U : never;
 
 export const formatPadNumber = (num: number): string => num.toString().padStart(2, "0");
+
+/**
+ * Formats a wallet address to be displayed in a more readable format.
+ * Example: "0x1234567890123456789012345678901234567890" → "0x1234...7890"
+ * @param address - The wallet address to format.
+ * @returns The formatted wallet address.
+ */
+export const formatWalletAddress = (address: string) => {
+  return `${address.slice(0, 4)}...${address.slice(-4)}`;
+};
