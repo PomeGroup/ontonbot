@@ -10,6 +10,7 @@ import { Address, Cell, contractAddress, loadStateInit, StateInit } from "@ton/c
 /* ------------------------------------------------------------------ */
 /*  CONSTANTS (from white-paper)                                      */
 /* ------------------------------------------------------------------ */
+
 export const TON_PROOF_PREFIX = utf8ToBytes("ton-proof-item-v2/");
 export const TON_CONNECT_PREFIX = utf8ToBytes("ton-connect");
 export const ALLOWED_DOMAINS = [
