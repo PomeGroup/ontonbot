@@ -30,7 +30,7 @@ export default function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) 
   const handleClose = () => {
     setIsOpen(false);
     setTimeout(() => {
-      trpcUtils.campaign.getClaimOverview;
+      trpcUtils.campaign.getClaimOverview.invalidate();
     }, 50);
   };
 
