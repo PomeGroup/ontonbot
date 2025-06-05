@@ -107,8 +107,7 @@ const DateCard = ({
                   variant="link"
                   onClick={(e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    handleLinkClilck(timeLeft && link ? link : linkAfter || "");
+                    handleLinkClilck((timeLeft || !endDateKey) && link ? link : linkAfter || "");
                   }}
                   className="flex items-center align-middle text-primary p-0"
                 >
