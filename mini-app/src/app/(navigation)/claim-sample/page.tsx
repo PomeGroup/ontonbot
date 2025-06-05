@@ -26,16 +26,26 @@ export default function ClaimSample() {
   const addr = useTonAddress();
   const ready = useIsConnectionRestored();
 
-  /* tRPC */
-  const genPayload = trpc.tonProof.generatePayload.useQuery(undefined, { enabled: false });
-  const verify = trpc.tonProof.verifyProof.useMutation();
-  const overview = trpc.campaign.getClaimOverview.useMutation();
-  const claimMut = trpc.campaign.claimOnion.useMutation();
-
-  /* local state */
+  /* local state (must be declared before tRPC hooks that depend on it) */
   const [proof, setProof] = useState<string>(); // stringified proof
   const [jwtOk, setJwtOk] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+
+  /* tRPC */
+  const genPayload = trpc.tonProof.generatePayload.useQuery(undefined, { enabled: false });
+  const verify = trpc.tonProof.verifyProof.useMutation();
+  /* switched to useQuery instead of useMutation 👇 */
+  const claimOverview = trpc.campaign.getClaimOverview.useQuery(
+    {
+      walletAddress: wallet?.account.address!,
+      tonProof: proof!,
+    },
+    {
+      queryKey: ["campaign.getClaimOverview", { walletAddress: wallet?.account.address!, tonProof: proof! }],
+      enabled: !!wallet?.account.address && !!proof,
+    }
+  );
+  const claimMut = trpc.campaign.claimOnion.useMutation();
 
   /* ----------------------------------------------------------------
      STEP 0  – payload pre-load (when NO wallet connected)
@@ -96,7 +106,8 @@ export default function ClaimSample() {
           setJwtOk(true);
 
           toast.success("Wallet verified – fetching overview…");
-          overview.mutate({ walletAddress: wallet.account.address, tonProof: session.proof });
+          /* force immediate fetch after proof is ready */
+          claimOverview.refetch();
         })
         .catch(() => {
           toast.error("Proof invalid – reconnect.");
@@ -106,7 +117,7 @@ export default function ClaimSample() {
       toast.error("Proof missing – reconnect.");
       ui.disconnect();
     }
-  }, [ready, wallet, verify, ui, overview]);
+  }, [ready, wallet, verify, ui, claimOverview]);
 
   /* ----------------------------------------------------------------
      helper actions
@@ -114,7 +125,7 @@ export default function ClaimSample() {
   const fetchOverview = () => {
     if (!addr) return toast.error("Connect first");
     if (!proof) return toast.error("Need proof");
-    overview.mutate({ walletAddress: addr, tonProof: proof });
+    claimOverview.refetch();
   };
 
   const claim = () => {
@@ -140,19 +151,21 @@ export default function ClaimSample() {
         </Button>
       )}
 
-      {addr && jwtOk && !overview.data && (
+      {addr && jwtOk && !claimOverview.data && (
         <Button
           onClick={fetchOverview}
-          disabled={overview.isLoading}
+          disabled={claimOverview.isFetching}
           className="bg-indigo-600 text-white"
         >
-          {overview.isLoading ? "Loading…" : "Fetch overview"}
+          {claimOverview.isFetching ? "Loading…" : "Fetch overview"}
         </Button>
       )}
 
-      {overview.data && (
+      {claimOverview.data && (
         <>
-          <pre className="text-xs bg-gray-100 p-2 rounded overflow-x-auto">{JSON.stringify(overview.data, null, 2)}</pre>
+          <pre className="text-xs bg-gray-100 p-2 rounded overflow-x-auto">
+            {JSON.stringify(claimOverview.data, null, 2)}
+          </pre>
           <Button
             onClick={claim}
             disabled={claimMut.isLoading}
