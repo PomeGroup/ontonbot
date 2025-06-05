@@ -11,19 +11,23 @@ import { WalletSummary } from "@/db/modules/claimOnion.db";
 import { formatWalletAddress } from "@/lib/utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Address } from "@ton/core";
+import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { Wallet2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useClaimPointsContext } from "./ClaimPointsContext";
 
 function OnionStockBanner() {
+  const { wallets } = useClaimPointsContext();
   return (
     <div className="rounded-lg bg-gradient-to-br from-[#FFAE6E] to-[#F36A00] opacity-60 border shadow-inner backdrop-blur-sm flex flex-col justify-center items-center gap-4 py-4 w-full">
       <div className="flex flex-col gap-2">
         <div className="font-medium text-[13px] leading-[1.38] text-center text-white tracking-tightest">
           Your Current Stock is
         </div>
-        <div className="font-bold text-3xl leading-tight text-center text-white tracking-tighter">? ONIONs</div>
+        <div className="font-bold text-3xl leading-tight text-center text-white tracking-tighter">
+          {Number(wallets?.reduce((pv, cv) => pv + cv.totalOnions, 0))}? ONIONs
+        </div>
       </div>
     </div>
   );
@@ -45,40 +49,42 @@ function SnapshotResultCard() {
       </Typography>
 
       <div className="h-[1px] bg-brand-bg w-full" />
-      <>
-        <p className="text-center text-black">
-          You can easily Claim the ONIONs you’ve earned during the snapshot phase. It’s a great way to see what you’ve
-          accumulated!
-        </p>
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col items-center gap-2 p-4 rounded-[10px] bg-[#EFEFF4]/50 flex-1">
-            <img
-              src="https://storage.onton.live/ontonimage/gem_nft_onions_icon.svg"
-              alt="ONION NFTs icon"
-              className="w-[60px] h-[60px]"
-            />
-            <Typography
-              variant="subheadline1"
-              className="text-center text-[#575757]"
-            >
-              ONION NFTs
-            </Typography>
+      {!pointWallets.wallets?.length && (
+        <>
+          <p className="text-center text-black">
+            You can easily Claim the ONIONs you’ve earned during the snapshot phase. It’s a great way to see what you’ve
+            accumulated!
+          </p>
+          <div className="flex flex-col gap-2 w-full">
+            <div className="flex flex-col items-center gap-2 p-4 rounded-[10px] bg-[#EFEFF4]/50 flex-1">
+              <img
+                src="https://storage.onton.live/ontonimage/gem_nft_onions_icon.svg"
+                alt="ONION NFTs icon"
+                className="w-[60px] h-[60px]"
+              />
+              <Typography
+                variant="subheadline1"
+                className="text-center text-[#575757]"
+              >
+                ONION NFTs
+              </Typography>
+            </div>
+            <div className="flex flex-col items-center gap-2 p-4 rounded-[10px] bg-[#EFEFF4]/50 flex-1">
+              <img
+                src="https://storage.onton.live/ontonimage/ticket_onions_icon.svg"
+                alt="Event Attendance icon"
+                className="w-[60px] h-[60px]"
+              />
+              <Typography
+                variant="subheadline1"
+                className="text-center text-[#575757]"
+              >
+                Event Attendance
+              </Typography>
+            </div>
           </div>
-          <div className="flex flex-col items-center gap-2 p-4 rounded-[10px] bg-[#EFEFF4]/50 flex-1">
-            <img
-              src="https://storage.onton.live/ontonimage/ticket_onions_icon.svg"
-              alt="Event Attendance icon"
-              className="w-[60px] h-[60px]"
-            />
-            <Typography
-              variant="subheadline1"
-              className="text-center text-[#575757]"
-            >
-              Event Attendance
-            </Typography>
-          </div>
-        </div>
-      </>
+        </>
+      )}
 
       {pointWallets.wallets?.map((wallet) => (
         <WalletSummaryCard
@@ -86,7 +92,38 @@ function SnapshotResultCard() {
           wallet={wallet}
         />
       ))}
+
+      {pointWallets.wallets?.length && pointWallets.wallets.every((wallet) => wallet.claimStatus === "claimed") && (
+        <ConnectNewWalletCard />
+      )}
+
+      {pointWallets.wallets?.length && pointWallets.wallets.every((wallet) => wallet.claimStatus === "claimed") && (
+        <AlertGeneric variant="info-light">
+          To claim your ONIONs for the NFTs you own, you need to disconnect your current wallet and connect a new one.
+        </AlertGeneric>
+      )}
     </CustomCard>
+  );
+}
+
+function ConnectNewWalletCard(props: { buttonText?: string }) {
+  const [tonconnectUi] = useTonConnectUI();
+  const { setOpenConnect } = useClaimPointsContext();
+
+  return (
+    <Button
+      variant="primary"
+      size="lg"
+      onClick={(e) => {
+        e.preventDefault();
+        if (tonconnectUi.account?.address) {
+          void tonconnectUi.disconnect();
+        }
+        setOpenConnect(true);
+      }}
+    >
+      {props.buttonText ? props.buttonText : "Connect a New Wallet"}
+    </Button>
   );
 }
 
@@ -226,7 +263,7 @@ function OnionBenefitsCard() {
       >
         Use ONION, the governance token, to enable:
       </Typography>
-      <ul className="list-disc list-inside flex flex-col">
+      <ul className={`list-inside list-disc space-y-1`}>
         <li className="text-black font-normal leading-snug tracking-tight text-xs">
           <Typography
             variant="footnote"
@@ -264,7 +301,6 @@ function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) {
   const claimPoints = trpc.campaign.claimOnion.useMutation({
     onSuccess: () => {
       setIsOpen(true);
-      trpcUtils.campaign.getClaimOverview.invalidate();
     },
     onError: () => {
       toast.error("Failed to claim ONIONs");
@@ -275,6 +311,13 @@ function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) {
     claimPoints.mutate({
       walletAddress: wallet.walletAddress,
     });
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setTimeout(() => {
+      trpcUtils.campaign.getClaimOverview.invalidate();
+    }, 50);
   };
 
   return (
@@ -315,7 +358,7 @@ function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) {
         }
         centerTitle
         hideClose
-        onClose={() => setIsOpen(false)}
+        onClose={handleClose}
       >
         <div className="flex flex-col gap-4">
           {/* Header */}
@@ -346,7 +389,7 @@ function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) {
             className="w-full"
             onClick={(e) => {
               e.preventDefault();
-              setIsOpen(false);
+              handleClose();
             }}
           >
             Close
@@ -358,10 +401,12 @@ function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) {
 }
 
 export default function ClaimPointsPage() {
+  const wallet = useTonWallet();
   return (
     <div className="flex flex-col gap-4 py-6 px-4">
       <OnionStockBanner />
       <SnapshotResultCard />
+      {wallet?.account.address ? <OnionBenefitsCard /> : <ConnectNewWalletCard buttonText="Connect Wallet" />}
     </div>
   );
 }

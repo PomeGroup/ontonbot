@@ -1,19 +1,33 @@
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import { useTonConnectModal, useTonWallet } from "@tonconnect/ui-react";
-import React from "react";
+import React, { useEffect } from "react";
 import DataStatus from "../../../_components/molecules/alerts/DataStatus";
 
 interface WalletNotConnectedProps {
   children: React.ReactNode;
+  /** Controls whether to show wallet provider when wallet is disconnected */
+  openOnDisconnect?: boolean;
+  /** Updates the wallet provider visibility state when disconnected */
+  setOpenOnDiconnect?: (open: boolean) => void;
 }
 
-const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({ children }) => {
+const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({ children, openOnDisconnect, setOpenOnDiconnect }) => {
   const tonConnectModal = useTonConnectModal();
   const tonConnectAddress = useTonWallet();
 
-  // If the user has a connected wallet, show the children
-  if (tonConnectAddress?.account.address) {
+  useEffect(() => {
+    if (tonConnectAddress?.account.address) {
+      setOpenOnDiconnect?.(false);
+    }
+  }, [tonConnectAddress?.account.address]);
+
+  if (
+    // If the user has a connected wallet, show the children
+    tonConnectAddress?.account.address || // OR
+    // if wallet was not connect but the state on disconnect was open we show the children
+    (!tonConnectAddress?.account.address && !openOnDisconnect)
+  ) {
     return <>{children}</>;
   }
 
@@ -30,18 +44,18 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({ children }) => 
           weight="bold"
           className="text-center text-zinc-900"
         >
-          No connected wallet
+          Connect Wallet
         </Typography>
         <div className="flex flex-col gap-2">
           <Typography
             variant="subheadline2"
             className="text-center font-bold"
           >
-            To check your ONION eligibility, connect your TON wallet.
+            To check your ONIONs, connect your TON wallet.
           </Typography>
           <Typography
-            variant="subheadline2"
-            className="text-center font-bold"
+            variant="footnote"
+            className="text-center font-normal"
           >
             This doesn&apos;t cost gas or give us access to your funds.
           </Typography>

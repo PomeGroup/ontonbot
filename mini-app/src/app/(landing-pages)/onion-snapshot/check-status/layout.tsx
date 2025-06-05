@@ -6,7 +6,7 @@ import Image from "next/image";
 import { SnapshotConnectWallet } from "../_components/SnapshotConnectWallet";
 import WalletNotConnected from "../_components/WalletNotConnected";
 
-const CheckStatusLayout = ({ children }: { children: React.ReactNode }) => {
+const Layout = ({ children }: { children: React.ReactNode }) => {
   const snapshotTimeLeft = useConfigDate("snapshot_date");
   const claimPointsTimeLeft = useConfigDate("snapshot_claim_points_date");
 
@@ -45,4 +45,4 @@ const CheckStatusLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default CheckStatusLayout;
+export default Layout;

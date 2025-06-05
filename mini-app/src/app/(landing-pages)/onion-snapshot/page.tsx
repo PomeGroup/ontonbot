@@ -77,7 +77,7 @@ const OnionSnapshotPage = () => {
               <Typography variant="callout">Let’s check the ONIONs you&apos;ve gathered</Typography>
 
               <Link
-                href="/onion-snapshot/check-status/claim-points"
+                href="/onion-snapshot/claim-points"
                 className="w-full"
               >
                 <Button
