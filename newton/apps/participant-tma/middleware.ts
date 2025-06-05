@@ -38,6 +38,9 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL(`/genesis-onions/`, req.nextUrl.origin));
           case "onion-snapshot":
             return NextResponse.redirect(new URL(`/onion-snapshot/`, req.nextUrl.origin));
+          case "snapshot_claim":
+            return NextResponse.redirect(new URL(`/onion-snapshot/claim-points`, req.nextUrl.origin));
+
           case "sample":
             return NextResponse.redirect(new URL(`/sample/`, req.nextUrl.origin));
           case "task_sample":

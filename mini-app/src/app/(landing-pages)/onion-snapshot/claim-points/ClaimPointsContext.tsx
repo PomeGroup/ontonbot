@@ -1,6 +1,7 @@
 "use client";
 
 import { trpc } from "@/app/_trpc/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import { type WalletSummary } from "@/db/modules/claimOnion.db";
 import { useTonWallet } from "@tonconnect/ui-react";
 import { createContext, useContext, useState } from "react";
@@ -39,6 +40,10 @@ export const ClaimPointsProvider = ({ children }: { children: React.ReactNode })
       enabled: !!wallet?.account.address && !!proof,
     }
   );
+
+  if (claimOverview.isInitialLoading) {
+    return <Skeleton />;
+  }
 
   return (
     <ClaimPointsContext.Provider value={{ wallets: claimOverview.data ?? null, openConnect, setOpenConnect }}>
