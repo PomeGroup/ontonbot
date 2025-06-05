@@ -8,6 +8,7 @@ import { logger } from "@/server/utils/logger";
 import axios, { AxiosError } from "axios";
 import { Bot, InputFile } from "grammy";
 import { InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo } from "grammy/types";
+import { is_local_env } from "@/server/utils/evnutils";
 
 interface MediaGroupItem {
   type: "photo" | "video";
@@ -173,6 +174,7 @@ export const sendLogNotification = async (
 ) => {
   // 1) Validate config
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
+    logger.log(configProtected);
     logger.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");
   }
@@ -195,7 +197,7 @@ export const sendLogNotification = async (
   };
 
   const topicMessageId = topicMapping[props.topic];
-  if (!topicMessageId) {
+  if (!topicMessageId && !is_local_env()) {
     logger.error(`Invalid or unconfigured topic: ${props.topic}`);
     throw new Error(`Invalid or unconfigured topic: ${props.topic}`);
   }

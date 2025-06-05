@@ -96,6 +96,7 @@ export async function registerActivity(
   if (response.status !== 200) {
     logger.error(`Error registering activity: ${response}`);
   }
+  logger.log(`Activity registered successfully with response:`, response.data);
   return response.data as TonSocietyRegisterActivityResponse;
 }
 

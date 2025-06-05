@@ -74,3 +74,4 @@ export const orderRelations = relations(orders, ({ one }) => ({
 }));
 
 export type OrderRow = InferSelectModel<typeof orders>;
+export type OrderTypeValues = (typeof orderTypeValues)[number];

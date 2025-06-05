@@ -44,8 +44,8 @@ export const eventRegistrants = pgTable(
     register_info: json("register_info").notNull().default({}).$type<Record<string, string | null>>(),
 
     /* per-ticket price data */
-    default_price: real("default_price").notNull(), // BEFORE discount
-    final_price: real("final_price").notNull(), // AFTER coupon/discount
+    default_price: real("default_price"), // BEFORE discount
+    final_price: real("final_price"), // AFTER coupon/discount
 
     /* minting fields */
     mint_wallet_address: text("mint_wallet_address"),
@@ -72,3 +72,5 @@ export const eventRegistrants = pgTable(
     statusCheck: check("valid_status", sql`${t.status} IN ('pending','rejected','approved','checkedin')`),
   })
 );
+
+export type EventRegistrantStatusType = "pending" | "rejected" | "approved" | "checkedin";

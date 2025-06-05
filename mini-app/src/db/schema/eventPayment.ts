@@ -1,3 +1,4 @@
+/* ─────────────────────────── eventPayment.ts  (event_payment_info) ─────────────────────────── */
 import { events } from "@/db/schema/events";
 import { index, integer, pgEnum, pgTable, real, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { paymentTypes } from "../enum";
@@ -17,25 +18,23 @@ export const eventPayment = pgTable(
       .notNull()
       .references(() => events.event_uuid),
 
-    /* TICKET-DEFINITION columns */
-    ticket_name: text("ticket_name") // e.g. "VIP", "General"
-      .notNull(),
-    ticket_type: pgTicketTypes("ticket_type") // "NFT" | "TSCSBT"
-      .notNull(),
-    price: real("price") // price per ticket before discount
-      .notNull(),
-    capacity: integer("capacity") // max sellable quantity for this ticket type
-      .notNull(),
-
-    /* PAYMENT columns */
-    payment_type: paymentTypes("payment_type").notNull(), // TON, USDT-TON, …
+    /* payment basics */
+    payment_type: paymentTypes("payment_type").notNull(),
+    price: real("price").notNull(),
     recipient_address: text("recipient_address").notNull(),
+    bought_capacity: integer("bought_capacity").notNull(),
 
-    /* NFT / SBT media + collection */
+    /* ticket meta */
+    ticket_type: pgTicketTypes("ticket_type").notNull(), // "NFT" | "TSCSBT"
+    title: text("title").notNull(), // *ticket name* (unchanged)
+    description: text("description").notNull(), // *ticket description* (unchanged)
+
+    /* NFT / SBT media & collection */
     ticketImage: text("ticket_image"),
     ticketVideo: text("ticket_video"),
     collectionAddress: text("collection_address"),
 
+    /* organizer settlement */
     organizer_payment_status: organizerPaymentStatus("organizer_payment_status").default("not_payed").notNull(),
     ticketActivityId: integer("ticket_activity_id").default(0),
 
@@ -45,11 +44,13 @@ export const eventPayment = pgTable(
     updatedBy: text("updated_by").default("system").notNull(),
   },
   (t) => ({
-    /* ⚠️ UNIQUE constraint on event_uuid REMOVED to allow multiple ticket definitions */
+    /* ⚠️ uniqueEven removed to allow multiple ticket definitions per event */
     eventUuidIdx: index("event_payment_event_uuid_idx").on(t.event_uuid),
-    ticketNameIdx: index("event_payment_ticket_name_idx").on(t.ticket_name),
+    ticketTypeIdx: index("event_payment_ticket_type_idx").on(t.ticket_type),
   })
 );
 
 export type EventPaymentSelectType = typeof eventPayment.$inferSelect;
+export type EventPaymentType = (typeof paymentTypes.enumValues)[number];
 export type EventTicketType = (typeof ticketTypes)[number];
+/* ─────────────────────────────────────────────────────────────────────────────── */

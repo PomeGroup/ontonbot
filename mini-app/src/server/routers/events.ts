@@ -264,48 +264,46 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       }
 
       const event_should_hidden = await eventDB.shouldEventBeHidden(is_paid, user_id);
+      const eventInsertData = {
+        category_id: input_event_data.category_id,
+        type: input_event_data.type,
+        event_uuid: uuidv4(),
+        title: input_event_data.title,
+        subtitle: input_event_data.subtitle,
+        description: input_event_data.description,
+        image_url: input_event_data.image_url,
+        society_hub: input_event_data.society_hub.name,
+        society_hub_id: input_event_data.society_hub.id,
+        secret_phrase: hashedSecretPhrase,
+        start_date: input_event_data.start_date,
+        end_date: input_event_data.end_date,
+        timezone: input_event_data.timezone,
+        location: input_event_data.location,
+        owner: user_id,
+        participationType: input_event_data.eventLocationType, // right now paid event only can be in_person
+        countryId: input_event_data.countryId,
+        tsRewardImage: input_event_data.ts_reward_url,
+        tsRewardVideo: input_event_data.video_url,
+        cityId: input_event_data.cityId,
+        /* --------------------------- Event Registration --------------------------- */
+        has_registration: input_event_data.has_registration,
+        has_approval: input_event_data.has_approval,
+        capacity: input_event_data.capacity,
+        has_waiting_list: input_event_data.has_waiting_list,
 
-      const newEvent = await trx
-        .insert(events)
-        .values({
-          category_id: input_event_data.category_id,
-          type: input_event_data.type,
-          event_uuid: uuidv4(),
-          title: input_event_data.title,
-          subtitle: input_event_data.subtitle,
-          description: input_event_data.description,
-          image_url: input_event_data.image_url,
-          society_hub: input_event_data.society_hub.name,
-          society_hub_id: input_event_data.society_hub.id,
-          secret_phrase: hashedSecretPhrase,
-          start_date: input_event_data.start_date,
-          end_date: input_event_data.end_date,
-          timezone: input_event_data.timezone,
-          location: input_event_data.location,
-          owner: user_id,
-          participationType: input_event_data.eventLocationType, // right now paid event only can be in_person
-          countryId: input_event_data.countryId,
-          tsRewardImage: input_event_data.ts_reward_url,
-          tsRewardVideo: input_event_data.video_url,
-          cityId: input_event_data.cityId,
-          /* --------------------------- Event Registration --------------------------- */
-          has_registration: input_event_data.has_registration,
-          has_approval: input_event_data.has_approval,
-          capacity: input_event_data.capacity,
-          has_waiting_list: input_event_data.has_waiting_list,
-
-          /* -------------------------- Publish Event Or Not -------------------------- */
-          enabled: true,
-          hidden: event_should_hidden,
-          /* ------------------------------- Paid Event ------------------------------- */
-          has_payment: is_paid,
-          ticketToCheckIn: is_paid, // Duplicated Column same as has_payment 😐
-          wallet_address: is_paid ? config?.ONTON_WALLET_ADDRESS : null,
-          /* ------------------------------- Paid Event ------------------------------- */
-        })
-        .returning();
+        /* -------------------------- Publish Event Or Not -------------------------- */
+        enabled: true,
+        hidden: event_should_hidden,
+        /* ------------------------------- Paid Event ------------------------------- */
+        has_payment: is_paid,
+        ticketToCheckIn: is_paid, // Duplicated Column same as has_payment 😐
+        wallet_address: is_paid ? config?.ONTON_WALLET_ADDRESS : null,
+        /* ------------------------------- Paid Event ------------------------------- */
+      };
+      const newEvent = await trx.insert(events).values(eventInsertData).returning();
 
       const eventData = newEvent[0];
+      logger.log("----------------------newEvent-------------------------------", newEvent);
       /* -------------------------------------------------------------------------- */
       /*                     Paid Event : Insert Payment Details                    */
       /* -------------------------------------------------------------------------- */
@@ -420,7 +418,6 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
             .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
             .execute();
         }
-
         /* ------------- Generate the message using the render function ------------- */
         if (is_ts_verified && !is_paid) {
           /* -------------------------- Just Send The Message ------------------------- */
@@ -443,7 +440,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
             participationType: eventData.participationType,
           });
 
-          eventsMsg && sentTelegramMsgs.push(eventsMsg);
+          // eventsMsg && sentTelegramMsgs.push(eventsMsg);
         } else if (!is_paid) {
           /* --------------------------- Moderation Message --------------------------- */
 
