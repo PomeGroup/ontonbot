@@ -4,8 +4,6 @@ import { airdropRoutines } from "@/db/schema/airdropRoutines";
 import { tickets } from "@/db/schema/tickets";
 import { userEventFields } from "@/db/schema/userEventFields";
 
-// @ts-ignore
-// @ts-ignore
 export const users = pgTable(
   "users",
   {
