@@ -2,6 +2,9 @@ import { useClaimPointsContext } from "../ClaimPointsContext";
 
 export default function OnionStockBanner() {
   const { wallets } = useClaimPointsContext();
+  const claimAmount = Number(
+    wallets?.filter((w) => w.claimStatus === "claimed")?.reduce((pv, cv) => pv + cv.totalOnions, 0)
+  );
   return (
     <div className="rounded-lg bg-gradient-to-br from-[#FFAE6E] to-[#F36A00] opacity-60 border shadow-inner backdrop-blur-sm flex flex-col justify-center items-center gap-4 py-4 w-full">
       <div className="flex flex-col gap-2">
@@ -9,7 +12,7 @@ export default function OnionStockBanner() {
           Your Current Stock is
         </div>
         <div className="font-bold text-3xl leading-tight text-center text-white tracking-tighter">
-          {Number(wallets?.reduce((pv, cv) => pv + cv.totalOnions, 0))}? ONIONs
+          {isNaN(claimAmount) ? "?" : claimAmount} ONIONs
         </div>
       </div>
     </div>

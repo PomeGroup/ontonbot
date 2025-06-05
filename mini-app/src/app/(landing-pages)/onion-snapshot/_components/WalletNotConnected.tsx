@@ -1,7 +1,17 @@
+import { setJwt, trpc } from "@/app/_trpc/client";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
-import { useTonConnectModal, useTonWallet } from "@tonconnect/ui-react";
-import React, { useEffect } from "react";
+import { PROOF_PAYLOAD_TTL_MS, TON_PROOF_STORAGE_KEY, WalletNetCHAIN_MAP } from "@/constants";
+import { TonProofSavedSession } from "@/types";
+import {
+  TonProofItemReplySuccess,
+  useIsConnectionRestored,
+  useTonConnectModal,
+  useTonConnectUI,
+  useTonWallet,
+} from "@tonconnect/ui-react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import DataStatus from "../../../_components/molecules/alerts/DataStatus";
 
 interface WalletNotConnectedProps {
@@ -10,11 +20,40 @@ interface WalletNotConnectedProps {
   openOnDisconnect?: boolean;
   /** Updates the wallet provider visibility state when disconnected */
   setOpenOnDiconnect?: (open: boolean) => void;
+  /** Callback when proof is verified */
+  onProofVerified?: (proof: string) => void;
 }
 
-const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({ children, openOnDisconnect, setOpenOnDiconnect }) => {
+const ProofContext = createContext<{ proof: string | null }>({
+  proof: null,
+});
+
+export const useWalletNotConnectedProofContext = () => {
+  return useContext(ProofContext);
+};
+
+const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
+  children,
+  openOnDisconnect,
+  setOpenOnDiconnect,
+  onProofVerified,
+}) => {
   const tonConnectModal = useTonConnectModal();
   const tonConnectAddress = useTonWallet();
+  const wallet = tonConnectAddress?.account.address;
+
+  /* Ton Connect */
+  const [ui] = useTonConnectUI();
+  const ready = useIsConnectionRestored();
+
+  /* tRPC */
+  const genPayload = trpc.tonProof.generatePayload.useQuery(undefined, { enabled: false });
+  const verify = trpc.tonProof.verifyProof.useMutation();
+
+  /* local state */
+  const [proof, setProof] = useState<string>(); // stringified proof
+  const [jwtOk, setJwtOk] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
     if (tonConnectAddress?.account.address) {
@@ -22,13 +61,86 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({ children, openO
     }
   }, [tonConnectAddress?.account.address]);
 
+  /* ----------------------------------------------------------------
+     STEP 0  – payload pre-load (when NO wallet connected)
+  ---------------------------------------------------------------- */
+  useEffect(() => {
+    if (!ready || wallet) return;
+
+    const refresh = async () => {
+      ui.setConnectRequestParameters({ state: "loading" });
+      try {
+        const { data } = await genPayload.refetch();
+        if (!data?.payload) throw new Error();
+        ui.setConnectRequestParameters({ state: "ready", value: { tonProof: data.payload } });
+      } catch {
+        ui.setConnectRequestParameters(null);
+      }
+    };
+
+    refresh();
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(refresh, PROOF_PAYLOAD_TTL_MS);
+    return () => clearInterval(timerRef.current);
+  }, [ready, wallet, genPayload, ui]);
+
+  /* ----------------------------------------------------------------
+     STEP 1  – wallet connected / restored
+  ---------------------------------------------------------------- */
+  useEffect(() => {
+    if (!ready || !wallet) return;
+
+    /* a) try localStorage first */
+    const saved = localStorage.getItem(TON_PROOF_STORAGE_KEY);
+    if (saved) {
+      const { token, proof } = JSON.parse(saved) as TonProofSavedSession;
+      setJwt(token);
+      setProof(proof);
+      onProofVerified?.(proof);
+      setJwtOk(true);
+      return;
+    }
+
+    /* b) need to verify fresh proof */
+    const reply = tonConnectAddress.connectItems?.tonProof;
+    if (reply && !("error" in reply)) {
+      const prf = (reply as TonProofItemReplySuccess).proof;
+      verify
+        .mutateAsync({
+          address: tonConnectAddress.account.address,
+          network: WalletNetCHAIN_MAP[tonConnectAddress.account.chain] ?? "-239",
+          public_key: tonConnectAddress.account.publicKey ?? "",
+          proof: { ...prf, address: tonConnectAddress.account.address, state_init: "" },
+        })
+        .then(({ token }) => {
+          const session: TonProofSavedSession = { token, proof: JSON.stringify(prf) };
+          localStorage.setItem(TON_PROOF_STORAGE_KEY, JSON.stringify(session));
+
+          setJwt(token);
+          setProof(session.proof);
+          setJwtOk(true);
+          onProofVerified?.(session.proof);
+        })
+        .catch(() => {
+          toast.error("Proof invalid – reconnect.");
+          ui.disconnect();
+        });
+    } else {
+      toast.error("Proof missing – reconnect.");
+      ui.disconnect();
+    }
+  }, [ready, wallet, verify, ui]);
+
+  /* ---------------------------------------------------------------- */
   if (
-    // If the user has a connected wallet, show the children
-    tonConnectAddress?.account.address || // OR
+    (jwtOk &&
+      // If the user has a connected wallet, show the children
+      tonConnectAddress?.account.address &&
+      proof) || // OR
     // if wallet was not connect but the state on disconnect was open we show the children
     (!tonConnectAddress?.account.address && !openOnDisconnect)
   ) {
-    return <>{children}</>;
+    return <ProofContext.Provider value={{ proof: proof ?? null }}>{children}</ProofContext.Provider>;
   }
 
   // Otherwise show the connect wallet UI
@@ -51,7 +163,7 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({ children, openO
             variant="subheadline2"
             className="text-center font-bold"
           >
-            To check your ONIONs, connect your TON wallet.
+            To check your ONIONs, connect your TON tonConnectAddress.
           </Typography>
           <Typography
             variant="footnote"
@@ -71,6 +183,7 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({ children, openO
             e.stopPropagation();
             tonConnectModal.open();
           }}
+          isLoading={genPayload.isLoading || verify.isLoading}
         >
           Connect Wallet
         </Button>

@@ -27,15 +27,16 @@ export const useClaimPointsContext = () => {
 export const ClaimPointsProvider = ({ children }: { children: React.ReactNode }) => {
   const [openConnect, setOpenConnect] = useState(false);
   const wallet = useTonWallet();
+  const [proof, setProof] = useState<string>();
 
   const claimOverview = trpc.campaign.getClaimOverview.useQuery(
     {
       walletAddress: wallet?.account.address!,
-      tonProof: "0x0000000000000000000000000000000000000000",
+      tonProof: proof!,
     },
     {
-      queryKey: ["campaign.getClaimOverview", { walletAddress: wallet?.account.address! }],
-      enabled: !!wallet?.account.address,
+      queryKey: ["campaign.getClaimOverview", { walletAddress: wallet?.account.address!, tonProof: proof! }],
+      enabled: !!wallet?.account.address && !!proof,
     }
   );
 
@@ -44,6 +45,9 @@ export const ClaimPointsProvider = ({ children }: { children: React.ReactNode })
       <WalletNotConnected
         openOnDisconnect={openConnect}
         setOpenOnDiconnect={setOpenConnect}
+        onProofVerified={(proof) => {
+          setProof(proof);
+        }}
       >
         {children}
       </WalletNotConnected>

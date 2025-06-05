@@ -2,21 +2,21 @@
 /*  app/(navigation)/sample/ClaimSample/page.tsx                      */
 /* ------------------------------------------------------------------ */
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import { setJwt, trpc } from "@/app/_trpc/client";
+import { PROOF_PAYLOAD_TTL_MS, TON_PROOF_STORAGE_KEY, WalletNetCHAIN_MAP } from "@/constants";
+import { TonProofSavedSession } from "@/types";
 import {
   TonConnectButton,
-  useTonAddress,
-  useTonConnectUI,
-  useTonConnectModal,
-  useTonWallet,
   useIsConnectionRestored,
+  useTonAddress,
+  useTonConnectModal,
+  useTonConnectUI,
+  useTonWallet,
   type TonProofItemReplySuccess,
 } from "@tonconnect/ui-react";
 import { Button } from "konsta/react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { trpc, setJwt } from "@/app/_trpc/client";
-import { PROOF_PAYLOAD_TTL_MS, TON_PROOF_STORAGE_KEY, WalletNetCHAIN_MAP } from "@/constants";
-import { TonProofSavedSession } from "@/types";
 
 export default function ClaimSample() {
   /* Ton Connect */

@@ -6,11 +6,13 @@ import { WalletSummary } from "@/db/modules/claimOnion.db";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useWalletNotConnectedProofContext } from "../../_components/WalletNotConnected";
 import OnionBenefitsCard from "./OnionBenefitsCard";
 
 export default function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) {
   const [isOpen, setIsOpen] = useState(false);
   const trpcUtils = trpc.useUtils();
+  const walletCtx = useWalletNotConnectedProofContext();
 
   const claimPoints = trpc.campaign.claimOnion.useMutation({
     onSuccess: () => {
@@ -24,6 +26,7 @@ export default function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) 
   const handleClaimPoints = () => {
     claimPoints.mutate({
       walletAddress: wallet.walletAddress,
+      tonProof: walletCtx.proof!,
     });
   };
 
