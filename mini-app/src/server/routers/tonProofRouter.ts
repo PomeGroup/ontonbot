@@ -25,6 +25,7 @@ import {
 import { createAuthToken } from "@/server/utils/jwt";
 import { redisTools } from "@/lib/redisTools";
 import { utf8ToBytes } from "@noble/hashes/utils";
+import { walletAlreadyClaimedByOtherUser } from "@/db/modules/tokenCampaignClaimOnion.db";
 
 const proofSchema = z.object({
   address: z.string(),
@@ -71,7 +72,13 @@ export const tonProofRouter = router({
       /* ─────────────────────────────── quick / structural checks */
       const userId = ctx.user.user_id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
-
+      /* 0) has this wallet already been claimed by someone else? */
+      if (await walletAlreadyClaimedByOtherUser(input.address, userId)) {
+        throw new TRPCError({
+          code: "CONFLICT", // 409 – fits “resource in use”
+          message: "This wallet has already been linked to another user.",
+        });
+      }
       /* 1) same bounce-false address in params & inside proof */
       const addrReq = Address.parse(input.address).toString({ bounceable: false });
       const addrPro = Address.parse(input.proof.address).toString({ bounceable: false });

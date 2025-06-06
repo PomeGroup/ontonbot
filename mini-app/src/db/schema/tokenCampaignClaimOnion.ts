@@ -1,4 +1,15 @@
-import { pgTable, serial, bigint, varchar, numeric, integer, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  bigint,
+  varchar,
+  numeric,
+  integer,
+  timestamp,
+  index,
+  uniqueIndex,
+  text,
+} from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 
 import { users } from "@/db/schema";
@@ -20,7 +31,7 @@ export const tokenCampaignClaimOnion = pgTable(
 
     walletAddress: varchar("wallet_address", { length: 66 }).notNull(),
     walletType: walletTypeEnum("wallet_type").notNull(), // primary | secondary
-    tonProof: varchar("ton_proof", { length: 255 }), // signed payload that proved ownership
+    tonProof: text("ton_proof"), // signed payload that proved ownership
 
     /* snapshot used to calculate this claim (for audit) */
     snapshotRuntime: timestamp("snapshot_runtime", { withTimezone: true }).notNull(),
