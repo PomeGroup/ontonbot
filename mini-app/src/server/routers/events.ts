@@ -7,7 +7,7 @@ import eventDB from "@/db/modules/events.db";
 import { organizerTsVerified, userHasModerationAccess } from "@/db/modules/userFlags.db";
 import { userRolesDB } from "@/db/modules/userRoles.db";
 import { getUserCacheKey, usersDB } from "@/db/modules/users.db";
-import { EventCategoryRow, eventFields, eventPayment, events, orders } from "@/db/schema";
+import { EventCategoryRow, eventFields, eventPayment, events, orders, paymentTypes, pgTicketTypes } from "@/db/schema";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { hashPassword } from "@/lib/bcrypt";
 import { timestampToIsoString } from "@/lib/DateAndTime";
@@ -31,7 +31,7 @@ import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { Bot } from "grammy";
 import { Message } from "grammy/types";
 import { v4 as uuidv4 } from "uuid";
@@ -44,6 +44,7 @@ import {
   router,
 } from "../trpc";
 import { internal_server_error } from "../utils/error_utils";
+import { upsertCapacityOrder } from "@/db/modules/orders.db";
 
 dotenv.config();
 
@@ -440,7 +441,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
             participationType: eventData.participationType,
           });
 
-          // eventsMsg && sentTelegramMsgs.push(eventsMsg);
+          eventsMsg && sentTelegramMsgs.push(eventsMsg);
         } else if (!is_paid) {
           /* --------------------------- Moderation Message --------------------------- */
 
@@ -974,6 +975,140 @@ const getCategories = initDataProtectedProcedure.query(async () => {
   }
 });
 /* -------------------------------------------------------------------------- */
+/*                                🐳🦞TICKET ROUTES🐳🦞                       */
+/* -------------------------------------------------------------------------- */
+/* ───────────────────────── Zod helpers ────────────────────────── */
+const PaymentTypeEnum = z.enum(paymentTypes.enumValues);
+const TicketTypeEnum = z.enum(pgTicketTypes.enumValues);
+
+export const TicketBase = z.object({
+  ticket_type: TicketTypeEnum, // "NFT" | "TSCSBT"
+  payment_type: PaymentTypeEnum, // "TON" | "USDT" | … whatever is in paymentTypes
+  price: z.number().min(0.001),
+  recipient_address: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  bought_capacity: z.number().int().positive(),
+  ticket_image: z.string().url().optional(),
+  ticket_video: z.string().url().optional(),
+});
+
+/* ---- 1)  GET  -------------------------------------------------- */
+const getTickets = eventManagerPP.query(async (opts) => {
+  const { event_uuid } = opts.ctx.event;
+  const rows = await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute();
+  return { tickets: rows };
+});
+
+/* ---- 2)  ADD  -------------------------------------------------- */
+const addTicket = eventManagerPP.input(TicketBase).mutation(async (opts) => {
+  const { event_uuid, capacity, has_payment } = opts.ctx.event;
+  if (!has_payment) throw new TRPCError({ code: "BAD_REQUEST", message: "Not a paid event." });
+
+  const p = opts.input;
+  const userId = opts.ctx.user.user_id;
+
+  await db.transaction(async (trx) => {
+    /* 1️⃣  current seats already bought */
+    const [{ total }] = await trx
+      .select({ total: sql<number>`coalesce(sum(${eventPayment.bought_capacity}),0)` })
+      .from(eventPayment)
+      .where(eq(eventPayment.event_uuid, event_uuid));
+
+    const after = Number(total) + Number(p.bought_capacity);
+    const extraSeats = capacity ? Math.max(Number(after) - Number(capacity), 0) : 0;
+
+    /* 2️⃣  add / update capacity-increment order if needed */
+    await upsertCapacityOrder(trx, {
+      eventUuid: event_uuid,
+      userId,
+      extraSeats,
+    });
+
+    /* 3️⃣  finally insert the ticket definition */
+    await trx.insert(eventPayment).values({
+      event_uuid,
+      payment_type: p.payment_type,
+      price: Math.round(p.price * 1000) / 1000,
+      recipient_address: p.recipient_address,
+      bought_capacity: p.bought_capacity,
+      ticket_type: p.ticket_type,
+      title: p.title,
+      description: p.description,
+      ticketImage: p.ticket_image,
+      ticketVideo: p.ticket_video,
+      collectionAddress: null,
+    });
+  });
+
+  return { success: true };
+});
+
+/* ---- 3)  UPDATE  ---------------------------------------------- */
+const updateTicket = eventManagerPP.input(TicketBase.extend({ id: z.number() })).mutation(async (opts) => {
+  const { event_uuid, capacity, has_payment } = opts.ctx.event;
+  if (!has_payment) throw new TRPCError({ code: "BAD_REQUEST", message: "Not a paid event." });
+
+  const p = opts.input;
+  const userId = opts.ctx.user.user_id;
+
+  await db.transaction(async (trx) => {
+    /* ── grab current row + sold seats ─────────────────────────────── */
+    const [rowInfo] = await trx
+      .select({
+        id: eventPayment.id,
+        bought_capacity: eventPayment.bought_capacity,
+        sold: sql<number>`coalesce(sum(${orders.ticket_count}),0)`.as("sold"),
+      })
+      .from(eventPayment)
+      .leftJoin(orders, and(eq(orders.event_payment_id, eventPayment.id), eq(orders.state, "completed")))
+      .where(and(eq(eventPayment.id, p.id), eq(eventPayment.event_uuid, event_uuid)))
+      .groupBy(eventPayment.id);
+
+    if (!rowInfo) throw new TRPCError({ code: "NOT_FOUND", message: `Ticket id ${p.id} not found.` });
+    if (p.bought_capacity < rowInfo.sold)
+      throw new TRPCError({ code: "BAD_REQUEST", message: "New capacity below tickets already sold." });
+
+    /* ── seats count *after* the update ────────────────────────────── */
+    const [{ others }] = await trx
+      .select({
+        others: sql<number>`coalesce(sum(${eventPayment.bought_capacity}),0)`,
+      })
+      .from(eventPayment)
+      .where(and(eq(eventPayment.event_uuid, event_uuid), ne(eventPayment.id, p.id)));
+
+    const after = others + p.bought_capacity;
+    const extraSeats = capacity ? Math.max(after - capacity, 0) : 0;
+
+    /* ── create / update capacity-increment order if needed ────────── */
+    await upsertCapacityOrder(trx, {
+      eventUuid: event_uuid,
+      userId,
+      extraSeats,
+    });
+
+    /* ── finally update the ticket definition ──────────────────────── */
+    await trx
+      .update(eventPayment)
+      .set({
+        payment_type: p.payment_type,
+        price: Math.round(p.price * 1000) / 1000,
+        recipient_address: p.recipient_address,
+        bought_capacity: p.bought_capacity,
+        ticket_type: p.ticket_type,
+        title: p.title,
+        description: p.description,
+        ticketImage: p.ticket_image,
+        ticketVideo: p.ticket_video,
+        updatedBy: userId.toString(),
+      })
+      .where(eq(eventPayment.id, p.id));
+  });
+
+  return { success: true };
+});
+
+/* -------------------------------------------------------------------------- */
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
 export const eventsRouter = router({
@@ -984,4 +1119,7 @@ export const eventsRouter = router({
   getEventsWithFilters,
   getEventsWithFiltersInfinite,
   getCategories,
+  getTickets,
+  addTicket,
+  updateTicket,
 });

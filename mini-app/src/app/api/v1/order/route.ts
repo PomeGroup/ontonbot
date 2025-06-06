@@ -200,13 +200,13 @@ export async function POST(request: Request) {
         register_info: register_info,
         user_id: userId,
       })
-      .onConflictDoUpdate({
-        target: [eventRegistrants.event_uuid, eventRegistrants.user_id],
-        set: {
-          status: "pending",
-          register_info: register_info,
-        },
-      })
+      // .onConflictDoUpdate({
+      //   target: [eventRegistrants.event_uuid, eventRegistrants.user_id],
+      //   set: {
+      //     status: "pending",
+      //     register_info: register_info,
+      //   },
+      // })
       .execute();
 
     new_order_uuid = new_order?.uuid;

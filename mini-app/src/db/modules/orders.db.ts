@@ -3,6 +3,7 @@ import { orders } from "@/db/schema";
 import { and, count, eq, isNull, not, or } from "drizzle-orm";
 import { is_dev_env, is_stage_env } from "../../server/utils/evnutils";
 import { OrderTypeValues } from "@/db/schema/orders";
+import { TRPCError } from "@trpc/server";
 
 const getEventOrders = async (event_uuid: string) => {
   return db
@@ -154,6 +155,69 @@ export const getDistinctCompletedOwnerWallets = async (): Promise<
     .groupBy(orders.user_id, orders.owner_address, orders.order_type)
     .execute();
 };
+/**
+ * Upsert an `event_capacity_increment` order when `extraSeats > 0`.
+ * - Re-uses an existing order in state NEW / CONFIRMING, or
+ *   inserts a fresh one.
+ * - Throws if there is already a PROCESSING order (user paid but
+ *   system hasn’t finished the upgrade yet).
+ */
+export async function upsertCapacityOrder(
+  trx: typeof db,
+  {
+    eventUuid,
+    userId,
+    extraSeats, // seats above current event.capacity
+  }: {
+    eventUuid: string;
+    userId: number;
+    extraSeats: number;
+  }
+) {
+  if (extraSeats <= 0) return; // nothing to do
+
+  /* ⚠ if an order is already in “processing”, block the change */
+  const processing = await trx.query.orders.findFirst({
+    where: and(
+      eq(orders.event_uuid, eventUuid),
+      eq(orders.order_type, "event_capacity_increment"),
+      eq(orders.state, "processing")
+    ),
+  });
+  if (processing) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "There is already a paid capacity-upgrade pending. Please wait a few minutes.",
+    });
+  }
+
+  /* price rule: 0.06 TON per new seat  (same as old logic) */
+  const price = 0.06 * extraSeats;
+
+  /* is there an editable (NEW / CONFIRMING) order already? */
+  const editable = await trx.query.orders.findFirst({
+    where: and(
+      eq(orders.event_uuid, eventUuid),
+      eq(orders.order_type, "event_capacity_increment"),
+      or(eq(orders.state, "new"), eq(orders.state, "confirming"))
+    ),
+  });
+
+  const upsert = {
+    event_uuid: eventUuid,
+    order_type: "event_capacity_increment" as const,
+    state: "new" as const,
+    payment_type: "TON" as const,
+    total_price: price,
+    user_id: userId,
+  };
+
+  if (editable) {
+    await trx.update(orders).set(upsert).where(eq(orders.uuid, editable.uuid));
+  } else {
+    await trx.insert(orders).values(upsert);
+  }
+}
 
 const ordersDB = {
   getEventOrders,
