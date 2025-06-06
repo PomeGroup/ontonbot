@@ -1,6 +1,6 @@
 import Typography from "@/components/Typography";
 import { AlertGeneric } from "@/components/ui/alert";
-import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { WalletSummary } from "@/db/modules/claimOnion.db";
 import { formatWalletAddress } from "@/lib/utils";
 import { Address } from "@ton/core";
@@ -57,17 +57,8 @@ export default function WalletSummaryCard({ wallet }: { wallet: WalletSummary })
         <Table className="min-w-full">
           <TableBody>
             <TableRow className="border-b">
-              <TableCell>
-                <Typography
-                  variant="caption1"
-                  weight="normal"
-                  className="text-info-dark"
-                >
-                  NFT
-                </Typography>
-              </TableCell>
               {Object.keys(wallet.nft.counts).map((tier, index) => (
-                <TableHead key={index}>
+                <TableCell key={index}>
                   <Typography
                     variant="caption1"
                     weight="normal"
@@ -75,21 +66,12 @@ export default function WalletSummaryCard({ wallet }: { wallet: WalletSummary })
                   >
                     {tier}
                   </Typography>
-                </TableHead>
+                </TableCell>
               ))}
             </TableRow>
             <TableRow className="border-b">
-              <TableCell>
-                <Typography
-                  variant="caption1"
-                  weight="normal"
-                  className="text-info-dark"
-                >
-                  Count
-                </Typography>
-              </TableCell>
               {Object.values(wallet.nft.counts).map((count, index) => (
-                <TableHead key={index}>
+                <TableCell key={index}>
                   <Typography
                     variant="caption1"
                     weight="normal"
@@ -97,7 +79,7 @@ export default function WalletSummaryCard({ wallet }: { wallet: WalletSummary })
                   >
                     {count}
                   </Typography>
-                </TableHead>
+                </TableCell>
               ))}
             </TableRow>
           </TableBody>
