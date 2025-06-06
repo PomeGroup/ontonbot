@@ -3,8 +3,11 @@ import { useClaimPointsContext } from "../ClaimPointsContext";
 export default function OnionStockBanner() {
   const { wallets } = useClaimPointsContext();
   const claimAmount = Number(
-    wallets?.filter((w) => w.claimStatus === "claimed")?.reduce((pv, cv) => pv + cv.totalOnions, 0)
+    Math.round(
+      (wallets?.filter((w) => w.claimStatus === "claimed")?.reduce((pv, cv) => pv + Number(cv.totalOnions), 0) ?? 0) * 100
+    ) / 100
   );
+
   return (
     <div className="rounded-lg bg-gradient-to-br from-[#FFAE6E] to-[#F36A00] opacity-60 border shadow-inner backdrop-blur-sm flex flex-col justify-center items-center gap-4 py-4 w-full">
       <div className="flex flex-col gap-2">
