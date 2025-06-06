@@ -1,4 +1,5 @@
 import { Address } from "@ton/core";
+import { logger } from "@/server/utils/logger";
 
 /**
  * The TON-Proof item produced by wallets (spec v2).
@@ -20,12 +21,7 @@ export type TonProofItem = {
  * Signature-level verification is omitted here (needs wallet pub-key
  * extraction). Add it later if you want full cryptographic safety.
  */
-export function verifyTonProof(
-  raw: string | undefined,
-  expectedWallet: string,
-  expectedUserId: number,
-  ttlSeconds = 60
-): void {
+export function verifyTonProof(raw: string | undefined, expectedWallet: string, expectedUserId: number): void {
   if (!raw) throw new Error("Missing tonProof");
 
   let proof: TonProofItem;
@@ -39,16 +35,16 @@ export function verifyTonProof(
   const normExpected = Address.parse(expectedWallet).toString({
     bounceable: false,
   });
+
   const normGot = Address.parse(proof.address).toString({ bounceable: false });
+  logger.info("Verifying ton proof" + ` for userId=${expectedUserId} wallet=${normExpected}  got=${normGot}`);
   if (normExpected !== normGot) throw new Error("tonProof: wallet mismatch");
 
   /* payload */
-  const mustPrefix = `onton-claim:${expectedUserId}`;
+  const mustPrefix = `onton:${expectedUserId}`;
   if (!proof.payload?.startsWith(mustPrefix)) throw new Error("tonProof: payload mismatch");
-
+  logger.log(`==================verifyTonProof: `, proof);
   /* freshness */
-  const now = Math.floor(Date.now() / 1000);
-  if (Math.abs(now - proof.timestamp) > ttlSeconds) throw new Error("tonProof: proof too old");
 
   /* signature   (skipped – add real ed25519 verify when ready) */
 }

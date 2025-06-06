@@ -33,10 +33,10 @@ export const ClaimPointsProvider = ({ children }: { children: React.ReactNode })
   const claimOverview = trpc.campaign.getClaimOverview.useQuery(
     {
       walletAddress: wallet?.account.address!,
-      tonProof: proof!,
+      //  tonProof: proof!,
     },
     {
-      queryKey: ["campaign.getClaimOverview", { walletAddress: wallet?.account.address!, tonProof: proof! }],
+      queryKey: ["campaign.getClaimOverview", { walletAddress: wallet?.account.address! /*tonProof: proof!*/ }],
       enabled: !!wallet?.account.address && !!proof,
     }
   );

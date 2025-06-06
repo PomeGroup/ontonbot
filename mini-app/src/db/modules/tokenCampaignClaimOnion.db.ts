@@ -4,7 +4,7 @@ import {
   TokenCampaignClaimOnionInsert,
   TokenCampaignClaimOnionRow,
 } from "@/db/schema/tokenCampaignClaimOnion";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 
 /* -------------------------------------------------------------------------- */
@@ -33,6 +33,17 @@ export const walletAlreadyClaimed = async (walletAddress: string): Promise<boole
     .select({ id: tokenCampaignClaimOnion.id })
     .from(tokenCampaignClaimOnion)
     .where(eq(tokenCampaignClaimOnion.walletAddress, walletAddress))
+    .limit(1)
+    .execute();
+
+  return !!row;
+};
+/// wallet has been connected by other user and already claimed ONIONs
+export const walletAlreadyClaimedByOtherUser = async (walletAddress: string, userId: number): Promise<boolean> => {
+  const [row] = await db
+    .select({ id: tokenCampaignClaimOnion.id })
+    .from(tokenCampaignClaimOnion)
+    .where(and(eq(tokenCampaignClaimOnion.walletAddress, walletAddress), eq(tokenCampaignClaimOnion.userId, userId)))
     .limit(1)
     .execute();
 
@@ -86,6 +97,7 @@ const tokenCampaignClaimOnionDB = {
   fetchClaimsByUser,
   fetchClaimByWallet,
   totalOnionsClaimedByUser,
+  walletAlreadyClaimedByOtherUser,
 };
 
 export default tokenCampaignClaimOnionDB;

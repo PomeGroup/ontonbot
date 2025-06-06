@@ -30,7 +30,8 @@ import { CampaignNFT } from "@/types/campaign.types";
 import { Address } from "@ton/core";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { initDataProtectedProcedure, router } from "../trpc";
+import { initDataProtectedProcedure, router, walletJWTProtectedProcedure } from "../trpc";
+
 export const campaignRouter = router({
   /**
    * Get Campaign Collections by Type
@@ -536,7 +537,7 @@ export const campaignRouter = router({
       return merges;
     }),
 
-  getClaimOverview: initDataProtectedProcedure
+  getClaimOverview: walletJWTProtectedProcedure
     .input(
       z.object({
         walletAddress: z.string().refine((v) => {
@@ -547,20 +548,22 @@ export const campaignRouter = router({
             return false;
           }
         }, "Invalid TON address"),
-        tonProof: z.string().optional(), // required now
       })
     )
     .query(async ({ input, ctx }) => {
-      const userId = ctx.user.user_id;
+      /* ✅ token ↔ requested wallet must match */
+      const tokenAddr = Address.parse(ctx.jwt.address).toString({ bounceable: false });
+      const reqAddr = Address.parse(input.walletAddress).toString({ bounceable: false });
 
-      /* 1️⃣  Verify TON-Proof (throws on failure) */
-      // verifyTonProof(input.tonProof, input.walletAddress, userId);
+      if (tokenAddr !== reqAddr) {
+        throw new TRPCError({ code: "UNPROCESSABLE_CONTENT", message: "token / wallet mismatch" });
+      }
 
-      /* 2️⃣  Build + return the overview */
-      return buildClaimOverview(userId, input.walletAddress);
+      /* business logic … */
+      return buildClaimOverview(ctx.user.user_id, input.walletAddress);
     }),
 
-  claimOnion: initDataProtectedProcedure
+  claimOnion: walletJWTProtectedProcedure
     .input(
       z.object({
         walletAddress: z.string().refine((v) => {
@@ -575,6 +578,12 @@ export const campaignRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      if (ctx.jwt.address !== input.walletAddress) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "wallet in JWT ≠ wallet in request",
+        });
+      }
       const userId = ctx.user.user_id;
       const wallet = input.walletAddress;
       //verifyTonProof(input.tonProof, input.walletAddress, ctx.user.user_id);

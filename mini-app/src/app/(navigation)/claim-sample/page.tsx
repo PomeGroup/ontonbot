@@ -2,6 +2,7 @@
 /*  app/(navigation)/sample/ClaimSample/page.tsx                      */
 /* ------------------------------------------------------------------ */
 "use client";
+
 import { setJwt, trpc } from "@/app/_trpc/client";
 import { PROOF_PAYLOAD_TTL_MS, TON_PROOF_STORAGE_KEY, WalletNetCHAIN_MAP } from "@/constants";
 import { TonProofSavedSession } from "@/types";
@@ -26,29 +27,41 @@ export default function ClaimSample() {
   const addr = useTonAddress();
   const ready = useIsConnectionRestored();
 
-  /* local state (must be declared before tRPC hooks that depend on it) */
-  const [proof, setProof] = useState<string>(); // stringified proof
+  /* local state */
+  const [proof, setProof] = useState<string>();
   const [jwtOk, setJwtOk] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
+  /* ----------------------------------------------------------------
+     STEP -1 – purge stale session on reload or disconnect
+  ---------------------------------------------------------------- */
+  useEffect(() => {
+    if (!ready) return; // TonConnect hasn’t finished restoring
+    if (wallet) return; // a wallet *is* connected – keep session
+
+    // no wallet ⇒ wipe cached session & local state
+    localStorage.removeItem(TON_PROOF_STORAGE_KEY);
+    setJwt("");
+    setProof(undefined);
+    setJwtOk(false);
+  }, [ready, wallet]);
+
   /* tRPC */
-  const genPayload = trpc.tonProof.generatePayload.useQuery(undefined, { enabled: false });
+  const genPayload = trpc.tonProof.generatePayload.useQuery(undefined, {
+    enabled: false,
+  });
   const verify = trpc.tonProof.verifyProof.useMutation();
-  /* switched to useQuery instead of useMutation 👇 */
   const claimOverview = trpc.campaign.getClaimOverview.useQuery(
+    { walletAddress: wallet?.account.address! },
     {
-      walletAddress: wallet?.account.address!,
-      tonProof: proof!,
-    },
-    {
-      queryKey: ["campaign.getClaimOverview", { walletAddress: wallet?.account.address!, tonProof: proof! }],
+      queryKey: ["campaign.getClaimOverview", { walletAddress: wallet?.account.address! }],
       enabled: !!wallet?.account.address && !!proof,
     }
   );
   const claimMut = trpc.campaign.claimOnion.useMutation();
 
   /* ----------------------------------------------------------------
-     STEP 0  – payload pre-load (when NO wallet connected)
+     STEP 0 – payload pre-load (when NO wallet connected)
   ---------------------------------------------------------------- */
   useEffect(() => {
     if (!ready || wallet) return;
@@ -71,7 +84,7 @@ export default function ClaimSample() {
   }, [ready, wallet, genPayload, ui]);
 
   /* ----------------------------------------------------------------
-     STEP 1  – wallet connected / restored
+     STEP 1 – wallet connected / restored
   ---------------------------------------------------------------- */
   useEffect(() => {
     if (!ready || !wallet) return;
@@ -98,7 +111,15 @@ export default function ClaimSample() {
           proof: { ...prf, address: wallet.account.address, state_init: "" },
         })
         .then(({ token }) => {
-          const session: TonProofSavedSession = { token, proof: JSON.stringify(prf) };
+          const session: TonProofSavedSession = {
+            token,
+            proof: JSON.stringify({
+              address: wallet.account.address,
+              network: WalletNetCHAIN_MAP[wallet.account.chain] ?? "-239",
+              public_key: wallet.account.publicKey ?? "",
+              proof: { ...prf, address: wallet.account.address, state_init: "" },
+            }),
+          };
           localStorage.setItem(TON_PROOF_STORAGE_KEY, JSON.stringify(session));
 
           setJwt(token);
@@ -106,7 +127,6 @@ export default function ClaimSample() {
           setJwtOk(true);
 
           toast.success("Wallet verified – fetching overview…");
-          /* force immediate fetch after proof is ready */
           claimOverview.refetch();
         })
         .catch(() => {

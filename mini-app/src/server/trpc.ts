@@ -5,6 +5,7 @@ import { createContext } from "./context";
 import { accessRolesPathConfig } from "./accessRolesPathConfig";
 import { userRolesDB } from "@/db/modules/userRoles.db";
 import { accessRoleEnumType, accessRoleItemType } from "@/db/schema/userRoles";
+import { walletFromHeader } from "./auth";
 
 export const trpcApiInstance = initTRPC.context<typeof createContext>().create();
 
@@ -145,3 +146,16 @@ export const eventManagementProtectedProcedure = initDataProtectedProcedure
       },
     });
   });
+
+export const walletJWTProtectedProcedure = initDataProtectedProcedure.use(async (opts) => {
+  // 1. Verify & decode the JWT from headers
+  const jwt = await walletFromHeader(opts.ctx.req.headers as Headers);
+
+  // 2. Make it available downstream
+  return opts.next({
+    ctx: {
+      ...opts.ctx,
+      jwt, // { address, network }
+    },
+  });
+});
