@@ -86,30 +86,35 @@ export default function WalletSummaryCard({ wallet }: { wallet: WalletSummary })
         </Table>
       </div>
       {/* ONTON Points */}
-      <div className="flex flex-col gap-2 bg-white p-3 rounded-2lg">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <img
-              src="https://storage.onton.live/ontonimage/ticket_onions_icon.svg"
-              alt="ONTON Points icon"
-              className="w-[24px] h-[24px]"
-            />
-            <Typography
-              variant="subheadline1"
-              weight="normal"
-            >
-              ONTON Points
-            </Typography>
+      {wallet.scoreOnions > 0 && (
+        <>
+          <div className="flex flex-col gap-2 bg-white p-3 rounded-2lg">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <img
+                  src="https://storage.onton.live/ontonimage/ticket_onions_icon.svg"
+                  alt="ONTON Points icon"
+                  className="w-[24px] h-[24px]"
+                />
+                <Typography
+                  variant="subheadline1"
+                  weight="normal"
+                >
+                  ONTON Points
+                </Typography>
+              </div>
+              <Typography
+                variant="body"
+                weight="medium"
+              >
+                {wallet.scoreOnions} ONIONs
+              </Typography>
+            </div>
           </div>
-          <Typography
-            variant="body"
-            weight="medium"
-          >
-            {wallet.totalOnions} ONIONs
-          </Typography>
-        </div>
-      </div>
-      <AlertGeneric variant="info-light">Your ONTON points will be used in your first wallet only.</AlertGeneric>
+          <AlertGeneric variant="info-light">Your ONTON points will be used in your first wallet only.</AlertGeneric>
+        </>
+      )}
+      {/* Total ONIONs */}
       {wallet.claimStatus === "not_claimed" && <ClaimPointsModal wallet={wallet} />}
     </div>
   );
