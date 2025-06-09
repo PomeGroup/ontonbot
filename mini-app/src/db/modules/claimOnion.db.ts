@@ -70,7 +70,7 @@ async function unclaimedScoreOnions(userId: number): Promise<{ points: number; o
     .execute();
 
   const pts = Number(row?.val ?? 0);
-  return { points: pts, onionOnPoints: pts / POINTS_PER_ONION } as const;
+  return { points: pts, onionOnPoints: pts * POINTS_PER_ONION } as const;
 }
 
 /* -------------------------------------------------------------------------- */
