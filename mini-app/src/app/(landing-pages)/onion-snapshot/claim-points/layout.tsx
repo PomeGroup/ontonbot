@@ -3,7 +3,7 @@
 import Typography from "@/components/Typography";
 import Image from "next/image";
 import { SnapshotConnectWallet } from "../_components/SnapshotConnectWallet";
-import { ClaimPointsProvider } from "./ClaimPointsContext";
+import { ClaimPointsProvider, useClaimPointsContext } from "./ClaimPointsContext";
 
 export default function ClaimPointsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +17,7 @@ export default function ClaimPointsLayout({ children }: { children: React.ReactN
 }
 
 const CampaignNavbar = () => {
+  const { setOpenConnect } = useClaimPointsContext();
   return (
     <div className="flex flex-row justify-between items-center gap-6 p-4 bg-white">
       <div className="flex flex-col min-w-0">
@@ -40,7 +41,12 @@ const CampaignNavbar = () => {
       </div>
 
       {/* Wallet Button */}
-      <SnapshotConnectWallet variant="secandary" />
+      <SnapshotConnectWallet
+        onTryConnect={() => {
+          setOpenConnect(true);
+        }}
+        variant="secandary"
+      />
     </div>
   );
 };
