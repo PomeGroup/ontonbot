@@ -103,7 +103,7 @@ const SnapshotClaimPointsBanner = () => {
           className="absolute top-0 right-0 -translate-y-1/4"
         />
         <Link
-          href="/onion-snapshot/claim-points"
+          href="/onion-snapshot"
           className="w-full"
         >
           <Button
