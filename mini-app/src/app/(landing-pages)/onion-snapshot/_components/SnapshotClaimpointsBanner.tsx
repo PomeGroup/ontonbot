@@ -48,7 +48,7 @@ const SnapshotClaimPointsBanner = () => {
       className="relative flex justify-center gap-3 rounded-xl p-3 bg-cover bg-center isolate border border-onion-extraLight flex-1 max-h-[128px]"
     >
       <div className="flex flex-col gap-2 flex-1 items-stretch justify-between w-full z-10">
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-max">
           <div className="flex items-center gap-2">
             <Typography
               variant="title1"
@@ -67,7 +67,7 @@ const SnapshotClaimPointsBanner = () => {
             </Typography>
             <Typography
               variant="footnote"
-              className=" text-balance"
+              className=" text-balance text-[#1C1C1C] font-[276]"
             >
               Claim ONION until:
             </Typography>
