@@ -59,6 +59,11 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
     if (tonConnectAddress?.account.address) {
       setOpenOnDiconnect?.(false);
     }
+    console.log("---------------WalletNotConnected: reset state on address change", tonConnectAddress?.account.address);
+    setJwt("");
+    setProof(undefined);
+    setJwtOk(true);
+    localStorage.removeItem(TON_PROOF_STORAGE_KEY);
   }, [tonConnectAddress?.account.address]);
 
   /* ----------------------------------------------------------------
