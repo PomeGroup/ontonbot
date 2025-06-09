@@ -12,6 +12,7 @@ import { SnapshotComing } from "./_components/SnapshotComing";
 const OnionSnapshotPage = () => {
   const snapshotTimeLeft = useConfigDate("snapshot_date");
   const claimPointsTimeLeft = useConfigDate("snapshot_claim_points_date");
+  const claimPointsEndTimeLeft = useConfigDate("snapshot_claim_end_date");
 
   const claimAndSnapshotEnded = claimPointsTimeLeft?.isEnded && snapshotTimeLeft?.isEnded;
 
@@ -85,7 +86,7 @@ const OnionSnapshotPage = () => {
                   size="lg"
                   className="w-full"
                 >
-                  Claim Points
+                  Claim ONIONs
                 </Button>
               </Link>
             </div>
