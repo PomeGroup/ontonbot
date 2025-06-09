@@ -59,7 +59,8 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
     if (tonConnectAddress?.account.address) {
       setOpenOnDiconnect?.(false);
     }
-    console.log("---------------WalletNotConnected: reset state on address change", tonConnectAddress?.account.address);
+    if (!ready) return; // TonConnect hasn’t finished restoring
+    if (wallet) return; // a wallet *is* connected – keep session
     setJwt("");
     setProof(undefined);
     setJwtOk(true);
