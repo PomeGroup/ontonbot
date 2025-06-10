@@ -555,8 +555,8 @@ export const campaignRouter = router({
       logger.log(
         `ONION_CLAIM: getClaimOverview1: tokenAddr=${ctx.jwt.address}, reqAddr=${input.walletAddress} for userId=${ctx.user.user_id}`
       );
-      const tokenAddr = Address.parse(ctx.jwt.address).toString({ bounceable: false });
-      const reqAddr = Address.parse(input.walletAddress).toString({ bounceable: false });
+      const tokenAddr = Address.parse(ctx.jwt.address).toString({ bounceable: false }).toUpperCase();
+      const reqAddr = Address.parse(input.walletAddress).toString({ bounceable: false }).toUpperCase();
 
       if (tokenAddr !== reqAddr) {
         logger.error(
