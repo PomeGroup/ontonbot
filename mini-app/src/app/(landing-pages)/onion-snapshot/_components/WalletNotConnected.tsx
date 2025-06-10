@@ -48,22 +48,7 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
 
   /* tRPC */
   const genPayload = trpc.tonProof.generatePayload.useQuery(undefined, { enabled: false });
-  const verify = trpc.tonProof.verifyProof.useMutation({
-    onSuccess: ({ token }, { proof }) => {
-      const { state_init, address, ...rest } = proof;
-      const session: TonProofSavedSession = { token, proof: JSON.stringify(rest) };
-      localStorage.setItem(TON_PROOF_STORAGE_KEY, JSON.stringify(session));
-
-      setJwt(token);
-      setJwtOk(true);
-      onProofVerified?.(session.proof);
-      setProof(session.proof);
-    },
-    onError: () => {
-      toast.error("Proof missing – reconnect.");
-      ui.disconnect();
-    },
-  });
+  const verify = trpc.tonProof.verifyProof.useMutation();
 
   /* local state */
   const [proof, setProof] = useState<string>(); // stringified proof
@@ -78,6 +63,7 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
     if (wallet) return; // a wallet *is* connected – keep session
     setJwt("");
     setProof(undefined);
+    onProofVerified?.("");
     setJwtOk(true);
     localStorage.removeItem(TON_PROOF_STORAGE_KEY);
   }, [tonConnectAddress?.account.address]);
@@ -109,33 +95,49 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
      STEP 1  – wallet connected / restored
   ---------------------------------------------------------------- */
   useEffect(() => {
-    if (!ready || !wallet) return;
+    const checkLocalStorage = async () => {
+      if (!ready || !wallet || verify.isLoading || proof) return;
 
-    /* a) try localStorage first */
-    const saved = localStorage.getItem(TON_PROOF_STORAGE_KEY);
-    if (saved) {
-      const { token, proof } = JSON.parse(saved) as TonProofSavedSession;
-      setJwt(token);
-      setProof(proof);
-      onProofVerified?.(proof);
-      setJwtOk(true);
-      return;
-    }
+      /* a) try localStorage first */
+      const saved = localStorage.getItem(TON_PROOF_STORAGE_KEY);
+      if (saved) {
+        const { token, proof } = JSON.parse(saved) as TonProofSavedSession;
+        setJwt(token);
+        setProof(proof);
+        setJwtOk(true);
+        onProofVerified?.(proof);
+        return;
+      }
 
-    /* b) need to verify fresh proof */
-    const reply = tonConnectAddress.connectItems?.tonProof;
-    if (reply && !("error" in reply)) {
-      const prf = (reply as TonProofItemReplySuccess).proof;
-      verify.mutate({
-        address: tonConnectAddress.account.address,
-        network: WalletNetCHAIN_MAP[tonConnectAddress.account.chain] ?? "-239",
-        public_key: tonConnectAddress.account.publicKey ?? "",
-        proof: { ...prf, address: tonConnectAddress.account.address, state_init: "" },
-      });
-    } else {
-      toast.error("Proof missing – reconnect.");
-      ui.disconnect();
-    }
+      /* b) need to verify fresh proof */
+      const reply = tonConnectAddress.connectItems?.tonProof;
+      if (reply && !("error" in reply)) {
+        const prf = (reply as TonProofItemReplySuccess).proof;
+        try {
+          const { token } = await verify.mutateAsync({
+            address: tonConnectAddress.account.address,
+            network: WalletNetCHAIN_MAP[tonConnectAddress.account.chain] ?? "-239",
+            public_key: tonConnectAddress.account.publicKey ?? "",
+            proof: { ...prf, address: tonConnectAddress.account.address, state_init: "" },
+          });
+
+          const session: TonProofSavedSession = { token, proof: JSON.stringify(prf) };
+
+          setJwt(token);
+          setJwtOk(true);
+          setProof(session.proof);
+          localStorage.setItem(TON_PROOF_STORAGE_KEY, JSON.stringify(session));
+          onProofVerified?.(session.proof);
+        } catch {
+          toast.error("Proof invalid – reconnect.");
+          ui.disconnect();
+        }
+      } else {
+        toast.error("Proof missing – reconnect.");
+        ui.disconnect();
+      }
+    };
+    checkLocalStorage();
   }, [ready, wallet, verify, ui]);
 
   /* ---------------------------------------------------------------- */

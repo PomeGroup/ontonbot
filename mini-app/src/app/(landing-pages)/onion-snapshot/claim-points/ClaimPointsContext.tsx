@@ -40,6 +40,7 @@ export const ClaimPointsProvider = ({ children }: { children: React.ReactNode })
       enabled: !!wallet?.account.address && !!proof,
     }
   );
+  console.log("proof", proof);
 
   if (claimOverview.isInitialLoading) {
     return <Skeleton />;
