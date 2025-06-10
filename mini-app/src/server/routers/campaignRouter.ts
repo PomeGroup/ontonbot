@@ -568,7 +568,7 @@ export const campaignRouter = router({
         `ONION_CLAIM: getClaimOverview2: tokenAddr=${tokenAddr}, reqAddr=${reqAddr} for userId=${ctx.user.user_id}`
       );
       /* business logic … */
-      return buildClaimOverview(ctx.user.user_id, input.walletAddress);
+      return buildClaimOverview(ctx.user.user_id, reqAddr);
     }),
 
   claimOnion: walletJWTProtectedProcedure
@@ -593,7 +593,7 @@ export const campaignRouter = router({
         });
       }
       const userId = ctx.user.user_id;
-      const wallet = input.walletAddress;
+      const wallet = input.walletAddress.toString().toUpperCase();
       //verifyTonProof(input.tonProof, input.walletAddress, ctx.user.user_id);
       /* 1. Reject if wallet already claimed */
       if (await tokenCampaignClaimOnionDB.walletAlreadyClaimed(wallet)) {
@@ -609,6 +609,11 @@ export const campaignRouter = router({
       const thisWalletBreakdown = overview.find((w) => w.walletAddress === wallet);
 
       if (!thisWalletBreakdown || thisWalletBreakdown.claimStatus === "claimed") {
+        logger.error(
+          `ONION_CLAIM: No breakdown for wallet ${wallet} for userId ${userId} => overview:`,
+          overview,
+          thisWalletBreakdown
+        );
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Nothing to claim for this wallet.",
