@@ -3,6 +3,7 @@ import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import { PROOF_PAYLOAD_TTL_MS, TON_PROOF_STORAGE_KEY, WalletNetCHAIN_MAP } from "@/constants";
 import { TonProofSavedSession } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   TonProofItemReplySuccess,
   useIsConnectionRestored,
@@ -41,6 +42,7 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
   const tonConnectModal = useTonConnectModal();
   const tonConnectAddress = useTonWallet();
   const wallet = tonConnectAddress?.account.address;
+  const queryClient = useQueryClient();
 
   /* Ton Connect */
   const [ui] = useTonConnectUI();
@@ -65,6 +67,8 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
     setProof(undefined);
     setJwtOk(true);
     localStorage.removeItem(TON_PROOF_STORAGE_KEY);
+
+    queryClient.invalidateQueries({ queryKey: ["campaign.getClaimOverview", { walletAddress: wallet }] });
   }, [tonConnectAddress?.account.address]);
 
   /* ----------------------------------------------------------------
