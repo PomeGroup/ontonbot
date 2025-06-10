@@ -61,14 +61,13 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
     if (tonConnectAddress?.account.address) {
       setOpenOnDiconnect?.(false);
     }
+    queryClient.refetchQueries({ queryKey: ["campaign.getClaimOverview", { walletAddress: wallet }] });
     if (!ready) return; // TonConnect hasn’t finished restoring
     if (wallet) return; // a wallet *is* connected – keep session
     setJwt("");
     setProof(undefined);
     setJwtOk(true);
     localStorage.removeItem(TON_PROOF_STORAGE_KEY);
-
-    queryClient.invalidateQueries({ queryKey: ["campaign.getClaimOverview", { walletAddress: wallet }] });
   }, [tonConnectAddress?.account.address]);
 
   /* ----------------------------------------------------------------
