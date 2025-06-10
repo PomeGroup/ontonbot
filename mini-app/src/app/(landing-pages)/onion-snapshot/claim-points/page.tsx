@@ -1,7 +1,8 @@
 "use client";
 
 import { useTonWallet } from "@tonconnect/ui-react";
-import { ConnectNewWalletCard, OnionBenefitsCard, OnionStockBanner, SnapshotResultCard } from "./_components";
+import { ConnectNewWalletCard, OnionStockBanner, SnapshotResultCard } from "./_components";
+import { OnionFollowUsCard } from "./_components/OnionFollowUsCard";
 
 export default function ClaimPointsPage() {
   const wallet = useTonWallet();
@@ -9,7 +10,7 @@ export default function ClaimPointsPage() {
     <div className="flex flex-col gap-4 py-6 px-4">
       <OnionStockBanner />
       <SnapshotResultCard />
-      {wallet?.account.address ? <OnionBenefitsCard /> : <ConnectNewWalletCard buttonText="Connect Wallet" />}
+      {wallet?.account.address ? <OnionFollowUsCard /> : <ConnectNewWalletCard buttonText="Connect Wallet" />}
     </div>
   );
 }

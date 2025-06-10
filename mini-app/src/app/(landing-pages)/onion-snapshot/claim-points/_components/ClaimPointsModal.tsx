@@ -49,14 +49,13 @@ export default function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) 
         }}
         isLoading={claimPoints.isLoading}
       >
-        Claim ONIONs
+        Stablize ONIONS
       </Button>
       <CustomSheet
         opened={isOpen}
         title={
           <div className="relative w-[184px] h-[184px] -mb-20 -mt-18">
             <DotLottieReact
-              loop
               autoplay
               src={"https://storage.onton.live/ontonimage/confetti_lottie.json"}
               className="absolute top-3/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[184px] h-[184px]"
@@ -84,19 +83,13 @@ export default function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) 
               variant="body"
               weight="normal"
             >
-              Congratulations! You've earned
-            </Typography>
-            <Typography
-              variant="title1"
-              className="font-bold"
-            >
-              {Number(claimPoints.data?.claim.totalOnions)} ONIONs
+              🎉Congrats!
             </Typography>
             <Typography
               variant="body"
               weight="normal"
             >
-              Based on your profile.
+              You’ve successfully claimed your ONIONs.
             </Typography>
           </div>
 
