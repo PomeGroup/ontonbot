@@ -5,13 +5,14 @@ import { useConfig } from "@/context/ConfigContext";
 import { useConfigDate } from "@/hooks/useConfigDate";
 import Image from "next/image";
 import Link from "next/link";
+import SnapshotClaimPointsBanner from "./SnapshotClaimpointsBanner";
 
 const SnapShotWaitForClaimBanner = () => {
   const claimPointsTimeLeft = useConfigDate("snapshot_claim_points_date");
   const config = useConfig();
   const disable = config["disable_snapshot_banner"];
 
-  if (!claimPointsTimeLeft || claimPointsTimeLeft?.isEnded || disable) return null;
+  if (!claimPointsTimeLeft || claimPointsTimeLeft?.isEnded || disable) return <SnapshotClaimPointsBanner />;
 
   return (
     <CustomCard

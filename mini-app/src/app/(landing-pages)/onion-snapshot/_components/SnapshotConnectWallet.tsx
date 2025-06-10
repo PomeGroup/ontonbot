@@ -1,16 +1,21 @@
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { cn } from "@/utils";
 import { useTonAddress, useTonConnectUI } from "@tonconnect/ui-react";
 import { UnplugIcon } from "lucide-react";
 import { FaAngleDown } from "react-icons/fa";
 
-export const SnapshotConnectWallet = () => {
+export const SnapshotConnectWallet = (props: { variant?: "default" | "secandary"; onTryConnect?: () => void }) => {
   const walletAddress = useTonAddress(true);
   const [tonModalUI] = useTonConnectUI();
 
   const connectWallet = () => {
-    void tonModalUI.openModal();
+    if (props.onTryConnect) {
+      props.onTryConnect();
+    } else {
+      void tonModalUI.openModal();
+    }
   };
 
   const disconnectWallet = () => {
@@ -21,9 +26,10 @@ export const SnapshotConnectWallet = () => {
     return (
       <Button
         onClick={connectWallet}
-        variant="primary-onion"
+        variant={props.variant === "secandary" ? "ghost" : "primary-onion"}
+        className={cn(props.variant === "secandary" && "font-normal")}
       >
-        Connect Wallet
+        {props.variant === "secandary" ? "No Wallet connected" : "Connect Wallet"}
       </Button>
     );
   }

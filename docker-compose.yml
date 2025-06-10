@@ -80,10 +80,14 @@ x-common-env: &common-env
   IP_MINI_APP_MODERATION: ${IP_MINI_APP_MODERATION}
   SWAGGER_UI_DOMAIN: ${SWAGGER_UI_DOMAIN}
   SWAGGER_UI_PORT: ${SWAGGER_UI_PORT}
-
+  USE_CLOUDFLARE: ${USE_CLOUDFLARE}
+  CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
 services:
   caddy:
-    image: caddy:latest
+#    image: caddy:latest
+    build:
+      context: ./devops/caddy
+      target: production
     container_name: ${ENV}-caddy
     restart: unless-stopped
     profiles:

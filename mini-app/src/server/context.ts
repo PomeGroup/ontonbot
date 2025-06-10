@@ -49,6 +49,7 @@ export async function createContext({ req }: { req: Request }) {
   const user = await getUserFromHeader();
 
   return {
+    req, // ← important!  (Fastify/Next Request – whatever you pass in)
     user,
   };
 }

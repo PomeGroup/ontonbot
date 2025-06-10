@@ -2,7 +2,7 @@ import { pgTable, serial, varchar, text, bigint, timestamp, json, index, numeric
 import { InferSelectModel } from "drizzle-orm";
 
 // Import the enum for NFT statuses
-import { nftStatusEnum, NftStatusEnum } from "../enum";
+import { claimStatusEnum, nftStatusEnum, NftStatusEnum } from "../enum";
 
 // Shared enum for collection/NFT statuses
 export const nftApiCollections = pgTable(

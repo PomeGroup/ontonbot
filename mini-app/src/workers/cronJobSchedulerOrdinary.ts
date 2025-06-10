@@ -94,6 +94,18 @@ async function MainCronJob() {
     false, // unrefTimeout => false
     true // waitForCompletion => true
   );
+  new CronJob(
+    "0 0 * * * *", // → 00:00, 01:00, 02:00 … (once per hour)
+    cronJobs.syncPlay2WinScores,
+    null, // onComplete
+    true, // start immediately
+    null, // timeZone (server default / UTC)
+    null, // context
+    false, // runOnInit – don’t run on startup
+    null, // utcOffset
+    false, // unrefTimeout
+    true // waitForCompletion
+  );
 
   if (is_prod_env()) {
     new CronJob(

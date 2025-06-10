@@ -4,7 +4,7 @@ import snapshotCollectionsDB from "@/db/modules/snapshotCollections.db";
 import userScoreSnapshotDB from "@/db/modules/userScoreSnapshot.db";
 
 import { SnapshotCollectionInsert } from "@/db/schema/snapshotCollections";
-import { activityTypesArray, usersScore } from "@/db/schema/usersScore";
+import { usersScore } from "@/db/schema/usersScore";
 
 import { db } from "@/db/db";
 import { eq, sql } from "drizzle-orm";
@@ -111,6 +111,7 @@ export const runCollectionSnapshot = async (collectionAddress = ONION_RAW_COLLEC
         nftAddress: p.nftAddress,
         ownerAddress: p.ownerAddress,
         nftIndex: p.nftIndex,
+        claimStatus: "not_claimed", // default value, not used in this snapshot
         ownerBalance: balance.toString(), // Drizzle numeric as string
         metadata: meta,
       };
@@ -201,7 +202,7 @@ export const runCollectionSnapshot = async (collectionAddress = ONION_RAW_COLLEC
     userId: r.user_id,
     snapshotRuntime: runtime,
     totalScore: r.total_score ?? "0",
-
+    claimStatus: "not_claimed", // default value, not used in this snapshot
     freeOnlineEvent: r.free_online_event ?? "0",
     freeOfflineEvent: r.free_offline_event ?? "0",
     paidOnlineEvent: r.paid_online_event ?? "0",

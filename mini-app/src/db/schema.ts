@@ -22,6 +22,8 @@ import {
   campaignTypes,
   nftStatusEnum,
   NftStatusEnum,
+  claimStatusEnum,
+  walletTypeEnum,
 } from "@/db/enum";
 
 import { specialGuests } from "@/db/schema/specialGuest";
@@ -180,6 +182,11 @@ import { userScoreRules, scoreRuleRole, UserScoreRuleRow, UserScoreRuleRoleType 
 import { eventCategories, EventCategoryRow } from "./schema/eventCategories";
 import { snapshotCollections, SnapshotCollectionRow, SnapshotCollectionInsert } from "./schema/snapshotCollections";
 import { userScoreSnapshots, UserScoreSnapshotRow, UserScoreSnapshotInsert } from "./schema/userScoreSnapshots";
+import {
+  tokenCampaignClaimOnion,
+  TokenCampaignClaimOnionRow,
+  TokenCampaignClaimOnionInsert,
+} from "./schema/tokenCampaignClaimOnion";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -218,6 +225,8 @@ export {
   taskUserStatusEnum,
   userScoreItem,
   snapshotCollections,
+  claimStatusEnum,
+  walletTypeEnum,
 };
 
 // export all the tables and relations
@@ -291,6 +300,7 @@ export {
   scoreRuleRole,
   usersScoreActivity,
   userScoreSnapshots,
+  tokenCampaignClaimOnion,
 };
 
 // Type Exports
@@ -395,4 +405,6 @@ export type {
   SnapshotCollectionInsert,
   UserScoreSnapshotRow,
   UserScoreSnapshotInsert,
+  TokenCampaignClaimOnionRow,
+  TokenCampaignClaimOnionInsert,
 };

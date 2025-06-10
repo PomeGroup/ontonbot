@@ -1,10 +1,15 @@
+import { SNAPSHOT_DATE } from "@/constants";
 import { db } from "@/db/db";
 import { campaignTypes } from "@/db/enum";
-import { TokenCampaignOrdersInsert, TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
-import { checkRateLimit } from "@/lib/checkRateLimit";
-import { generateRandomHash } from "@/lib/generateRandomHash";
-import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
+import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
+import {
+  buildClaimOverview,
+  insertClaimRowTx,
+  markNftRowsClaimedTx,
+  markScoreRowsClaimedTx,
+} from "@/db/modules/claimOnion.db";
+import tokenCampaignClaimOnionDB from "@/db/modules/tokenCampaignClaimOnion.db";
 import userEligibilityDB from "@/db/modules/tokenCampaignEligibleUsers.db";
 import tokenCampaignMergeTransactionsDB from "@/db/modules/tokenCampaignMergeTransactions.db";
 import { tokenCampaignNftCollectionsDB } from "@/db/modules/tokenCampaignNftCollections.db";
@@ -12,15 +17,20 @@ import { tokenCampaignNftItemsDB } from "@/db/modules/tokenCampaignNftItems.db";
 import { tokenCampaignOrdersDB } from "@/db/modules/tokenCampaignOrders.db";
 import { tokenCampaignSpinPackagesDB } from "@/db/modules/tokenCampaignSpinPackages.db";
 import { tokenCampaignUserSpinsDB } from "@/db/modules/tokenCampaignUserSpins.db";
-import tonCenter, { NFTItem } from "@/services/tonCenter";
+import { TokenCampaignClaimOnionInsert } from "@/db/schema/tokenCampaignClaimOnion";
+import { TokenCampaignOrdersInsert, TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
+import { checkRateLimit } from "@/lib/checkRateLimit";
+import { generateRandomHash } from "@/lib/generateRandomHash";
+import { redisTools } from "@/lib/redisTools";
+import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
 import { is_prod_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
+import tonCenter, { NFTItem } from "@/services/tonCenter";
 import { CampaignNFT } from "@/types/campaign.types";
 import { Address } from "@ton/core";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
-import { initDataProtectedProcedure, router } from "../trpc";
+import { initDataProtectedProcedure, router, walletJWTProtectedProcedure } from "../trpc";
 
 export const campaignRouter = router({
   /**
@@ -525,5 +535,115 @@ export const campaignRouter = router({
     .query(async ({ input }) => {
       const merges = await tokenCampaignMergeTransactionsDB.getMergeTransactionsByWallet(input.walletAddress);
       return merges;
+    }),
+
+  getClaimOverview: walletJWTProtectedProcedure
+    .input(
+      z.object({
+        walletAddress: z.string().refine((v) => {
+          try {
+            Address.parse(v);
+            return true;
+          } catch {
+            return false;
+          }
+        }, "Invalid TON address"),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      /* ✅ token ↔ requested wallet must match */
+      const tokenAddr = Address.parse(ctx.jwt.address).toString({ bounceable: false });
+      const reqAddr = Address.parse(input.walletAddress).toString({ bounceable: false });
+
+      if (tokenAddr !== reqAddr) {
+        throw new TRPCError({ code: "UNPROCESSABLE_CONTENT", message: "token / wallet mismatch" });
+      }
+
+      /* business logic … */
+      return buildClaimOverview(ctx.user.user_id, input.walletAddress);
+    }),
+
+  claimOnion: walletJWTProtectedProcedure
+    .input(
+      z.object({
+        walletAddress: z.string().refine((v) => {
+          try {
+            Address.parse(v);
+            return true;
+          } catch {
+            return false;
+          }
+        }, "Invalid TON address"),
+        tonProof: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.jwt.address !== input.walletAddress) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "wallet in JWT ≠ wallet in request",
+        });
+      }
+      const userId = ctx.user.user_id;
+      const wallet = input.walletAddress;
+      //verifyTonProof(input.tonProof, input.walletAddress, ctx.user.user_id);
+      /* 1. Reject if wallet already claimed */
+      if (await tokenCampaignClaimOnionDB.walletAlreadyClaimed(wallet)) {
+        throw new TRPCError({ code: "CONFLICT", message: "Wallet already claimed." });
+      }
+
+      /* 2. Does user already have a primary? */
+      const previousClaims = await tokenCampaignClaimOnionDB.fetchClaimsByUser(userId);
+      const hasPrimary = previousClaims.some((r) => r.walletType === "primary");
+
+      /* 3. Get the breakdown for the CONNECTED wallet only */
+      const overview = await buildClaimOverview(userId, wallet);
+      const thisWalletBreakdown = overview.find((w) => w.walletAddress === wallet);
+
+      if (!thisWalletBreakdown || thisWalletBreakdown.claimStatus === "claimed") {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Nothing to claim for this wallet.",
+        });
+      }
+
+      /* 4. Assemble insert payload */
+      const b = thisWalletBreakdown;
+      const insertRow: TokenCampaignClaimOnionInsert = {
+        userId,
+        walletAddress: wallet,
+        walletType: hasPrimary ? "secondary" : "primary",
+        tonProof: input.tonProof ?? null,
+        snapshotRuntime: SNAPSHOT_DATE,
+
+        /* NFT data */
+        platinumNftCount: b.nft.counts.platinum,
+        goldNftCount: b.nft.counts.gold,
+        silverNftCount: b.nft.counts.silver,
+        bronzeNftCount: b.nft.counts.bronze,
+
+        onionsFromPlatinum: b.nft.onions.platinum.toString(),
+        onionsFromGold: b.nft.onions.gold.toString(),
+        onionsFromSilver: b.nft.onions.silver.toString(),
+        onionsFromBronze: b.nft.onions.bronze.toString(),
+
+        /* Score onions: ZERO on secondaries */
+        onionsFromScore: hasPrimary ? "0" : b.scoreOnions.toString(),
+
+        totalOnions: hasPrimary ? b.nft.totalOnions.toString() : (b.nft.totalOnions + b.scoreOnions).toString(),
+      };
+
+      /* 5. Atomic transaction */
+      const [claimRow] = await db.transaction(async (tx) => {
+        /* mark snapshots only when first (primary) claim */
+        if (!hasPrimary) {
+          await markScoreRowsClaimedTx(tx, userId);
+        }
+        await markNftRowsClaimedTx(tx, wallet);
+
+        return await insertClaimRowTx(tx, insertRow);
+      });
+
+      return { success: true, claim: claimRow };
     }),
 });

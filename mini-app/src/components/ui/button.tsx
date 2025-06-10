@@ -8,7 +8,7 @@ import { Button as KButton } from "konsta/react";
 import { Loader2 } from "lucide-react";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-cn-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cn-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-xl disabled:cursor-not-allowed",
+  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-cn-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cn-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-2lg disabled:cursor-not-allowed",
   {
     variants: {
       variant: {

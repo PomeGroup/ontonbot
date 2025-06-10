@@ -1,4 +1,5 @@
 import { Play2WinCampaignType } from "@/db/schema/play2winCampaigns";
+import { is_local_env } from "@/server/utils/evnutils";
 
 export const gmtTimeZones = [
   "GMT",
@@ -729,3 +730,25 @@ export const PLAY2WIN_DEFAULT_CAMPAIGN_TYPE: Play2WinCampaignType = "genesis_oni
 export const PLAY2WIN_DEFAULT_MIN_POINTS = 1500;
 
 export const ONION_RAW_COLLECTION_ADDRESS = "0:826678a6c2e4ca8addef714c05ec9476ea22eed5fea8b005c05ad60d4bd73e43";
+
+// onionConversion
+export const POINTS_PER_ONION = 2;
+
+export const NFT_POINTS: Record<"platinum" | "gold" | "silver" | "bronze", number> = {
+  platinum: 15419,
+  gold: 5140,
+  silver: 3084,
+  bronze: 2056,
+};
+
+export const toOnionFromPoints = (pts: number) => pts * POINTS_PER_ONION;
+
+export const SNAPSHOT_DATE = is_local_env() ? new Date("2025-05-29 20:50:30.7+00") : new Date("2025-05-30 21:00:00.009+00");
+
+export const TON_PROOF_STORAGE_KEY = "onton-mini-app-proof-auth";
+export const PROOF_PAYLOAD_TTL_MS = 1_000 * 60 * 60 * 24 * 7; // 1 week
+export const WalletNetCHAIN_MAP: Record<number | string, "-239" | "-3"> = {
+  0: "-239",
+  "-239": "-239",
+  "-3": "-3",
+};
