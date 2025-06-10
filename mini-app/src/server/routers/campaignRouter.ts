@@ -552,13 +552,21 @@ export const campaignRouter = router({
     )
     .query(async ({ input, ctx }) => {
       /* ✅ token ↔ requested wallet must match */
+      logger.log(
+        `ONION_CLAIM: getClaimOverview1: tokenAddr=${ctx.jwt.address}, reqAddr=${input.walletAddress} for userId=${ctx.user.user_id}`
+      );
       const tokenAddr = Address.parse(ctx.jwt.address).toString({ bounceable: false });
       const reqAddr = Address.parse(input.walletAddress).toString({ bounceable: false });
 
       if (tokenAddr !== reqAddr) {
+        logger.error(
+          `ONION_CLAIM: getClaimOverview1: tokenAddr=${tokenAddr}, reqAddr=${reqAddr} for userId=${ctx.user.user_id}`
+        );
         throw new TRPCError({ code: "UNPROCESSABLE_CONTENT", message: "token / wallet mismatch" });
       }
-
+      logger.log(
+        `ONION_CLAIM: getClaimOverview2: tokenAddr=${tokenAddr}, reqAddr=${reqAddr} for userId=${ctx.user.user_id}`
+      );
       /* business logic … */
       return buildClaimOverview(ctx.user.user_id, input.walletAddress);
     }),
