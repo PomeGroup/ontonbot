@@ -5,6 +5,7 @@ import { snapshotCollections } from "@/db/schema/snapshotCollections";
 import { userScoreSnapshots } from "@/db/schema/userScoreSnapshots";
 import { POINTS_PER_ONION, NFT_POINTS, SNAPSHOT_DATE } from "@/constants";
 import { ClaimStatusEnum } from "@/db/enum";
+import { logger } from "@/server/utils/logger";
 
 export type WalletSummary = {
   walletAddress: string;
@@ -47,8 +48,9 @@ async function nftCounts(wallet: string) {
     )
     .groupBy(jsonColorExpr)
     .execute();
-
+  logger.log(`NFT counts for ${wallet}:`, rows);
   const base = { platinum: 0, gold: 0, silver: 0, bronze: 0 };
+  logger.log(`NFT counts  base for ${wallet}:`, base);
   for (const r of rows) {
     const key = (r.clr || "").toLowerCase() as keyof typeof base;
     if (key in base) base[key] = Number(r.cnt);
