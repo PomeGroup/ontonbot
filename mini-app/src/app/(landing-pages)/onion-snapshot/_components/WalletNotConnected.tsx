@@ -3,7 +3,6 @@ import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import { PROOF_PAYLOAD_TTL_MS, TON_PROOF_STORAGE_KEY, WalletNetCHAIN_MAP } from "@/constants";
 import { TonProofSavedSession } from "@/types";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   TonProofItemReplySuccess,
   useIsConnectionRestored,
@@ -42,7 +41,6 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
   const tonConnectModal = useTonConnectModal();
   const tonConnectAddress = useTonWallet();
   const wallet = tonConnectAddress?.account.address;
-  const queryClient = useQueryClient();
 
   /* Ton Connect */
   const [ui] = useTonConnectUI();
@@ -50,7 +48,22 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
 
   /* tRPC */
   const genPayload = trpc.tonProof.generatePayload.useQuery(undefined, { enabled: false });
-  const verify = trpc.tonProof.verifyProof.useMutation();
+  const verify = trpc.tonProof.verifyProof.useMutation({
+    onSuccess: ({ token }, { proof }) => {
+      const { state_init, address, ...rest } = proof;
+      const session: TonProofSavedSession = { token, proof: JSON.stringify(rest) };
+      localStorage.setItem(TON_PROOF_STORAGE_KEY, JSON.stringify(session));
+
+      setJwt(token);
+      setJwtOk(true);
+      onProofVerified?.(session.proof);
+      setProof(session.proof);
+    },
+    onError: () => {
+      toast.error("Proof missing – reconnect.");
+      ui.disconnect();
+    },
+  });
 
   /* local state */
   const [proof, setProof] = useState<string>(); // stringified proof
@@ -61,7 +74,6 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
     if (tonConnectAddress?.account.address) {
       setOpenOnDiconnect?.(false);
     }
-    queryClient.refetchQueries({ queryKey: ["campaign.getClaimOverview", { walletAddress: wallet }] });
     if (!ready) return; // TonConnect hasn’t finished restoring
     if (wallet) return; // a wallet *is* connected – keep session
     setJwt("");
@@ -114,26 +126,12 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
     const reply = tonConnectAddress.connectItems?.tonProof;
     if (reply && !("error" in reply)) {
       const prf = (reply as TonProofItemReplySuccess).proof;
-      verify
-        .mutateAsync({
-          address: tonConnectAddress.account.address,
-          network: WalletNetCHAIN_MAP[tonConnectAddress.account.chain] ?? "-239",
-          public_key: tonConnectAddress.account.publicKey ?? "",
-          proof: { ...prf, address: tonConnectAddress.account.address, state_init: "" },
-        })
-        .then(({ token }) => {
-          const session: TonProofSavedSession = { token, proof: JSON.stringify(prf) };
-          localStorage.setItem(TON_PROOF_STORAGE_KEY, JSON.stringify(session));
-
-          setJwt(token);
-          setProof(session.proof);
-          setJwtOk(true);
-          onProofVerified?.(session.proof);
-        })
-        .catch(() => {
-          toast.error("Proof invalid – reconnect.");
-          ui.disconnect();
-        });
+      verify.mutate({
+        address: tonConnectAddress.account.address,
+        network: WalletNetCHAIN_MAP[tonConnectAddress.account.chain] ?? "-239",
+        public_key: tonConnectAddress.account.publicKey ?? "",
+        proof: { ...prf, address: tonConnectAddress.account.address, state_init: "" },
+      });
     } else {
       toast.error("Proof missing – reconnect.");
       ui.disconnect();
