@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ilike, sql } from "drizzle-orm";
 import { tokenCampaignClaimOnion, TokenCampaignClaimOnionInsert } from "@/db/schema/tokenCampaignClaimOnion";
 import { snapshotCollections } from "@/db/schema/snapshotCollections";
 import { userScoreSnapshots } from "@/db/schema/userScoreSnapshots";
@@ -41,7 +41,7 @@ async function nftCounts(wallet: string) {
     .from(snapshotCollections)
     .where(
       and(
-        eq(snapshotCollections.ownerAddress, wallet),
+        ilike(snapshotCollections.ownerAddress, wallet),
         eq(snapshotCollections.snapshotRuntime, SNAPSHOT_DATE),
         eq(snapshotCollections.claimStatus, "not_claimed")
       )

@@ -555,8 +555,8 @@ export const campaignRouter = router({
       logger.log(
         `ONION_CLAIM: getClaimOverview1: tokenAddr=${ctx.jwt.address}, reqAddr=${input.walletAddress} for userId=${ctx.user.user_id}`
       );
-      const tokenAddr = Address.parse(ctx.jwt.address).toString({ bounceable: false }).toUpperCase();
-      const reqAddr = Address.parse(input.walletAddress).toString({ bounceable: false }).toUpperCase();
+      const tokenAddr = Address.parse(ctx.jwt.address).toString({ bounceable: false });
+      const reqAddr = Address.parse(input.walletAddress).toString({ bounceable: false });
 
       if (tokenAddr !== reqAddr) {
         logger.error(
@@ -568,7 +568,7 @@ export const campaignRouter = router({
         `ONION_CLAIM: getClaimOverview2: tokenAddr=${tokenAddr}, reqAddr=${reqAddr} for userId=${ctx.user.user_id}`
       );
       /* business logic … */
-      return buildClaimOverview(ctx.user.user_id, reqAddr);
+      return buildClaimOverview(ctx.user.user_id, input.walletAddress);
     }),
 
   claimOnion: walletJWTProtectedProcedure
@@ -593,7 +593,7 @@ export const campaignRouter = router({
         });
       }
       const userId = ctx.user.user_id;
-      const wallet = input.walletAddress.toString().toUpperCase();
+      const wallet = input.walletAddress;
       //verifyTonProof(input.tonProof, input.walletAddress, ctx.user.user_id);
       /* 1. Reject if wallet already claimed */
       if (await tokenCampaignClaimOnionDB.walletAlreadyClaimed(wallet)) {
