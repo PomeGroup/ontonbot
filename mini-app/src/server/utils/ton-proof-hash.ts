@@ -19,6 +19,10 @@ export const ALLOWED_DOMAINS = [
   "onton.live",
   "mohammad-app.toncloud.observer",
   "mohammad-app.toncloud.observer",
+  "tonkeeper.app",
+  "tonkeeper.com",
+  "tonhub.com",
+  "mytonwallet.app",
 ];
 export const VALID_AGE_SEC = 60; // 60-second TTL
 

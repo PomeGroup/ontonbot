@@ -4,19 +4,14 @@ import crypto from "crypto";
 import { initDataProtectedProcedure, router } from "@/server/trpc";
 
 import { Address, Cell, loadStateInit, contractAddress } from "@ton/core";
+
 import { TonClient4 } from "@ton/ton";
 
 import {
-  TON_PROOF_PREFIX,
-  TON_CONNECT_PREFIX,
   ALLOWED_DOMAINS,
   VALID_AGE_SEC,
   tryParsePublicKey,
-  be32,
-  le32,
-  le64,
   hexToU8,
-  b64ToU8,
   buildSignedBody,
   ed25519Verify,
   u8eq,
@@ -26,6 +21,8 @@ import { createAuthToken } from "@/server/utils/jwt";
 import { redisTools } from "@/lib/redisTools";
 import { utf8ToBytes } from "@noble/hashes/utils";
 import { walletAlreadyClaimedByOtherUser } from "@/db/modules/tokenCampaignClaimOnion.db";
+import { logger } from "@/server/utils/logger";
+import { WALLET_FACTORIES } from "../utils/ walletFactories";
 
 const proofSchema = z.object({
   address: z.string(),
@@ -96,6 +93,7 @@ export const tonProofRouter = router({
       }
 
       /* ─────────────────────────────── public-key discovery      */
+
       let pubKey: Uint8Array | null = null;
 
       /* a) fast path – key inside state-init supplied by wallet  */
@@ -108,23 +106,45 @@ export const tonProofRouter = router({
       if (!pubKey) {
         const endpoint = input.network === "-239" ? "https://mainnet-v4.tonhubapi.com" : "https://testnet-v4.tonhubapi.com";
         const api = new TonClient4({ endpoint });
-
+        logger.log(`Using TON API endpoint: ${endpoint}`);
         try {
           const blk = await api.getLastBlock();
           const res = await api.runMethod(blk.last.seqno, Address.parse(input.address), "get_public_key", []);
           pubKey = hexToU8(res.reader.readBigNumber().toString(16).padStart(64, "0"));
         } catch {
           /* ignore – some wallets aren’t deployed yet             */
+          logger.warn(`Failed to get public key for address ${input.address} on network ${input.network}`);
         }
       }
 
+      /* c) compare with key Ton-Connect gave us                  */
+      const suppliedBuf = Buffer.from(input.public_key, "hex");
+      const addr = Address.parse(input.address);
+      if (!pubKey) {
+        let matched = false;
+
+        for (const wf of WALLET_FACTORIES) {
+          const wallet = wf.create({ workchain: addr.workChain, publicKey: suppliedBuf });
+
+          if (wallet.address.equals(addr)) {
+            logger.log(`Wallet template matched: ${wf.name}`);
+            pubKey = suppliedBuf; // accept
+            matched = true;
+            break;
+          }
+        }
+
+        if (!matched) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "public-key ↔ address mismatch (no wallet template fits)",
+          });
+        }
+      }
       if (!pubKey) {
         throw new TRPCError({ code: "FORBIDDEN", message: "pub-key not found" });
       }
-
-      /* c) compare with key Ton-Connect gave us                  */
-      const supplied = hexToU8(input.public_key);
-      if (!u8eq(pubKey, supplied)) {
+      if (!u8eq(pubKey, suppliedBuf)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "pub-key mismatch" });
       }
 
