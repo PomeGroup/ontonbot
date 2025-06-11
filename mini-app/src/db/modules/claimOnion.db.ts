@@ -1,10 +1,11 @@
 import { db } from "@/db/db";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ilike, sql } from "drizzle-orm";
 import { tokenCampaignClaimOnion, TokenCampaignClaimOnionInsert } from "@/db/schema/tokenCampaignClaimOnion";
 import { snapshotCollections } from "@/db/schema/snapshotCollections";
 import { userScoreSnapshots } from "@/db/schema/userScoreSnapshots";
 import { POINTS_PER_ONION, NFT_POINTS, SNAPSHOT_DATE } from "@/constants";
 import { ClaimStatusEnum } from "@/db/enum";
+import { logger } from "@/server/utils/logger";
 
 export type WalletSummary = {
   walletAddress: string;
@@ -40,15 +41,16 @@ async function nftCounts(wallet: string) {
     .from(snapshotCollections)
     .where(
       and(
-        eq(snapshotCollections.ownerAddress, wallet),
+        ilike(snapshotCollections.ownerAddress, wallet),
         eq(snapshotCollections.snapshotRuntime, SNAPSHOT_DATE),
         eq(snapshotCollections.claimStatus, "not_claimed")
       )
     )
     .groupBy(jsonColorExpr)
     .execute();
-
+  logger.log(`NFT counts for ${wallet}:`, rows);
   const base = { platinum: 0, gold: 0, silver: 0, bronze: 0 };
+  logger.log(`NFT counts  base for ${wallet}:`, base);
   for (const r of rows) {
     const key = (r.clr || "").toLowerCase() as keyof typeof base;
     if (key in base) base[key] = Number(r.cnt);
@@ -84,10 +86,14 @@ export async function buildClaimOverview(userId: number, connectedWallet: string
     .where(eq(tokenCampaignClaimOnion.userId, userId))
     .orderBy(tokenCampaignClaimOnion.createdAt) // oldest → newest
     .execute();
-
+  logger.log(`ONION_CLAIM: Build claimOverview: ${previous} for user ${userId}`);
   const hasPrimary = previous.some((r) => r.walletType === "primary");
-  const walletAlreadyClaimed = previous.find((r) => r.walletAddress === connectedWallet);
 
+  logger.log(`ONION_CLAIM: Has primary wallet: ${hasPrimary} for user ${userId}`);
+  const walletAlreadyClaimed = previous.find((r) => r.walletAddress === connectedWallet);
+  logger.log(
+    `ONION_CLAIM: Wallet ${connectedWallet} already claimed: ${walletAlreadyClaimed ? "yes" : "no"}  for user ${userId}`
+  );
   /* 2️⃣  Convert them into WalletSummary objects ------------------------ */
   const summaries: WalletSummary[] = previous.map((r) => ({
     walletAddress: r.walletAddress,
@@ -114,11 +120,11 @@ export async function buildClaimOverview(userId: number, connectedWallet: string
     scoreOnions: r.walletType === "primary" ? Number(r.onionsFromScore) : 0,
     totalOnions: Number(r.totalOnions),
   }));
-
+  logger.log(`ONION_CLAIM: Build claimOverview: ${previous}  for user ${userId} => summaries:`, summaries);
   /* 3️⃣  Connected wallet – if not claimed yet, compute live ------------ */
   if (!walletAlreadyClaimed) {
     const counts = await nftCounts(connectedWallet);
-
+    logger.log(`ONION_CLAIM: NFT counts for ${connectedWallet}:`, counts);
     const onionsPerTier = {
       platinum: counts.platinum * NFT_POINTS.platinum,
       gold: counts.gold * NFT_POINTS.gold,
@@ -132,7 +138,7 @@ export async function buildClaimOverview(userId: number, connectedWallet: string
           onionOnPoints: 0,
         }
       : await unclaimedScoreOnions(userId);
-
+    logger.log(`ONION_CLAIM: NFT counts  for user ${userId}  for ${connectedWallet}:`, scoreOnion);
     summaries.push({
       walletAddress: connectedWallet,
       isPrimary: !hasPrimary,
@@ -148,7 +154,12 @@ export async function buildClaimOverview(userId: number, connectedWallet: string
       totalOnions: nftTotal + scoreOnion.onionOnPoints,
     });
   }
-
+  logger.log(`ONION_CLAIM: Build claimOverview: ${previous}  for user ${userId}` + ` => summaries:`, summaries);
+  logger.log(
+    `ONION_CLAIM: Build claimOverview: ${previous}  for user ${userId}` + ` => summaries.length:`,
+    summaries.length,
+    [...summaries.filter((w) => w.isPrimary), ...summaries.filter((w) => !w.isPrimary)]
+  );
   /* 4️⃣  Sort: primary first, then others ------------------------------- */
   return [...summaries.filter((w) => w.isPrimary), ...summaries.filter((w) => !w.isPrimary)];
 }

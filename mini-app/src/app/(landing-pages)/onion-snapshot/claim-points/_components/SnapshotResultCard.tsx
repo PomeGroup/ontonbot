@@ -2,7 +2,6 @@ import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import Typography from "@/components/Typography";
 import { AlertGeneric } from "@/components/ui/alert";
 import { useClaimPointsContext } from "../ClaimPointsContext";
-import ConnectNewWalletCard from "./ConnectNewWalletCard";
 import WalletSummaryCard from "./WalletSummaryCard";
 
 export default function SnapshotResultCard() {
@@ -65,9 +64,9 @@ export default function SnapshotResultCard() {
         />
       ))}
 
-      {pointWallets.wallets?.length && pointWallets.wallets.every((wallet) => wallet.claimStatus === "claimed") && (
+      {/* {pointWallets.wallets?.length && pointWallets.wallets.every((wallet) => wallet.claimStatus === "claimed") && (
         <ConnectNewWalletCard />
-      )}
+      )} */}
 
       {pointWallets.wallets?.length && pointWallets.wallets.every((wallet) => wallet.claimStatus === "claimed") && (
         <AlertGeneric variant="info-light">
