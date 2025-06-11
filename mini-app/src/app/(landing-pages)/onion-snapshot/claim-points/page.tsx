@@ -12,8 +12,8 @@ export default function ClaimPointsPage() {
       <OnionStockBanner />
       <SnapshotResultCard />
       <AlertGeneric variant="info-light">
-        Seeing a “missing proof” error when connecting your wallet? Make one small transaction (even 0 TON, to any address or
-        to yourself) to activate the wallet, then try again.
+        Seeing a “missing proof” error when connecting your wallet? Make one small transaction (even 0.002 TON, to any
+        address or to yourself) to activate the wallet, then try again.
       </AlertGeneric>
       {wallet?.account.address ? <OnionFollowUsCard /> : <ConnectNewWalletCard buttonText="Connect Wallet" />}
     </div>
