@@ -24,7 +24,7 @@ export const ALLOWED_DOMAINS = [
   "tonhub.com",
   "mytonwallet.app",
 ];
-export const VALID_AGE_SEC = 600; // 600-second TTL
+export const VALID_AGE_SEC = 3600 + 600; // 600-second TTL
 
 /* ------------------------------------------------------------------ */
 /*  Simple numeric helpers                                            */
