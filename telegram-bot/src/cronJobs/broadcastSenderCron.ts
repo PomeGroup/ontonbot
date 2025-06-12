@@ -11,13 +11,69 @@ import {
 } from "../db/broadcast";
 import { Readable } from "stream";
 import { InputFile } from "grammy";
-import { additionalRecipients, AFFILIATE_PLACEHOLDERS } from "../constants";
-import { escapeCsv } from "../utils/utils";
+import {additionalRecipients, AFFILIATE_PLACEHOLDERS, INVITE_PLACEHOLDER_REGEX} from "../constants";
+import {escapeCsv, generateBroadcastGroupTitle, normalizeDashes} from "../utils/utils";
+import {getOrCreateSingleInviteLinkForUserAndChat} from "../db/db";
+import {getOrCreateSingleAffiliateLink} from "../db/affiliateLinks";
 function isChatNotFoundError(err: unknown): boolean {
     if (err instanceof GrammyError) {
         return err.error_code === 400 && /chat (?:not )?found/i.test(err.description);
     }
     return /chat (?:not )?found/i.test(String(err));
+}
+
+/* ------------------------------------------------------------------ */
+/* Placeholder replacement (same logic you had in composer)           */
+/* ------------------------------------------------------------------ */
+async function replacePlaceholdersAndLinks(
+    baseText: string,
+    userId: number,
+    broadcastGroupTitle: string,
+    bot: Bot,
+): Promise<string> {
+    let newText = normalizeDashes(baseText);
+
+    // affiliate placeholders
+    for (const ph of AFFILIATE_PLACEHOLDERS) {
+        if (!newText.includes(ph)) continue;
+        const itemType = ph.replace(/[{}]/g, "");
+        const baseTitle = `broadcast-${itemType}-${userId}`;
+
+        try {
+            const linkRow = await getOrCreateSingleAffiliateLink(
+                userId,
+                itemType,
+                baseTitle,
+                broadcastGroupTitle,
+            );
+            const finalLink =
+                `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=campaign-aff-${linkRow.link_hash}`;
+            newText = newText.replace(ph, finalLink);
+        } catch (err) {
+            logger.error(`aff link err for ${userId}: ${err}`);
+            newText = newText.replace(ph, "[LINK_ERROR]");
+        }
+    }
+
+    // invite placeholders
+    const invites = Array.from(newText.matchAll(INVITE_PLACEHOLDER_REGEX));
+    for (const m of invites) {
+        const full = m[0];
+        const chatId = parseInt(m[1], 10);
+        try {
+            const link = await getOrCreateSingleInviteLinkForUserAndChat(
+                bot.api,
+                userId,
+                chatId,
+            );
+            newText = newText.replace(full, link);
+        } catch (err) {
+            logger.warn(`invite link err uid=${userId} chat=${chatId}: ${err}`);
+            newText = newText.replace(full, "[LINK_ERROR]");
+        }
+    }
+
+    return newText;
 }
 /* ------------------------------------------------------------------ */
 /* broadcastSenderCron                                                */
@@ -37,53 +93,83 @@ export async function broadcastSenderCron(bot: Bot) {
             broadcast_type,
             source_chat_id,
             source_message_id,
+            message_text,          // now available
         } = row;
 
         try {
             let sentMessageId: number;
 
             if (broadcast_type === "event") {
-                /* 1️⃣  simple copyMessage */
+                /* no placeholders – cheap copyMessage */
                 const msg = await bot.api.copyMessage(
                     user_id,
                     source_chat_id,
                     source_message_id,
                 );
                 sentMessageId = msg.message_id;
+
             } else {
-                /* 2️⃣  CSV broadcast: we stored the personalised text+media **inside** source message.
-                        Easiest: simply copyMessage as well; the placeholder-replacement
-                        was done when the broadcast row was created, so the message
-                        the admin sent already has the correct text/caption for
-                        each user. */
-                const msg = await bot.api.copyMessage(
-                    user_id,
-                    source_chat_id,
-                    source_message_id,
+                /* -------------- CSV / placeholders branch ------------------ */
+                const baseText = message_text ?? "";
+                const replaced = await replacePlaceholdersAndLinks(
+                    baseText,
+                    Number(user_id),
+                    generateBroadcastGroupTitle(),
+                    bot,
                 );
-                sentMessageId = msg.message_id;
+
+                if (!baseText) {
+                    /* text-less media – copy + edit caption */
+                    const copy = await bot.api.copyMessage(
+                        user_id,
+                        source_chat_id,
+                        source_message_id,
+                    );
+                    sentMessageId = copy.message_id;
+                    try {
+                        // first try caption
+                        await bot.api.editMessageCaption(
+                            user_id,                 // chat_id
+                            sentMessageId,           // message_id
+                            {                        // other  (3rd param)
+                                caption: replaced,
+                                parse_mode: "HTML",
+                            },
+                        );
+                    } catch {
+                        // if not a media message with caption, fall back to editing text
+                        await bot.api.editMessageText(user_id, sentMessageId, replaced, {
+                            parse_mode: "HTML",
+                        });
+                    }
+                } else {
+                    /* plain text (or media caption stored as text) */
+                    const msg = await bot.api.sendMessage(user_id, replaced, {
+                        parse_mode: "HTML",
+                    });
+                    sentMessageId = msg.message_id;
+                }
             }
 
             await markBroadcastUserSent(bu_id, sentMessageId);
-            logger.info(`broadcastSenderCron: sent to ${user_id}`);
         } catch (err) {
             logger.warn(`broadcastSenderCron: error to ${user_id}: ${err}`);
 
-            const is403  = isForbiddenError(err);
-            const is404  = isChatNotFoundError(err);   // 🔸 new
-            const finalFail = is403 || is404 || retry_count + 1 >= 10;
+            const fatal =
+                isForbiddenError(err) ||
+                isChatNotFoundError(err) ||
+                retry_count + 1 >= 10;
 
             await markBroadcastUserFailed(
                 bu_id,
                 retry_count + 1,
                 String(err),
-                finalFail,);
+                fatal,
+            );
         }
 
-        /* obey rate-limit: ~10 msgs/sec */
-        await delay(100);
+        await delay(100); // 10 msgs/sec
     }
-
     /* ---------------------------------------------------------------- */
     /* For every broadcast we touched, check if it is now finished       */
     /* ---------------------------------------------------------------- */

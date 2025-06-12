@@ -118,7 +118,9 @@ export async function fetchPendingBroadcastSends(limit = 100) {
         m.broadcast_id,
         m.broadcast_type,
         m.source_chat_id,
-        m.source_message_id
+        m.source_message_id,
+        m.message_text
+        
       FROM broadcast_users u
       JOIN broadcast_messages m USING (broadcast_id)
       WHERE u.send_status = 'pending'
