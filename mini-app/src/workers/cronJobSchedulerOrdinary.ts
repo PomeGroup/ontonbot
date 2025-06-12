@@ -81,7 +81,18 @@ async function MainCronJob() {
     false, // unrefTimeout => false
     true // waitForCompletion => true
   );
-
+  new CronJob(
+    "*/60 * * * * *", // Every 60 seconds
+    cronJobs.sendPendingPromoCodes, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
   new CronJob(
     "*/60 * * * * *", // Every 60 seconds
     cronJobs.syncOngoingTournamentsLeaderboard, // The function to run
