@@ -666,6 +666,13 @@
       "when": 1749683684175,
       "tag": "0094_green_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1749727113210,
+      "tag": "0095_regular_garia",
+      "breakpoints": true
     }
   ]
 }
