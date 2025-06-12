@@ -1,5 +1,7 @@
+// cron/broadcastSenderCron.ts
 import { Bot, GrammyError } from "grammy";
 import { logger } from "../utils/logger";
+
 import {
     fetchPendingBroadcastSends,
     markBroadcastUserSent,
@@ -9,74 +11,30 @@ import {
     countBroadcastSuccess,
     getBroadcastMeta,
 } from "../db/broadcast";
+
+import {
+    AFFILIATE_PLACEHOLDERS,
+    INVITE_PLACEHOLDER_REGEX,
+    additionalRecipients,
+} from "../constants";
+
+import {
+    generateBroadcastGroupTitle,
+    normalizeDashes,
+    extractInviteChatIds,
+    escapeCsv,
+} from "../utils/utils";
+
+import {
+    getOrCreateSingleInviteLinkForUserAndChat,
+} from "../db/db";
+import { getOrCreateSingleAffiliateLink } from "../db/affiliateLinks";
+
 import { Readable } from "stream";
 import { InputFile } from "grammy";
-import {additionalRecipients, AFFILIATE_PLACEHOLDERS, INVITE_PLACEHOLDER_REGEX} from "../constants";
-import {escapeCsv, generateBroadcastGroupTitle, normalizeDashes} from "../utils/utils";
-import {getOrCreateSingleInviteLinkForUserAndChat} from "../db/db";
-import {getOrCreateSingleAffiliateLink} from "../db/affiliateLinks";
-function isChatNotFoundError(err: unknown): boolean {
-    if (err instanceof GrammyError) {
-        return err.error_code === 400 && /chat (?:not )?found/i.test(err.description);
-    }
-    return /chat (?:not )?found/i.test(String(err));
-}
 
 /* ------------------------------------------------------------------ */
-/* Placeholder replacement (same logic you had in composer)           */
-/* ------------------------------------------------------------------ */
-async function replacePlaceholdersAndLinks(
-    baseText: string,
-    userId: number,
-    broadcastGroupTitle: string,
-    bot: Bot,
-): Promise<string> {
-    let newText = normalizeDashes(baseText);
-
-    // affiliate placeholders
-    for (const ph of AFFILIATE_PLACEHOLDERS) {
-        if (!newText.includes(ph)) continue;
-        const itemType = ph.replace(/[{}]/g, "");
-        const baseTitle = `broadcast-${itemType}-${userId}`;
-
-        try {
-            const linkRow = await getOrCreateSingleAffiliateLink(
-                userId,
-                itemType,
-                baseTitle,
-                broadcastGroupTitle,
-            );
-            const finalLink =
-                `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=campaign-aff-${linkRow.link_hash}`;
-            newText = newText.replace(ph, finalLink);
-        } catch (err) {
-            logger.error(`aff link err for ${userId}: ${err}`);
-            newText = newText.replace(ph, "[LINK_ERROR]");
-        }
-    }
-
-    // invite placeholders
-    const invites = Array.from(newText.matchAll(INVITE_PLACEHOLDER_REGEX));
-    for (const m of invites) {
-        const full = m[0];
-        const chatId = parseInt(m[1], 10);
-        try {
-            const link = await getOrCreateSingleInviteLinkForUserAndChat(
-                bot.api,
-                userId,
-                chatId,
-            );
-            newText = newText.replace(full, link);
-        } catch (err) {
-            logger.warn(`invite link err uid=${userId} chat=${chatId}: ${err}`);
-            newText = newText.replace(full, "[LINK_ERROR]");
-        }
-    }
-
-    return newText;
-}
-/* ------------------------------------------------------------------ */
-/* broadcastSenderCron                                                */
+/* main cron                                                          */
 /* ------------------------------------------------------------------ */
 export async function broadcastSenderCron(bot: Bot) {
     const rows = await fetchPendingBroadcastSends(100);
@@ -93,70 +51,58 @@ export async function broadcastSenderCron(bot: Bot) {
             broadcast_type,
             source_chat_id,
             source_message_id,
-            message_text,          // now available
+            message_text,
         } = row;
 
         try {
-            let sentMessageId: number;
+            /* -------- 1. always copy -------- */
+            const copy = await bot.api.copyMessage(
+                user_id,
+                source_chat_id,
+                source_message_id,
+            );
+            const sentMessageId = copy.message_id;   // copy succeeded ⇒ delivery done
 
-            if (broadcast_type === "event") {
-                /* no placeholders – cheap copyMessage */
-                const msg = await bot.api.copyMessage(
-                    user_id,
-                    source_chat_id,
-                    source_message_id,
-                );
-                sentMessageId = msg.message_id;
-
-            } else {
-                /* -------------- CSV / placeholders branch ------------------ */
-                const baseText = message_text ?? "";
-                const replaced = await replacePlaceholdersAndLinks(
-                    baseText,
+            /* -------- 2. personalise (CSV only) -------- */
+            if (broadcast_type === "csv" && message_text) {
+                const replaced = await personalise(
+                    message_text,
                     Number(user_id),
-                    generateBroadcastGroupTitle(),
                     bot,
                 );
-
-                if (!baseText) {
-                    /* text-less media – copy + edit caption */
-                    const copy = await bot.api.copyMessage(
+                try {
+                    // try caption first
+                    await bot.api.editMessageCaption(
                         user_id,
-                        source_chat_id,
-                        source_message_id,
+                        sentMessageId,
+                        { caption: replaced, parse_mode: "HTML" },
                     );
-                    sentMessageId = copy.message_id;
+                } catch (errCap) {
                     try {
-                        // first try caption
-                        await bot.api.editMessageCaption(
-                            user_id,                 // chat_id
-                            sentMessageId,           // message_id
-                            {                        // other  (3rd param)
-                                caption: replaced,
-                                parse_mode: "HTML",
-                            },
+                        // fallback: edit text
+                        await bot.api.editMessageText(
+                            user_id,
+                            sentMessageId,
+                            replaced,
+                            { parse_mode: "HTML" },
                         );
-                    } catch {
-                        // if not a media message with caption, fall back to editing text
-                        await bot.api.editMessageText(user_id, sentMessageId, replaced, {
-                            parse_mode: "HTML",
-                        });
+                    } catch (errTxt) {
+                        // Both edits failed – log, but DO NOT throw (avoid retry duplicates)
+                        logger.warn(
+                            `broadcastSenderCron: could not edit message for ${user_id}: ${errTxt}`,
+                        );
                     }
-                } else {
-                    /* plain text (or media caption stored as text) */
-                    const msg = await bot.api.sendMessage(user_id, replaced, {
-                        parse_mode: "HTML",
-                    });
-                    sentMessageId = msg.message_id;
                 }
             }
 
+            /* -------- 3. mark as sent -------- */
             await markBroadcastUserSent(bu_id, sentMessageId);
             logger.info(
                 `broadcastSenderCron: sent to ${user_id} (bu_id=${bu_id}, bid=${broadcast_id})`,
             );
         } catch (err) {
-            logger.warn(`broadcastSenderCron: error to ${user_id}: ${err}`);
+            /* copyMessage itself failed ⇒ real send failure */
+            logger.warn(`broadcastSenderCron: copy error to ${user_id}: ${err}`);
 
             const fatal =
                 isForbiddenError(err) ||
@@ -173,30 +119,77 @@ export async function broadcastSenderCron(bot: Bot) {
 
         await delay(100); // 10 msgs/sec
     }
-    /* ---------------------------------------------------------------- */
-    /* For every broadcast we touched, check if it is now finished       */
-    /* ---------------------------------------------------------------- */
-    const finishedIds = new Set<number>(rows.map((r) => r.broadcast_id));
 
-    for (const bid of Array.from(finishedIds)) {
-        if (await broadcastHasPendingUsers(bid)) continue;   // still work left
+    /* notify admins if any broadcast finished */
+    const touched = new Set<number>(rows.map((r) => r.broadcast_id));
+
+    for (const bid of Array.from(touched)) {
+        if (await broadcastHasPendingUsers(bid)) continue;
         await notifyAdminsAboutFinishedBroadcast(bot, bid);
     }
 }
 
 /* ------------------------------------------------------------------ */
-/* final report to admins                                             */
+/* personalise placeholders                                           */
+/* ------------------------------------------------------------------ */
+async function personalise(
+    baseText: string,
+    userId: number,
+    bot: Bot,
+): Promise<string> {
+    let text = normalizeDashes(baseText);
+    const broadcastGroupTitle = generateBroadcastGroupTitle();
+
+    /* affiliate placeholders */
+    for (const ph of AFFILIATE_PLACEHOLDERS) {
+        if (!text.includes(ph)) continue;
+        const itemType = ph.replace(/[{}]/g, "");
+        const baseTitle = `broadcast-${itemType}-${userId}`;
+        try {
+            const linkRow = await getOrCreateSingleAffiliateLink(
+                userId,
+                itemType,
+                baseTitle,
+                broadcastGroupTitle,
+            );
+            const link = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=campaign-aff-${linkRow.link_hash}`;
+            text = text.replace(ph, link);
+        } catch (e) {
+            logger.error(`afflink err uid=${userId}: ${e}`);
+            text = text.replace(ph, "[LINK_ERROR]");
+        }
+    }
+
+    /* invite placeholders */
+    for (const chatId of extractInviteChatIds(text)) {
+        const placeholder = `{invite:${chatId}}`;
+        try {
+            const link = await getOrCreateSingleInviteLinkForUserAndChat(
+                bot.api,
+                userId,
+                chatId,
+            );
+            text = text.replace(placeholder, link);
+        } catch (e) {
+            logger.warn(`invite err uid=${userId} chat=${chatId}: ${e}`);
+            text = text.replace(placeholder, "[LINK_ERROR]");
+        }
+    }
+
+    return text;
+}
+
+/* ------------------------------------------------------------------ */
+/* finished-broadcast report                                          */
 /* ------------------------------------------------------------------ */
 async function notifyAdminsAboutFinishedBroadcast(bot: Bot, broadcastId: number) {
-    const { source_chat_id, source_message_id } = await getBroadcastMeta(
-        broadcastId,
-    );
-    const successCount = await countBroadcastSuccess(broadcastId);
-    const errors = await fetchBroadcastErrors(broadcastId);
+    const { source_chat_id, source_message_id } = await getBroadcastMeta(broadcastId);
+    const success = await countBroadcastSuccess(broadcastId);
+    const errors  = await fetchBroadcastErrors(broadcastId);
 
-    const summary = `Broadcast #${broadcastId} finished.\n- Success: ${successCount}\n- Errors: ${errors.length}`;
+    const summary =
+        `Broadcast #${broadcastId} finished.\n- Success: ${success}\n- Errors: ${errors.length}`;
 
-    /* 1) forward original message */
     for (const adminId of additionalRecipients) {
         try {
             await bot.api.copyMessage(adminId, source_chat_id, source_message_id, {
@@ -214,16 +207,12 @@ async function notifyAdminsAboutFinishedBroadcast(bot: Bot, broadcastId: number)
 
         if (!errors.length) continue;
 
-        /* 2) CSV with errors */
-        const csvStr =
-            ["user_id,error", ...errors.map((e) => `${e.user_id},${escapeCsv(e.last_error)}`)].join(
-                "\n",
-            );
-        const stream = Readable.from(csvStr);
-        const csvFile = new InputFile(stream, "broadcast_errors.csv");
+        const csv =
+            ["user_id,error", ...errors.map((e) => `${e.user_id},${escapeCsv(e.last_error)}`)].join("\n");
+        const file = new InputFile(Readable.from(csv), "broadcast_errors.csv");
 
         try {
-            await bot.api.sendDocument(adminId, csvFile, {
+            await bot.api.sendDocument(adminId, file, {
                 caption: "Broadcast encountered errors. See CSV.",
             });
         } catch (e) {
@@ -238,10 +227,17 @@ async function notifyAdminsAboutFinishedBroadcast(bot: Bot, broadcastId: number)
 /* helpers                                                            */
 /* ------------------------------------------------------------------ */
 function isForbiddenError(err: unknown) {
-    if (err instanceof GrammyError) return err.error_code === 403;
-    return String(err).includes("403");
+    return err instanceof GrammyError
+        ? err.error_code === 403
+        : /403|forbidden/i.test(String(err));
+}
+
+function isChatNotFoundError(err: unknown) {
+    return err instanceof GrammyError
+        ? err.error_code === 400 && /chat (?:not )?found/i.test(err.description)
+        : /chat (?:not )?found/i.test(String(err));
 }
 
 function delay(ms: number) {
-    return new Promise<void>((res) => setTimeout(res, ms));
+    return new Promise<void>((r) => setTimeout(r, ms));
 }
