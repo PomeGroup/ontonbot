@@ -659,6 +659,13 @@
       "when": 1749220584988,
       "tag": "0093_clammy_shinobi_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1749683684175,
+      "tag": "0094_green_silver_fox",
+      "breakpoints": true
     }
   ]
 }

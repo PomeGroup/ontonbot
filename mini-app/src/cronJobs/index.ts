@@ -31,6 +31,7 @@ import { deployNFTApiCollections } from "@/cronJobs/tasks/deployNFTApiCollection
 import { mintNFTApiCollections } from "@/cronJobs/tasks/mintNFTApiCollections";
 import { runCollectionSnapshot } from "@/cronJobs/tasks/runCollectionSnapshot";
 import { syncPlay2WinScores } from "@/cronJobs/tasks/syncPlay2WinScores";
+import { sendPendingPromoCodes } from "@/cronJobs/tasks/promoCron";
 
 const cronJobs = {
   CheckTransactions,
@@ -65,6 +66,7 @@ const cronJobs = {
   mintNFTApiCollections,
   runCollectionSnapshot,
   syncPlay2WinScores,
+  sendPendingPromoCodes,
 };
 export { cronJobRunner };
 export default cronJobs;
