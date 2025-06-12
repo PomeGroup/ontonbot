@@ -29,7 +29,7 @@ import {
 import { specialGuests } from "@/db/schema/specialGuest";
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { coupon_definition, coupon_definition_status, coupon_definition_type } from "./schema/coupon_definition";
-import { coupon_item_status, coupon_items } from "./schema/coupon_items";
+import { coupon_item_status, coupon_items, couponMessageSendStatus, CouponMessageSendStatus } from "./schema/coupon_items";
 import { event_details_search_list } from "./schema/event_details_search_list";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
 import { eventPayment, EventTicketType, organizerPaymentStatus, pgTicketTypes, ticketTypes } from "./schema/eventPayment";
@@ -301,6 +301,7 @@ export {
   usersScoreActivity,
   userScoreSnapshots,
   tokenCampaignClaimOnion,
+  couponMessageSendStatus,
 };
 
 // Type Exports
@@ -407,4 +408,5 @@ export type {
   UserScoreSnapshotInsert,
   TokenCampaignClaimOnionRow,
   TokenCampaignClaimOnionInsert,
+  CouponMessageSendStatus,
 };
