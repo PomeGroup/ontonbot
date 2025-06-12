@@ -152,6 +152,9 @@ export async function broadcastSenderCron(bot: Bot) {
             }
 
             await markBroadcastUserSent(bu_id, sentMessageId);
+            logger.info(
+                `broadcastSenderCron: sent to ${user_id} (bu_id=${bu_id}, bid=${broadcast_id})`,
+            );
         } catch (err) {
             logger.warn(`broadcastSenderCron: error to ${user_id}: ${err}`);
 
