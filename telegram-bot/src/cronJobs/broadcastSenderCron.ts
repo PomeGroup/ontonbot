@@ -51,57 +51,45 @@ export async function broadcastSenderCron(bot: Bot) {
             broadcast_type,
             source_chat_id,
             source_message_id,
-            message_text,
+            message_text,           // caption/text as stored
         } = row;
 
         try {
-            /* -------- 1. always copy -------- */
-            const copy = await bot.api.copyMessage(
-                user_id,
-                source_chat_id,
-                source_message_id,
-            );
-            const sentMessageId = copy.message_id;   // copy succeeded ⇒ delivery done
-
-            /* -------- 2. personalise (CSV only) -------- */
+            /* ------------------------------------------------------------ */
+            /* 1. build personalised caption if this is a CSV broadcast     */
+            /* ------------------------------------------------------------ */
+            let captionOpts: Parameters<Bot["api"]["copyMessage"]>[3] | undefined;
             if (broadcast_type === "csv" && message_text) {
                 const replaced = await personalise(
                     message_text,
                     Number(user_id),
                     bot,
                 );
-                try {
-                    // try caption first
-                    await bot.api.editMessageCaption(
-                        user_id,
-                        sentMessageId,
-                        { caption: replaced, parse_mode: "HTML" },
-                    );
-                } catch (errCap) {
-                    try {
-                        // fallback: edit text
-                        await bot.api.editMessageText(
-                            user_id,
-                            sentMessageId,
-                            replaced,
-                            { parse_mode: "HTML" },
-                        );
-                    } catch (errTxt) {
-                        // Both edits failed – log, but DO NOT throw (avoid retry duplicates)
-                        logger.warn(
-                            `broadcastSenderCron: could not edit message for ${user_id}: ${errTxt}`,
-                        );
-                    }
-                }
+                captionOpts = { caption: replaced, parse_mode: "HTML" };
             }
 
-            /* -------- 3. mark as sent -------- */
+            /* ------------------------------------------------------------ */
+            /* 2. copy the original message (photo/video/doc/…)             */
+            /*    - with caption override when captionOpts is defined       */
+            /* ------------------------------------------------------------ */
+            const copy = await bot.api.copyMessage(
+                user_id,
+                source_chat_id,
+                source_message_id,
+                captionOpts,
+            );
+            const sentMessageId = copy.message_id;
+
+            /* ------------------------------------------------------------ */
+            /* 3. mark success                                              */
+            /* ------------------------------------------------------------ */
             await markBroadcastUserSent(bu_id, sentMessageId);
             logger.info(
                 `broadcastSenderCron: sent to ${user_id} (bu_id=${bu_id}, bid=${broadcast_id})`,
             );
+
         } catch (err) {
-            /* copyMessage itself failed ⇒ real send failure */
+            /* copyMessage failed → handle retries / fatal */
             logger.warn(`broadcastSenderCron: copy error to ${user_id}: ${err}`);
 
             const fatal =
@@ -117,7 +105,7 @@ export async function broadcastSenderCron(bot: Bot) {
             );
         }
 
-        await delay(100); // 10 msgs/sec
+        await delay(50);               // 10 msgs/sec
     }
 
     /* notify admins if any broadcast finished */
