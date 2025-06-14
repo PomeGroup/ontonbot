@@ -53,26 +53,43 @@ export async function createBroadcastMessage(data: BroadcastMessageInsert) {
     return res.rows[0].broadcast_id as number;
 }
 
+const CHUNK = 5000;                // < 65 535 / 2  (room to spare)
+
 export async function bulkInsertBroadcastUsers(
     broadcastId: number,
-    userIds: string[]
+    userIds: string[],
 ): Promise<void> {
     if (!userIds.length) return;
 
-    // Build VALUES ($1,$2),($1,$3)…  (1st param repeated broadcastId)
-    const values: string[] = [];
-    const params: any[] = [];
-    userIds.forEach((uid, i) => {
-        values.push(`($1,$${i + 2})`);
-        params.push(uid);
-    });
-    params.unshift(broadcastId); // $1
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
 
-    const sql = `
-      INSERT INTO broadcast_users (broadcast_id, user_id)
-      VALUES ${values.join(",")}
-  `;
-    await pool.query(sql, params);
+        for (let i = 0; i < userIds.length; i += CHUNK) {
+            const slice = userIds.slice(i, i + CHUNK);
+
+            // ($1,$2),($1,$3)… structure for this slice
+            const values: string[] = [];
+            const params: any[] = [broadcastId]; // $1
+            slice.forEach((uid, idx) => {
+                values.push(`($1,$${idx + 2})`);
+                params.push(uid);
+            });
+
+            const sql = `
+        INSERT INTO broadcast_users (broadcast_id, user_id)
+        VALUES ${values.join(",")}
+      `;
+            await client.query(sql, params);
+        }
+
+        await client.query("COMMIT");
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
+    }
 }
 
 /* ---------- status updates ---------- */

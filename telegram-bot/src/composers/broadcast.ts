@@ -20,6 +20,7 @@ import {
 } from "../utils/utils";
 import { AFFILIATE_PLACEHOLDERS, INVITE_PLACEHOLDER_REGEX } from "../constants";
 import { getOrCreateSingleAffiliateLink } from "../db/affiliateLinks";
+import {json} from "express";
 
 export const broadcastComposer = new Composer<MyContext>();
 
@@ -209,28 +210,40 @@ async function handleBroadcastMessage(ctx: MyContext) {
   }
 
   /* ------------------------------------------------------------- */
-  /* Persist broadcast & recipients                                */
+  /*   persist broadcast + recipients, with error handling          */
   /* ------------------------------------------------------------- */
-  const rawText =
-      ctx.message?.text ??
-      ctx.message?.caption ??
-      null;            // photo/video without caption ➜ null
-  const broadcastId = await createBroadcastMessage({
-    broadcaster_id: ctx.from!.id,
-    source_chat_id: ctx.chat!.id,
-    source_message_id: ctx.message!.message_id,
-    broadcast_type: ctx.session.broadcastType as "event" | "csv",
-    event_uuid: ctx.session.broadcastEventUuid ?? null,
-    title: ctx.session.broadcastEventTitle ?? "(custom list)",
-    message_text: rawText, // store the original text for later reference
-  });
-  await bulkInsertBroadcastUsers(broadcastId, userIds);
+  try {
+    const rawText =
+        ctx.message?.text ??
+        ctx.message?.caption ??
+        null;                    // media without caption → null
 
-  /* ------------------------------------------------------------- */
-  await ctx.reply(
-      `✅ Broadcast queued! ${userIds.length} user(s) will receive the message shortly.\n` +
-      "You can safely close Telegram – delivery runs in the background.",
-  );
+    const broadcastId = await createBroadcastMessage({
+      broadcaster_id: ctx.from!.id,
+      source_chat_id: ctx.chat!.id,
+      source_message_id: ctx.message!.message_id,
+      broadcast_type: ctx.session.broadcastType as "event" | "csv",
+      event_uuid: ctx.session.broadcastEventUuid ?? null,
+      title: ctx.session.broadcastEventTitle ?? "(custom list)",
+      message_text: rawText,
+    });
+
+    await bulkInsertBroadcastUsers(broadcastId, userIds);
+
+    /* success → inform admin */
+    await ctx.reply(
+        `✅ Broadcast queued! ${userIds.length} user(s) will receive the message shortly.\n` +
+        "You can safely close Telegram – delivery runs in the background.",
+    );
+  } catch (err) {
+    logger.error(`broadcastComposer: DB error while queuing broadcast: ${err}`);
+
+    await ctx.reply(
+        "❌ Failed to queue the broadcast.\n" +
+        JSON.stringify(err, null, 2) + "\n" +
+        "Please try again later or contact support.",
+    );
+  }
 
   ctx.session.broadcastStep = "done";
 }
