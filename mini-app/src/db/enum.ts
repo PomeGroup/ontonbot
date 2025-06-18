@@ -63,3 +63,11 @@ export type NotificationItemType = (typeof notificationItemType.enumValues)[numb
 export type EventPoaResultStatus = (typeof eventPoaResultStatus.enumValues)[number];
 export type PaymentTypes = (typeof paymentTypes.enumValues)[number];
 export type NftStatusEnum = (typeof nftStatusEnum.enumValues)[number];
+
+/** row state inside snapshots & claim table */
+export const claimStatusEnum = pgEnum("claim_status", ["not_claimed", "claimed"]);
+export type ClaimStatusEnum = (typeof claimStatusEnum.enumValues)[number];
+
+/** how this wallet will receive ONION */
+export const walletTypeEnum = pgEnum("wallet_type", ["primary", "secondary"]);
+export type WalletTypeEnum = (typeof walletTypeEnum.enumValues)[number];

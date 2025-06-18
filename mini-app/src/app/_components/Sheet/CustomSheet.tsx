@@ -7,7 +7,7 @@ import { createPortal } from "react-dom";
 import { IoCloseCircleOutline } from "react-icons/io5";
 
 interface ReusableSheetProps {
-  title: string;
+  title: React.ReactNode;
   opened: boolean;
   children: React.ReactNode;
   className?: string;

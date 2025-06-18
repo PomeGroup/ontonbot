@@ -1,6 +1,7 @@
 import { pgTable, serial, bigint, timestamp, decimal, uniqueIndex, index, varchar } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { users } from "@/db/schema";
+import { claimStatusEnum } from "../enum";
 
 /* -------------------------------------------------------------------------- */
 /*  Per-user score snapshot (aggregated)                                      */
@@ -29,7 +30,7 @@ export const userScoreSnapshots = pgTable(
     joinOntonAffiliate: decimal("join_onton_affiliate", { precision: 20, scale: 6 }).default("0"),
     freePlay2Win: decimal("free_play2win", { precision: 20, scale: 6 }).default("0"),
     paidPlay2Win: decimal("paid_play2win", { precision: 20, scale: 6 }).default("0"),
-
+    claimStatus: claimStatusEnum("claim_status").default("not_claimed").notNull(),
     /* grand total (redundant but quick-to-query) */
     totalScore: decimal("total_score", { precision: 20, scale: 6 }).notNull(),
   },

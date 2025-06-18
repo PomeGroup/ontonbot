@@ -22,12 +22,14 @@ import {
   campaignTypes,
   nftStatusEnum,
   NftStatusEnum,
+  claimStatusEnum,
+  walletTypeEnum,
 } from "@/db/enum";
 
 import { specialGuests } from "@/db/schema/specialGuest";
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { coupon_definition, coupon_definition_status, coupon_definition_type } from "./schema/coupon_definition";
-import { coupon_item_status, coupon_items } from "./schema/coupon_items";
+import { coupon_item_status, coupon_items, couponMessageSendStatus, CouponMessageSendStatus } from "./schema/coupon_items";
 import { event_details_search_list } from "./schema/event_details_search_list";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
 import { eventPayment, EventTicketType, organizerPaymentStatus, pgTicketTypes, ticketTypes } from "./schema/eventPayment";
@@ -180,6 +182,11 @@ import { userScoreRules, scoreRuleRole, UserScoreRuleRow, UserScoreRuleRoleType 
 import { eventCategories, EventCategoryRow } from "./schema/eventCategories";
 import { snapshotCollections, SnapshotCollectionRow, SnapshotCollectionInsert } from "./schema/snapshotCollections";
 import { userScoreSnapshots, UserScoreSnapshotRow, UserScoreSnapshotInsert } from "./schema/userScoreSnapshots";
+import {
+  tokenCampaignClaimOnion,
+  TokenCampaignClaimOnionRow,
+  TokenCampaignClaimOnionInsert,
+} from "./schema/tokenCampaignClaimOnion";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -218,6 +225,8 @@ export {
   taskUserStatusEnum,
   userScoreItem,
   snapshotCollections,
+  claimStatusEnum,
+  walletTypeEnum,
 };
 
 // export all the tables and relations
@@ -291,6 +300,8 @@ export {
   scoreRuleRole,
   usersScoreActivity,
   userScoreSnapshots,
+  tokenCampaignClaimOnion,
+  couponMessageSendStatus,
 };
 
 // Type Exports
@@ -395,4 +406,7 @@ export type {
   SnapshotCollectionInsert,
   UserScoreSnapshotRow,
   UserScoreSnapshotInsert,
+  TokenCampaignClaimOnionRow,
+  TokenCampaignClaimOnionInsert,
+  CouponMessageSendStatus,
 };

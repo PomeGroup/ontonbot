@@ -1,40 +1,37 @@
-import { Composer, InlineKeyboard, InputFile } from "grammy";
+import { Composer, InlineKeyboard } from "grammy";
 import { MyContext } from "../types/MyContext";
 import {
   isUserAdmin,
   getEvent,
   getEventTickets,
-  getOrCreateSingleInviteLinkForUserAndChat
+  getOrCreateSingleInviteLinkForUserAndChat,
 } from "../db/db";
+import {
+  createBroadcastMessage,
+  bulkInsertBroadcastUsers,
+} from "../db/broadcast";
 import { parse } from "csv-parse/sync";
 import axios from "axios";
 import { isNewCommand } from "../helpers/isNewCommand";
 import { logger } from "../utils/logger";
 import {
   checkBotIsAdmin,
-  escapeCsv,
   extractInviteChatIds,
-  generateBroadcastGroupTitle,
-  normalizeDashes,
-  sleep
 } from "../utils/utils";
-import { additionalRecipients, AFFILIATE_PLACEHOLDERS, INVITE_PLACEHOLDER_REGEX } from "../constants";
-import { Readable } from "stream";
+import { AFFILIATE_PLACEHOLDERS, INVITE_PLACEHOLDER_REGEX } from "../constants";
 import { getOrCreateSingleAffiliateLink } from "../db/affiliateLinks";
-
+import {json} from "express";
 
 export const broadcastComposer = new Composer<MyContext>();
 
-
-
 /* -------------------------------------------------------------------------- */
-/* /broadcast Command => user picks event or CSV                              */
+/* /broadcast – entry                                                         */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.command("broadcast", async (ctx) => {
   const { isAdmin } = await isUserAdmin(ctx.from?.id.toString() || "");
   if (!isAdmin) return;
 
-  // Reset session
+  /* reset wizard state */
   ctx.session.broadcastStep = "chooseTarget";
   ctx.session.broadcastType = undefined;
   ctx.session.broadcastEventUuid = undefined;
@@ -49,19 +46,21 @@ broadcastComposer.command("broadcast", async (ctx) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Step => user picks event or CSV                                            */
+/* Callback‑query router                                                      */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.on("callback_query:data", async (ctx, next) => {
   if (ctx.session.broadcastStep !== "chooseTarget") return next();
-  await ctx.answerCallbackQuery();
 
+  await ctx.answerCallbackQuery();
   const choice = ctx.callbackQuery.data;
+
   if (choice === "bc_event") {
     ctx.session.broadcastType = "event";
     ctx.session.broadcastStep = "askEventUuid";
     await ctx.reply("Please send the Event UUID (36 characters).");
     return;
-  } else if (choice === "bc_csv") {
+  }
+  if (choice === "bc_csv") {
     ctx.session.broadcastType = "csv";
     ctx.session.broadcastStep = "askCsv";
     await ctx.reply("Please upload your CSV file now (one user_id per line).");
@@ -70,29 +69,30 @@ broadcastComposer.on("callback_query:data", async (ctx, next) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Step => handle event UUID or CSV => then askBroadcast                     */
+/* Message router                                                             */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.on("message", async (ctx, next) => {
   if (isNewCommand(ctx)) {
-    ctx.session = {};
+    ctx.session = {} as any;
     return next();
   }
 
-  const step = ctx.session.broadcastStep;
-
-  if (step === "askEventUuid" && ctx.message?.text) {
-    return handleEventUuid(ctx);
-  } else if (step === "askCsv" && ctx.message?.document) {
-    return handleCsvUpload(ctx);
-  } else if (step === "askBroadcast") {
-    return handleBroadcastMessage(ctx);
+  switch (ctx.session.broadcastStep) {
+    case "askEventUuid":
+      if (ctx.message?.text) return handleEventUuid(ctx);
+      break;
+    case "askCsv":
+      if (ctx.message?.document) return handleCsvUpload(ctx);
+      break;
+    case "askBroadcast":
+      return handleBroadcastMessage(ctx);
   }
 
   return next();
 });
 
 /* -------------------------------------------------------------------------- */
-/* handleEventUuid => fetch participants => store user IDs => askBroadcast   */
+/* Step: Event UUID                                                            */
 /* -------------------------------------------------------------------------- */
 async function handleEventUuid(ctx: MyContext) {
   const uuidCandidate = ctx.message?.text?.trim();
@@ -112,7 +112,7 @@ async function handleEventUuid(ctx: MyContext) {
   const tickets = await getEventTickets(uuidCandidate);
   if (!tickets?.length) {
     await ctx.reply(
-        `No participants found for event "${eventRow.title}". Nothing to broadcast.`
+        `No participants found for event \"${eventRow.title}\". Nothing to broadcast.`,
     );
     ctx.session.broadcastStep = "done";
     return;
@@ -121,16 +121,16 @@ async function handleEventUuid(ctx: MyContext) {
   ctx.session.broadcastEventUuid = uuidCandidate;
   ctx.session.broadcastEventTitle = eventRow.title;
   ctx.session.broadcastUserIds = tickets.map((t) => String(t.user_id));
-
   ctx.session.broadcastStep = "askBroadcast";
+
   await ctx.reply(
-      `✅ Event "${eventRow.title}" found with ${tickets.length} participant(s).\n` +
+      `✅ Event \"${eventRow.title}\" found with ${tickets.length} participant(s).\n` +
       "Now send any message (text, photo, video, etc.) you want to broadcast.",
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* handleCsvUpload => parse CSV => store user IDs => askBroadcast            */
+/* Step: CSV upload                                                            */
 /* -------------------------------------------------------------------------- */
 async function handleCsvUpload(ctx: MyContext) {
   const doc = ctx.message?.document;
@@ -143,7 +143,6 @@ async function handleCsvUpload(ctx: MyContext) {
     return;
   }
 
-  // Download CSV from Telegram
   const fileInfo = await ctx.api.getFile(doc.file_id);
   if (!fileInfo.file_path) {
     await ctx.reply("Unable to retrieve file path from Telegram.");
@@ -177,7 +176,7 @@ async function handleCsvUpload(ctx: MyContext) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* handleBroadcastMessage => final => send to user IDs, track errors         */
+/* Step: receive the actual message to broadcast                               */
 /* -------------------------------------------------------------------------- */
 async function handleBroadcastMessage(ctx: MyContext) {
   const userIds = ctx.session.broadcastUserIds;
@@ -187,246 +186,64 @@ async function handleBroadcastMessage(ctx: MyContext) {
     return;
   }
 
-  if (ctx.session.broadcastType === "event") {
-    await handleEventBroadcast(ctx, userIds);
-  } else {
-    await handleCsvBroadcastWithPlaceholders(ctx, userIds);
-  }
-  ctx.session.broadcastStep = "done";
-}
+  /* ------------------------------------------------------------- */
+  /* For CSV broadcasts: validate that the bot is admin in all      */
+  /* chats referenced by {invite:<chatId>} placeholders so the cron */
+  /* won't crash later.                                             */
+  /* ------------------------------------------------------------- */
+  if (ctx.session.broadcastType === "csv") {
+    const msg = ctx.message!;
+    const baseText = msg.text ?? msg.caption ?? "";
 
-/* -------------------------------------------------------------------------- */
-/* handleEventBroadcast => copyMessage, no placeholders                      */
-/* -------------------------------------------------------------------------- */
-async function handleEventBroadcast(ctx: MyContext, userIds: string[]) {
-  const sourceChatId = ctx.chat?.id;
-  const sourceMessageId = ctx.message?.message_id;
-  if (!sourceChatId || !sourceMessageId) {
-    await ctx.reply("Unable to read the message ID or chat ID. Flow ended.");
-    return;
-  }
-
-  await ctx.reply(`Broadcasting this message to ${userIds.length} users...`);
-
-  const errors: { user_id: string; error: string }[] = [];
-  let successCount = 0;
-
-  for (const userId of userIds) {
-    try {
-      await ctx.api.copyMessage(userId, sourceChatId, sourceMessageId);
-      successCount++;
-    } catch (err) {
-      logger.warn(`Failed to send to user ${userId}: ${err}`);
-      errors.push({ user_id: userId, error: String(err) });
-    }
-    await sleep(100);
-  }
-
-  await finalizeBroadcast(ctx, sourceChatId, sourceMessageId, errors, successCount);
-}
-
-/* -------------------------------------------------------------------------- */
-/* handleCsvBroadcastWithPlaceholders => pre-check => if all ok => broadcast */
-/* -------------------------------------------------------------------------- */
-async function handleCsvBroadcastWithPlaceholders(ctx: MyContext, userIds: string[]) {
-  const msg = ctx.message;
-  const sourceChatId = msg.chat?.id!;
-  const sourceMessageId = msg.message_id;
-
-  // 1) Extract text or caption
-  const isText = Boolean(msg.text);
-  const caption = msg.caption || "";
-  const baseText = isText ? msg.text! : caption;
-
-  // 2) Gather all chat IDs from {invite:<chatId>}
-  const chatIds = extractInviteChatIds(baseText);
-
-  // 3) Check if bot is admin for each chat. If any fail => abort
-  for (const chatId of chatIds) {
-    const isAdmin = await checkBotIsAdmin(ctx.api, chatId);
-    if (!isAdmin) {
-      await ctx.reply(
-          `❌ The bot is NOT an admin in chatId=${chatId}.\n` +
-          "Please make the bot admin and restart the process."
-      );
-      // Clear session
-      ctx.session = {};
-      await ctx.reply("Operation canceled. Your active flow(s) have been cleared.");
-      return;
-    }
-  }
-
-  // 4) All placeholders valid => proceed
-  await ctx.reply(`All placeholders are valid. Now sending to ${userIds.length} users...`);
-  const errors: { user_id: string; error: string }[] = [];
-  let successCount = 0;
-  const broadcastGroupTitle = generateBroadcastGroupTitle();
-
-  const isPhoto = Boolean(msg.photo);
-  const isVideo = Boolean(msg.video);
-
-  for (const userId of userIds) {
-    const userIdNum = parseInt(userId, 10);
-    const replacedText = await replacePlaceholdersAndLinks(
-        baseText,
-        userIdNum,
-        broadcastGroupTitle,
-        ctx
-    );
-    try {
-      if (isText) {
-        await ctx.api.sendMessage(userIdNum, replacedText, { parse_mode: "HTML" });
-      } else if (isPhoto && msg.photo) {
-        const largest = msg.photo[msg.photo.length - 1];
-        await ctx.api.sendPhoto(userIdNum, largest.file_id, {
-          caption: replacedText,
-          parse_mode: "HTML",
-        });
-      } else if (isVideo && msg.video) {
-        await ctx.api.sendVideo(userIdNum, msg.video.file_id, {
-          caption: replacedText,
-          parse_mode: "HTML",
-        });
-      } else {
-        // fallback for other media
-        await ctx.api.copyMessage(userIdNum, sourceChatId, sourceMessageId);
+    // 1) ensure bot admin rights for every chatID used
+    for (const chatId of extractInviteChatIds(baseText)) {
+      const isAdmin = await checkBotIsAdmin(ctx.api, chatId);
+      if (!isAdmin) {
+        await ctx.reply(
+            `❌ The bot is NOT an admin in chatId=${chatId}.\n` +
+            "Please make the bot admin and restart the process.",
+        );
+        ctx.session.broadcastStep = "done";
+        return;
       }
-      successCount++;
-    } catch (err) {
-      logger.warn(`Failed to send to user ${userId}: ${err}`);
-      errors.push({ user_id: userId, error: String(err) });
     }
-    await sleep(100);
   }
 
-  await finalizeBroadcast(ctx, sourceChatId, sourceMessageId, errors, successCount);
-}
+  /* ------------------------------------------------------------- */
+  /*   persist broadcast + recipients, with error handling          */
+  /* ------------------------------------------------------------- */
+  try {
+    const rawText =
+        ctx.message?.text ??
+        ctx.message?.caption ??
+        null;                    // media without caption → null
 
-/* -------------------------------------------------------------------------- */
-/* finalizeBroadcast => handle summary, CSV, notify admins                   */
-/* -------------------------------------------------------------------------- */
-async function finalizeBroadcast(
-    ctx: MyContext,
-    sourceChatId: number,
-    sourceMsgId: number,
-    errors: { user_id: string; error: string }[],
-    successCount: number,
-) {
-  await ctx.reply(`✅ Broadcast complete. Sent to ${successCount} user(s).`);
-  if (errors.length === 0) {
-    await ctx.reply("No errors occurred during the broadcast!");
-    await notifyAdmins(ctx, sourceChatId, sourceMsgId, null, successCount);
-  } else {
-    const header = "user_id,error";
-    const csvRows = errors.map((e) => `${e.user_id},${escapeCsv(e.error)}`);
-    const finalCsvString = [header, ...csvRows].join("\n");
-
-    const fileName = "broadcast_errors.csv";
-    const fileStream = Readable.from(finalCsvString);
-    const inputFile = new InputFile(fileStream, fileName);
-
-    const docMsg = await ctx.replyWithDocument(inputFile, {
-      caption: `There were ${errors.length} errors. See details in the CSV.`,
+    const broadcastId = await createBroadcastMessage({
+      broadcaster_id: ctx.from!.id,
+      source_chat_id: ctx.chat!.id,
+      source_message_id: ctx.message!.message_id,
+      broadcast_type: ctx.session.broadcastType as "event" | "csv",
+      event_uuid: ctx.session.broadcastEventUuid ?? null,
+      title: ctx.session.broadcastEventTitle ?? "(custom list)",
+      message_text: rawText,
     });
 
-    await notifyAdmins(ctx, sourceChatId, sourceMsgId, docMsg.document?.file_id, successCount);
+    await bulkInsertBroadcastUsers(broadcastId, userIds);
+
+    /* success → inform admin */
+    await ctx.reply(
+        `✅ Broadcast queued! ${userIds.length} user(s) will receive the message shortly.\n` +
+        "You can safely close Telegram – delivery runs in the background.",
+    );
+  } catch (err) {
+    logger.error(`broadcastComposer: DB error while queuing broadcast: ${err}`);
+
+    await ctx.reply(
+        "❌ Failed to queue the broadcast.\n" +
+        JSON.stringify(err, null, 2) + "\n" +
+        "Please try again later or contact support.",
+    );
   }
+
+  ctx.session.broadcastStep = "done";
 }
-
-/* -------------------------------------------------------------------------- */
-/* notifyAdmins => forward the original broadcast + any error CSV            */
-/* -------------------------------------------------------------------------- */
-async function notifyAdmins(
-    ctx: MyContext,
-    broadcastSourceChatId: number,
-    broadcastSourceMsgId: number,
-    errorCsvFileId: string | null | undefined,
-    successCount: number,
-) {
-  const summaryText = `Broadcast summary:\n- Success count: ${successCount}\n`;
-
-  for (const adminId of additionalRecipients) {
-    try {
-      await ctx.api.copyMessage(adminId, broadcastSourceChatId, broadcastSourceMsgId, {
-        caption: "This was the broadcasted message (original).",
-      });
-    } catch (err) {
-      logger.warn(`Could not forward broadcast to admin ${adminId}: ${err}`);
-    }
-
-    try {
-      await ctx.api.sendMessage(adminId, summaryText);
-    } catch (err) {
-      logger.warn(`Could not send summary to admin ${adminId}: ${err}`);
-    }
-
-    if (errorCsvFileId) {
-      try {
-        await ctx.api.sendDocument(adminId, errorCsvFileId, {
-          caption: "Broadcast encountered errors. See CSV.",
-        });
-      } catch (err) {
-        logger.warn(`Could not send CSV to admin ${adminId}: ${err}`);
-      }
-    }
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/* replacePlaceholdersAndLinks => merges affiliate placeholders + single-use link from DB */
-/* -------------------------------------------------------------------------- */
-async function replacePlaceholdersAndLinks(
-    baseText: string,
-    userId: number,
-    broadcastGroupTitle: string,
-    ctx: MyContext
-): Promise<string> {
-  // Normalize fancy dashes
-  let newText = normalizeDashes(baseText);
-
-  // 1) handle affiliate placeholders
-  for (const ph of AFFILIATE_PLACEHOLDERS) {
-    if (!newText.includes(ph)) continue;
-    const itemType = ph.replace(/[{}]/g, "");
-    const baseTitle = `broadcast-${itemType}-${userId}`;
-
-    try {
-      const linkRow = await getOrCreateSingleAffiliateLink(
-          userId,
-          itemType,
-          baseTitle,
-          broadcastGroupTitle
-      );
-      const finalLinkUrl = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=campaign-aff-${linkRow.link_hash}`;
-      newText = newText.replace(ph, finalLinkUrl);
-    } catch (err) {
-      logger.error(`Error creating affiliate link for user ${userId}, ph=${ph}: ${err}`);
-      newText = newText.replace(ph, "[LINK_ERROR]");
-    }
-  }
-
-  // 2) handle invite placeholders => we create or reuse single invite link from DB
-  const invites = Array.from(newText.matchAll(INVITE_PLACEHOLDER_REGEX));
-  for (const match of invites) {
-    const fullPlaceholder = match[0]; // e.g. "{invite:-1001234567890}"
-    const chatIdStr = match[1];
-    const chatId = parseInt(chatIdStr, 10);
-
-    try {
-      // We do not call createChatInviteLink directly. Instead:
-      const userInviteLink = await getOrCreateSingleInviteLinkForUserAndChat(
-          ctx.api,
-          userId,
-          chatId
-      );
-      newText = newText.replace(fullPlaceholder, userInviteLink);
-    } catch (err) {
-      logger.warn(`getOrCreateSingleInviteLinkForUserAndChat error userId=${userId} chatId=${chatId}: ${err}`);
-      newText = newText.replace(fullPlaceholder, "[LINK_ERROR]");
-    }
-  }
-
-  return newText;
-}
-
-
