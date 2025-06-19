@@ -53,4 +53,5 @@ export const eventPayment = pgTable(
 export type EventPaymentSelectType = typeof eventPayment.$inferSelect;
 export type EventPaymentType = (typeof paymentTypes.enumValues)[number];
 export type EventTicketType = (typeof ticketTypes)[number];
+
 /* ─────────────────────────────────────────────────────────────────────────────── */

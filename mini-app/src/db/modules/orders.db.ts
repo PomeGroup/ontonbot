@@ -1,9 +1,12 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema";
 import { and, count, eq, isNull, not, or } from "drizzle-orm";
-import { is_dev_env, is_stage_env } from "../../server/utils/evnutils";
+import { is_dev_env, is_stage_env } from "@/server/utils/evnutils";
 import { OrderTypeValues } from "@/db/schema/orders";
 import { TRPCError } from "@trpc/server";
+import { NFT_MINT_FEE } from "@/constants";
+import { EventPaymentSelectType } from "@/db/schema/eventPayment";
+import { logger } from "@/server/utils/logger";
 
 const getEventOrders = async (event_uuid: string) => {
   return db
@@ -168,20 +171,26 @@ export async function upsertCapacityOrder(
     eventUuid,
     userId,
     extraSeats, // seats above current event.capacity
+    paymentInfo, // EventPaymentSelectType
   }: {
     eventUuid: string;
     userId: number;
     extraSeats: number;
+    paymentInfo: EventPaymentSelectType;
   }
 ) {
-  if (extraSeats <= 0) return; // nothing to do
+  if (extraSeats <= 0) {
+    logger.log(`upsertCapacityOrder: no extra seats requested for event ${eventUuid}`);
+    return; // nothing to do
+  }
 
   /* ⚠ if an order is already in “processing”, block the change */
   const processing = await trx.query.orders.findFirst({
     where: and(
       eq(orders.event_uuid, eventUuid),
       eq(orders.order_type, "event_capacity_increment"),
-      eq(orders.state, "processing")
+      eq(orders.state, "processing"),
+      eq(orders.event_payment_id, paymentInfo.id)
     ),
   });
   if (processing) {
@@ -192,14 +201,15 @@ export async function upsertCapacityOrder(
   }
 
   /* price rule: 0.06 TON per new seat  (same as old logic) */
-  const price = 0.06 * extraSeats;
+  const price = NFT_MINT_FEE * extraSeats; // dev/stage price is 0.0001 TON per seat
 
   /* is there an editable (NEW / CONFIRMING) order already? */
   const editable = await trx.query.orders.findFirst({
     where: and(
       eq(orders.event_uuid, eventUuid),
       eq(orders.order_type, "event_capacity_increment"),
-      or(eq(orders.state, "new"), eq(orders.state, "confirming"))
+      or(eq(orders.state, "new"), eq(orders.state, "confirming")),
+      eq(orders.event_payment_id, paymentInfo.id)
     ),
   });
 
@@ -210,8 +220,9 @@ export async function upsertCapacityOrder(
     payment_type: "TON" as const,
     total_price: price,
     user_id: userId,
+    event_payment_id: paymentInfo.id,
   };
-
+  logger.log(`upsertCapacityOrder: ${JSON.stringify(upsert)} and editable: ${JSON.stringify(editable)}`);
   if (editable) {
     await trx.update(orders).set(upsert).where(eq(orders.uuid, editable.uuid));
   } else {

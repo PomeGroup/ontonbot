@@ -90,14 +90,25 @@ export async function createUserRewardLink(
  */
 export async function registerActivity(
   activityDetails: TSAPIoperations["createEvent"]["requestBody"]["content"]["application/json"]
-) {
-  const response = await tonSocietyClient.post("/activities", activityDetails);
-  // log error if response status is not 200
-  if (response.status !== 200) {
-    logger.error(`Error registering activity: ${response}`);
+): Promise<TonSocietyRegisterActivityResponse> {
+  try {
+    const response = await tonSocietyClient.post("/activities", activityDetails);
+
+    logger.log(`POST ${tonSocietyClient.getUri(response.config)} → ${response.status}`);
+
+    return response.data as TonSocietyRegisterActivityResponse;
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.config) {
+      const fullUrl = tonSocietyClient.getUri(err.config);
+      logger.error(
+        `Error registering activity – ${fullUrl} returned ${err.response?.status ?? "no status"}`,
+        err.response?.data ?? err.message
+      );
+    } else {
+      logger.error("Unexpected error registering activity:", err);
+    }
+    throw err; // keep bubbling up
   }
-  logger.log(`Activity registered successfully with response:`, response.data);
-  return response.data as TonSocietyRegisterActivityResponse;
 }
 
 export type CreateActivityRequestBody = TSAPIoperations["createEvent"]["requestBody"]["content"]["application/json"];

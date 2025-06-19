@@ -1,4 +1,7 @@
 import { eventCategories, eventParticipationType, giataCity } from "@/db/schema";
+import { paymentTypes } from "@/db/enum";
+import { pgTicketTypes } from "@/db/schema/eventPayment";
+
 import { users } from "@/db/schema/users";
 import { InferSelectModel } from "drizzle-orm";
 import {
@@ -73,6 +76,8 @@ export const events = pgTable(
       precision: 3,
     }).$onUpdate(() => new Date()),
     updatedBy: text("updated_by").default("system").notNull(),
+    payment_type: paymentTypes("payment_type"), // nullable → only filled for paid events
+    ticket_type: pgTicketTypes("ticket_type"), //   "
   },
   (table) => ({
     eventUuidIdx: index("events_event_uuid_idx").on(table.event_uuid),

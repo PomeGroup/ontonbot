@@ -752,3 +752,5 @@ export const WalletNetCHAIN_MAP: Record<number | string, "-239" | "-3"> = {
   "-239": "-239",
   "-3": "-3",
 };
+
+export const NFT_MINT_FEE = is_local_env() ? 0.0001 : 0.06; // 0.06 TON for mainnet, 0.0001 TON for local env

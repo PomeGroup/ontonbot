@@ -5,6 +5,7 @@ import { logger } from "@/server/utils/logger";
 import eventDB from "@/db/modules/events.db";
 import { eventPayment } from "@/db/schema/eventPayment";
 import { events } from "@/db/schema/events";
+import { NFT_MINT_FEE } from "@/constants";
 
 export const UpdateEventCapacity = async () => {
   const results = await db
@@ -45,8 +46,10 @@ export const UpdateEventCapacity = async () => {
       }
 
       await db.transaction(async (trx) => {
-        //const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.06);
-        const newCapacity = Math.floor((paymentInfo?.bought_capacity || 0) + order.total_price / 0.06 + Number.EPSILON);
+        //const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / NFT_MINT_FEE);
+        const newCapacity = Math.floor(
+          (paymentInfo?.bought_capacity || 0) + order.total_price / NFT_MINT_FEE + Number.EPSILON
+        );
         logger.log(
           `( bought_capacity ${paymentInfo?.bought_capacity}  + order.total_price ${order.total_price} ) => newCapacity  ${newCapacity}`
         );
