@@ -1,6 +1,6 @@
 /* ─────────────────────────── eventPayment.ts  (event_payment_info) ─────────────────────────── */
 import { events } from "@/db/schema/events";
-import { index, integer, pgEnum, pgTable, real, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgEnum, pgTable, real, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { paymentTypes } from "../enum";
 
 /* ───── enums ───── */
@@ -37,7 +37,8 @@ export const eventPayment = pgTable(
     /* organizer settlement */
     organizer_payment_status: organizerPaymentStatus("organizer_payment_status").default("not_payed").notNull(),
     ticketActivityId: integer("ticket_activity_id").default(0),
-
+    active: boolean("active").notNull().default(true), // can organiser toggle sales?
+    reserved_count: integer("reserved_count").notNull().default(0),
     /* meta */
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),

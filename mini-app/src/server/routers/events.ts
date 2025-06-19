@@ -1154,6 +1154,29 @@ const updateTicket = eventManagerPP.input(TicketBase.extend({ id: z.number() }))
   return { success: true, ticket };
 });
 
+const setTicketActive = eventManagerPP
+  .input(
+    z.object({
+      id: z.number(), // ticket id
+      active: z.boolean(), // true = resume, false = stop sales
+    })
+  )
+  .mutation(async (opts) => {
+    const { id, active } = opts.input;
+    const { event_uuid } = opts.ctx.event;
+
+    const [ticket] = await db
+      .update(eventPayment)
+      .set({ active, updatedBy: opts.ctx.user.user_id.toString() })
+      .where(and(eq(eventPayment.id, id), eq(eventPayment.event_uuid, event_uuid)))
+      .returning();
+
+    if (!ticket) {
+      throw new TRPCError({ code: "NOT_FOUND", message: `Ticket id ${id} not found for this event.` });
+    }
+
+    return { success: true, ticket };
+  });
 /* -------------------------------------------------------------------------- */
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
@@ -1168,4 +1191,5 @@ export const eventsRouter = router({
   getTickets,
   addTicket,
   updateTicket,
+  setTicketActive,
 });
