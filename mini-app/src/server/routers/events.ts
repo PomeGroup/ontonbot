@@ -31,7 +31,7 @@ import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { Bot } from "grammy";
 import { Message } from "grammy/types";
 import { v4 as uuidv4 } from "uuid";
@@ -53,7 +53,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const userRole = opts.ctx.user.role;
   const event_uuid = opts.input.event_uuid;
   let eventData = {
-    payment_details: {} as Partial<EventPaymentSelectType>,
+    payment_details: [] as EventPaymentSelectType[],
     category: {} as EventCategoryRow,
     ...(await eventDB.selectEventByUuid(event_uuid)),
   };
@@ -145,20 +145,17 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const userIsAdminOrOwner = eventData.owner == userId || userRole == "admin";
   let mask_event_capacity = !userIsAdminOrOwner;
 
-  if (userIsAdminOrOwner) {
-    //event payment info
-    if (eventData.has_payment) {
-      const payment_details = (
-        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
-      ).pop();
-      if (!payment_details) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Event Payment Data Not found (Corrupted Event)",
-        });
-      }
-      eventData.payment_details = { ...payment_details };
-    }
+  //event payment info
+  if (eventData.has_payment) {
+    const payment_details = await db
+      .select()
+      .from(eventPayment)
+      .where(
+        and(eq(eventPayment.event_uuid, event_uuid), ne(eventPayment.bought_capacity, 0), eq(eventPayment.active, true))
+      )
+      .orderBy(desc(eventPayment.price))
+      .execute();
+    eventData.payment_details = payment_details as EventPaymentSelectType[];
   }
 
   if (!user_request && !userIsAdminOrOwner && eventData.participationType === "online" && eventData.has_registration) {
@@ -992,8 +989,8 @@ export const TicketBase = z.object({
 });
 
 /* ---- 1)  GET  -------------------------------------------------- */
-const getTickets = eventManagerPP.query(async (opts) => {
-  const { event_uuid } = opts.ctx.event;
+const getTickets = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
+  const { event_uuid } = opts.input;
   const rows = await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute();
   return { tickets: rows };
 });
@@ -1048,6 +1045,7 @@ const addTicket = eventManagerPP.input(TicketBase).mutation(async (opts) => {
         ticketImage: p.ticket_image,
         ticketVideo: p.ticket_video,
         collectionAddress: null,
+        active: false,
       })
       .returning(); // ← fetch the inserted row
     logger.log(`Inserted ticket payment info: ${JSON.stringify(paymentInfo)}`);

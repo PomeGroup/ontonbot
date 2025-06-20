@@ -54,5 +54,8 @@ export const eventPayment = pgTable(
 export type EventPaymentSelectType = typeof eventPayment.$inferSelect;
 export type EventPaymentType = (typeof paymentTypes.enumValues)[number];
 export type EventTicketType = (typeof ticketTypes)[number];
-
+export type EventPaymentDTO = Omit<EventPaymentSelectType, "created_at" | "updatedAt"> & {
+  created_at: string | null;
+  updatedAt: string | null;
+};
 /* ─────────────────────────────────────────────────────────────────────────────── */

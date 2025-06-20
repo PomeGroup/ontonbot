@@ -3,7 +3,7 @@
 import EventPageLoadingSkeleton from "../../events/[hash]/loading";
 import { EventDataProvider } from "./EventDataProvider";
 import { useEventData } from "./eventPageContext";
-import { EventSections } from "./EventPageSections";
+import { EventSections, PaidEventSections } from "./EventPageSections";
 
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
@@ -14,6 +14,8 @@ const EventDataQueryState = () => {
   switch (true) {
     case eventData.isLoading || !initData:
       return <EventPageLoadingSkeleton />;
+    case eventData?.data?.has_payment:
+      return <PaidEventSections />;
     default:
       return <EventSections />;
   }

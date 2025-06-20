@@ -10,7 +10,7 @@ import { useUserStore } from "@/context/store/user.store";
 import { Address } from "@ton/core";
 import { Block, List, ListItem } from "konsta/react";
 import { useRouter } from "next/navigation";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { FaAngleRight } from "react-icons/fa6";
 import SupportButtons from "../atoms/buttons/SupportButton";
 import MainButton from "../atoms/buttons/web-app/MainButton";
@@ -21,7 +21,7 @@ import EventKeyValue from "../organisms/events/EventKewValue";
 import ShareEventButton from "../ShareEventButton";
 import { ClaimRewardButton } from "./ClaimRewardButton";
 import { EventActions } from "./EventActions";
-import { useEventData } from "./eventPageContext";
+import { useEventData, useTickets } from "./eventPageContext";
 import { EventPasswordAndWalletInput } from "./EventPasswordInput";
 import { ManageEventButton } from "./ManageEventButton";
 import PreRegistrationTasks from "./PreRegistrationTasks";
@@ -115,11 +115,40 @@ const EventWebsiteLink = React.memo(() => {
 });
 EventCategory.displayName = "EventWebsiteLink";
 
+import { EventPaymentDTO, EventPaymentSelectType } from "@/db/schema/eventPayment";
+import { useTonWallet } from "@tonconnect/ui-react";
+import { TicketPurchaseDrawer } from "./TicketPurchaseDrawer";
+
+/**
+ * Extract the first ticket from either
+ *   – an array,  or
+ *   – a { "0": …, "1": … } dictionary.
+ */
+function firstTicket(
+  details: EventPaymentSelectType[] | Record<string, EventPaymentSelectType> | undefined
+): EventPaymentSelectType | undefined {
+  if (!details) return undefined;
+  return Array.isArray(details) ? details[0] : Object.values(details)[0];
+}
+
 const EventTicketPrice = React.memo(() => {
+  const { eventData } = useEventData();
+
+  // ── pull & normalise payment details ────────────────────────────
+  const paymentDetails = eventData.data?.payment_details as
+    | EventPaymentSelectType[]
+    | Record<string, EventPaymentSelectType>
+    | undefined;
+
+  const ticket = firstTicket(paymentDetails);
+
+  // ── decide what to render ───────────────────────────────────────
+  const value = eventData.data?.has_payment ? (ticket ? `${ticket.price} ${ticket.payment_type}` : "Price TBD") : "Free";
+
   return (
     <EventKeyValue
       label="Ticket Price"
-      value={"Free"}
+      value={value}
     />
   );
 });
@@ -511,7 +540,26 @@ const EventHeader = React.memo(() => {
 });
 EventHeader.displayName = "EventHeader";
 
-// Main component
+const PaidEventMainButton = React.memo(() => {
+  const { eventData } = useEventData();
+  const tonWallet = useTonWallet(); // ← wallet hook
+  const hasWallet = Boolean(tonWallet?.account.address);
+
+  // show nothing unless it's a paid event *and* a wallet is connected
+  if (!eventData.data?.has_payment || !hasWallet) return null;
+
+  return (
+    <MainButton
+      text="Purchase Ticket"
+      onClick={() => {
+        /* TODO – wire-up purchase flow later */
+      }}
+    />
+  );
+});
+PaidEventMainButton.displayName = "PaidEventMainButton";
+
+// Main components
 export const EventSections = () => {
   const { eventData } = useEventData();
 
@@ -538,6 +586,58 @@ export const EventSections = () => {
       {/* ---------- MainButtonHandler ---------- */}
       {/* --------------------------------------- */}
       <MainButtonHandler />
+    </div>
+  );
+};
+
+export const PaidEventSections: React.FC = () => {
+  /* ── data ─────────────────────────────────────────────── */
+  const { eventData } = useEventData();
+  const { user } = useUserStore();
+
+  /* ── tickets helper (handles {} vs []) ─────────────────── */
+  const tickets = useTickets(eventData.data?.payment_details as EventPaymentDTO[] | undefined);
+
+  /* ── wallet check & drawer state ───────────────────────── */
+  const walletConnected = Boolean(user?.wallet_address);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  /* ── render ────────────────────────────────────────────── */
+  return (
+    <div
+      className="flex flex-col gap-3 p-4"
+      style={{ paddingBottom: "calc(var(--tg-safe-area-inset-bottom) + 4rem)" }}
+    >
+      <EventHeader />
+      <EventDescription />
+
+      <ManageEventButton />
+      <OrganizerCard />
+      <SbtCollectionLink />
+      <ConnectWalletCard />
+
+      <SupportButtons orgSupportTelegramUserName={eventData.data?.organizer?.org_support_telegram_user_name || undefined} />
+
+      {/* ───────── Purchase button (wallet required) ───────── */}
+      {eventData.data?.has_payment &&
+        walletConnected &&
+        tickets.length > 0 && ( //   ← make sure we have ticket data
+          <MainButton
+            text="Purchase Ticket"
+            onClick={() => setDrawerOpen(true)}
+          />
+        )}
+
+      {/* ───────── Bottom-sheet with tickets ──────────────── */}
+      {eventData.data?.event_uuid && (
+        <TicketPurchaseDrawer
+          open={drawerOpen}
+          eventUuid={eventData.data?.event_uuid ?? ""}
+          onOpenChange={setDrawerOpen}
+          tickets={tickets}
+          eventTitle={eventData.data?.title ?? ""}
+        />
+      )}
     </div>
   );
 };

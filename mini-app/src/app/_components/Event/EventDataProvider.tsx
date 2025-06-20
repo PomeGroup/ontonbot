@@ -92,6 +92,7 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
     <EventDataContext.Provider
       value={{
         eventData,
+        hasPayment: Boolean(eventData.data?.has_payment),
         isNotEnded: Boolean(eventData.data?.isNotEnded),
         isStarted: Boolean(eventData.data?.isStarted),
         endUTC,
