@@ -2,7 +2,7 @@ import { useConfig } from "@/context/ConfigContext";
 import { useUserStore } from "@/context/store/user.store";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import useTransferTon from "./useTransfer";
+import useTransferTon from "../../../hooks/useTransfer";
 import { trpc } from "@/app/_trpc/client";
 
 const emptyObject = {};

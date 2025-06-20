@@ -1,113 +1,171 @@
 /* app/events/[hash]/register/page.tsx */
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { List, ListInput } from "konsta/react";
 import { trpc } from "@/app/_trpc/client";
 import { GuestTicketSchema } from "@/types";
 import Typography from "@/components/Typography";
 import CustomButton from "@/app/_components/Button/CustomButton";
+import { Address } from "@ton/core";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { RouterOutput } from "@/server";
+import useTransferTon from "@/hooks/useTransfer";
+import { useConfig } from "@/context/ConfigContext";
 
-/* ────────────────────────── helpers ─────────────────────────── */
+/* ── helpers ─────────────────────────────────────────────── */
 type CartRow = { id: number; qty: number };
 type FieldErrs = Record<string, string[]>;
 
-interface GuestSeat {
-  ticketId: number;
-  key: string; //  "99-0"  (ticket-id + seat index)
-  ordinal: number; //  1-based ordinal inside that ticket block
-}
-
-/* ───────────────────────── component ────────────────────────── */
+/* ── page ────────────────────────────────────────────────── */
 export default function GuestRegisterPage() {
-  /* ------ 1. route / search params -------------------------------- */
+  const router = useRouter();
   const { hash: eventUuid } = useParams<{ hash: string }>();
   const search = useSearchParams();
+  const config = useConfig();
+  const transfer = useTransferTon();
 
-  /* ------ 2. cart (?t=id:qty) ------------------------------------- */
-  const cart: CartRow[] = useMemo(() => {
-    return search
-      .getAll("t") // ["99:2","98:1",…]
-      .map((s) => s.split(":").map(Number))
-      .filter(([id, q]) => !!id && !!q)
-      .map(([id, qty]) => ({ id, qty }));
-  }, [search]);
+  /* --- cart ------------------------------------------------ */
+  const cart: CartRow[] = useMemo(
+    () =>
+      search
+        .getAll("t")
+        .map((s) => s.split(":").map(Number))
+        .filter(([id, q]) => !!id && !!q)
+        .map(([id, qty]) => ({ id, qty })),
+    [search]
+  );
 
-  /* ------ 3. ticket rows (one query, cached by tRPC) -------------- */
-  type TicketRowClient = RouterOutput["events"]["getTickets"]["tickets"][number]; // ✅ strings for dates
+  /* extras */
+  const couponCode = search.get("coupon") ?? undefined;
+  const affiliateId = search.get("aff") ?? undefined;
 
-  /* --------------------------------------------------------
-   *  2)  query + map use the new type
-   * ----------------------------------------------------- */
+  /* --- ticket meta ---------------------------------------- */
   const { data: ticketResp } = trpc.events.getTickets.useQuery({ event_uuid: eventUuid }, { enabled: cart.length > 0 });
+  const ticketMap = useMemo(
+    () => Object.fromEntries((ticketResp?.tickets ?? []).map((t) => [t.id, t] as const)),
+    [ticketResp?.tickets]
+  );
 
-  const ticketRows: TicketRowClient[] = ticketResp?.tickets ?? [];
+  /* --- guests --------------------------------------------- */
+  const guests = useMemo(
+    () =>
+      cart.flatMap(({ id, qty }) =>
+        Array.from({ length: qty }, (_, i) => ({
+          ticketId: id,
+          key: `${id}-${i}`,
+        }))
+      ),
+    [cart]
+  );
 
-  /* fast lookup without red squiggles */
-  const ticketMap = useMemo(() => Object.fromEntries(ticketRows.map((r) => [r.id, r] as const)), [ticketRows]);
-
-  /* ------ 4. expand “3 × Ticket A” into three GuestSeat objects --- */
-  const guests: GuestSeat[] = useMemo(() => {
-    return cart.flatMap(({ id, qty }) =>
-      Array.from({ length: qty }, (_, i) => ({
-        ticketId: id,
-        key: `${id}-${i}`,
-        ordinal: i + 1,
-      }))
-    );
-  }, [cart]);
-
-  /* ------ 5. form plumbing --------------------------------------- */
+  /* --- form state ----------------------------------------- */
   const formRef = useRef<HTMLFormElement>(null);
-  const [rowErrors, setRowErrors] = useState<Record<string, FieldErrs>>({});
+  const [rowErrs, setRowErrs] = useState<Record<string, FieldErrs>>({});
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  /* --- mutation - create order ---------------------------- */
+  const addOrder = trpc.orders.addOrder.useMutation({
+    onError: (err) => {
+      toast.error(err.message);
+      setSubmitting(false);
+    },
+    onSuccess: async (data) => {
+      try {
+        /* 1️⃣  trigger TON-Connect modal */
+        if (!config.ONTON_WALLET_ADDRESS) {
+          toast.error("TON wallet address is not configured.");
+          setSubmitting(false);
+          return;
+        }
+        console.log("Transferring TON to", config.ONTON_WALLET_ADDRESS, "for order", data.order_id);
+        await transfer(config.ONTON_WALLET_ADDRESS as string, data.total_price, data.payment_type, {
+          comment: `OntonOrder=${data.order_id}`,
+        });
+
+        /* 2️⃣  go to the payment-watch page */
+        router.replace(`/events/${eventUuid}/payment/${data.order_id}`);
+      } catch (err) {
+        // user rejected or tx failed – do nothing except notify
+        toast.error("Payment was cancelled.");
+        setSubmitting(false);
+      }
+    },
+  });
+
+  /* --- submit handler ------------------------------------- */
+  const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!formRef.current) return;
 
     const fd = new FormData(formRef.current);
-    const ok: unknown[] = [];
     const errs: Record<string, FieldErrs> = {};
+    const guestsPayload: {
+      event_payment_id: number;
+      full_name: string;
+      wallet: string;
+      company?: string;
+      position?: string;
+    }[] = [];
 
-    /* validate row-by-row with Zod */
+    const get = (k: string) => fd.get(k)?.toString() ?? "";
+
+    /* validate every seat */
     guests.forEach(({ key, ticketId }) => {
-      const get = (name: string) => fd.get(`${key}__${name}`)?.toString() ?? "";
-
       const candidate = {
         event_uuid: eventUuid,
         ticket_id: ticketId,
-        full_name: get("full_name"),
-        wallet: get("wallet"),
-        company: get("company"),
-        position: get("position"),
+        full_name: get(`${key}__full_name`),
+        wallet: get(`${key}__wallet`),
+        company: get(`${key}__company`),
+        position: get(`${key}__position`),
       };
 
       const parsed = GuestTicketSchema.safeParse(candidate);
-      if (parsed.success) ok.push(parsed.data);
-      else errs[key] = parsed.error.flatten().fieldErrors;
+      if (!parsed.success) {
+        errs[key] = parsed.error.flatten().fieldErrors;
+        return;
+      }
+
+      try {
+        Address.parse(parsed.data.wallet); // extra TON validity check
+      } catch {
+        errs[key] = { wallet: ["Invalid TON address"] };
+        return;
+      }
+
+      guestsPayload.push({
+        event_payment_id: parsed.data.ticket_id,
+        full_name: parsed.data.full_name,
+        wallet: parsed.data.wallet,
+        company: parsed.data.company || undefined,
+        position: parsed.data.position || undefined,
+      });
     });
 
-    setRowErrors(errs);
+    setRowErrs(errs);
+    if (Object.keys(errs).length) return;
 
-    /* everything valid → you can now call your tRPC mutation */
-    if (Object.keys(errs).length === 0) {
-      console.log("✅ ready to send:", ok);
-      toast.success("Guests validated – integrate your mutation here.");
-      // TODO: trpc.registrant.guestRegister.mutate(ok)
-    }
+    /* ---- create order then pay --------------------------- */
+    setSubmitting(true);
+    addOrder.mutate({
+      event_uuid: eventUuid,
+      guests: guestsPayload,
+      buyer_wallet: guestsPayload[0].wallet,
+      buyer_telegram: "", // fill as needed
+      affiliate_id: affiliateId,
+      coupon_code: couponCode,
+    });
   };
 
-  /* clear errors if cart shape changes (rare) */
-  useEffect(() => setRowErrors({}), [guests.length]);
+  /* reset errors when guest count changes */
+  useEffect(() => setRowErrs({}), [guests.length]);
 
-  /* =========================== JSX ============================== */
+  /* ========================== JSX ========================= */
   return (
     <form
       ref={formRef}
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
       className="p-4 space-y-6 pb-32"
     >
       <Typography
@@ -118,8 +176,7 @@ export default function GuestRegisterPage() {
       </Typography>
 
       {cart.map(({ id, qty }) => {
-        const ticket = ticketMap[id];
-        const title = ticket?.title ?? `Ticket ${id}`;
+        const title = ticketMap[id]?.title ?? `Ticket ${id}`;
 
         return (
           <div
@@ -135,7 +192,7 @@ export default function GuestRegisterPage() {
 
             {Array.from({ length: qty }).map((_, idx) => {
               const key = `${id}-${idx}`;
-              const err = rowErrors[key] ?? {};
+              const err = rowErrs[key] ?? {};
 
               return (
                 <div
@@ -159,9 +216,9 @@ export default function GuestRegisterPage() {
                     />
                     <ListInput
                       outline
-                      label="Wallet Address"
+                      label="Wallet"
                       name={`${key}__wallet`}
-                      placeholder="EQ… / UQ… / …"
+                      placeholder="EQ… / UQ…"
                       error={err.wallet?.[0]}
                     />
                     <ListInput
@@ -186,10 +243,11 @@ export default function GuestRegisterPage() {
         );
       })}
 
-      {/* ---------- sticky footer ---------- */}
+      {/* footer */}
       <div className="fixed bottom-0 inset-x-0 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] bg-white pt-3 border-t border-brand-stroke">
         <CustomButton
           variant="primary"
+          isLoading={submitting}
           onClick={() => formRef.current?.requestSubmit()}
         >
           Check&nbsp;out
