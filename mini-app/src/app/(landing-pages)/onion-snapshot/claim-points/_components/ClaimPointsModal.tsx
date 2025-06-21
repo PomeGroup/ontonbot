@@ -39,18 +39,18 @@ export default function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) 
 
   return (
     <div>
-      <Button
-        variant="primary"
-        size="default"
-        className="w-full"
-        onClick={(e) => {
-          e.preventDefault();
-          handleClaimPoints();
-        }}
-        isLoading={claimPoints.isLoading}
-      >
-        Stablize ONIONS
-      </Button>
+      {/*<Button*/}
+      {/*  variant="primary"*/}
+      {/*  size="default"*/}
+      {/*  className="w-full"*/}
+      {/*  onClick={(e) => {*/}
+      {/*    e.preventDefault();*/}
+      {/*    handleClaimPoints();*/}
+      {/*  }}*/}
+      {/*  isLoading={claimPoints.isLoading}*/}
+      {/*>*/}
+      {/*  Stablize ONIONS*/}
+      {/*</Button>*/}
       <CustomSheet
         opened={isOpen}
         title={
