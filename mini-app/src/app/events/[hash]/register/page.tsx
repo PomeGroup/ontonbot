@@ -39,7 +39,7 @@ export default function GuestRegisterPage() {
   /* extras */
   const couponCode = search.get("coupon") ?? undefined;
   const affiliateId = search.get("aff") ?? undefined;
-
+  console.log("Config:", config);
   /* --- ticket meta ---------------------------------------- */
   const { data: ticketResp } = trpc.events.getTickets.useQuery({ event_uuid: eventUuid }, { enabled: cart.length > 0 });
   const ticketMap = useMemo(

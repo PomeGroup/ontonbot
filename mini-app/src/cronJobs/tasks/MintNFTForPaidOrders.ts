@@ -1,174 +1,195 @@
+/* ─────────────  cron/MintNFTForPaidOrders.ts  ───────────── */
 import { db } from "@/db/db";
-import { orders } from "@/db/schema/orders";
-import { and, asc, eq, isNotNull, or, sql } from "drizzle-orm";
+import { orders, eventRegistrants, eventPayment, nftItems } from "@/db/schema";
+import { and, eq, isNotNull, asc, sql, inArray } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { Address } from "@ton/core";
-import { eventPayment } from "@/db/schema/eventPayment";
 import { uploadJsonToMinio } from "@/lib/minioTools";
-import { nftItems } from "@/db/schema/nft_items";
 import { mintNFT } from "@/lib/nft";
 import { is_mainnet } from "@/services/tonCenter";
 import { selectUserById } from "@/db/modules/users.db";
 import { sendLogNotification } from "@/lib/tgBot";
-import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { couponItemsDB } from "@/db/modules/couponItems.db";
 
-export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
-  // Get Orders to be Minted
-  // Mint NFT
-  // Update (DB) Successful Minted Orders as Minted
-  // logger.log("&&&& MintNFT &&&&");
-  const results = await db
+/**
+ * Run every minute (or whatever you schedule) in a single worker.
+ */
+export const MintNFTForPaidOrders = async (pushLockTtl: () => unknown) => {
+  /* 1️⃣  pull the next batch of “processing” orders */
+  const pendingOrders = await db
     .select()
     .from(orders)
-    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "nft_mint"), isNotNull(orders.event_uuid)))
+    .where(and(eq(orders.state, "processing"), isNotNull(orders.event_uuid), eq(orders.order_type, "nft_mint")))
     .orderBy(asc(orders.created_at))
-    .limit(100)
+    .limit(50) /* keep it small to avoid time-outs */
     .execute();
 
-  /* -------------------------------------------------------------------------- */
-  /*                               ORDER PROCCESS                               */
-  /* -------------------------------------------------------------------------- */
-  for (const ordr of results) {
-    await pushLockTTl();
+  for (const ord of pendingOrders) {
     try {
-      const event_uuid = ordr.event_uuid;
+      if (pushLockTtl) {
+        await pushLockTtl(); // keep the job’s lock fresh
+      }
 
-      if (!ordr.owner_address) {
-        //NOTE -  tg error
-        logger.error("error_wtf : no owner address", "order_id=", ordr.uuid);
+      /* ── basic sanity ───────────────────────────────────── */
+      const buyerAddress = ord.owner_address;
+      if (!buyerAddress) {
+        logger.error("order %s has no owner_address", ord.uuid);
         continue;
       }
       try {
-        Address.parse(ordr.owner_address);
+        Address.parse(buyerAddress);
       } catch {
-        //NOTE - tg error
-        logger.error("error_unparsable address : ", ordr.owner_address, "order_id=", ordr.uuid);
+        logger.error("order %s owner_address unparsable: %s", ord.uuid, buyerAddress);
         continue;
       }
 
-      const paymentInfo = (
-        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid!)).execute()
-      ).pop();
+      /* 2️⃣  fetch all registrants that belong to this order */
+      const regs = await db.select().from(eventRegistrants).where(eq(eventRegistrants.order_uuid, ord.uuid)).execute();
 
-      if (!paymentInfo) {
-        logger.error("error_what the fuck : ", "event Does not have payment !!!", event_uuid);
+      if (!regs.length) {
+        logger.error("order %s has ZERO registrants", ord.uuid);
+        /* optional: fail the order here */
         continue;
       }
-      if (!paymentInfo.collectionAddress) {
-        logger.error(" no collection address right now");
-        continue;
-      }
-      const meta_data_url = await uploadJsonToMinio(
-        {
-          name: paymentInfo.title,
-          description: paymentInfo.description,
-          image: paymentInfo?.ticketImage,
-          attributes: {
-            order_id: ordr.uuid,
-            ref: ordr.utm_source || "onton",
-          },
-          buttons: [
-            {
-              label: "Join The Onton Event",
-              uri: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`,
-            },
-          ],
-        },
-        "ontonitem"
-      );
-      // const approved_users = modules.select().from(eventRegistrants).where(
-      //   and(
-      //     eq(eventRegistrants.event_uuid , event_uuid),
-      //     eq(eventRegistrants)
-      //   )
-      // )
-      const nft_count_result = await db
-        .select({
-          count: sql`count
-              (*)`.mapWith(Number),
-        })
-        .from(nftItems)
-        .where(eq(nftItems.event_uuid, event_uuid!))
-        .execute();
 
-      const nft_index = nft_count_result[0].count || 0;
+      /* 3️⃣  collect every unique event_payment_id we’ll need */
+      const paymentIds = [...new Set(regs.map((r) => r.event_payment_id).filter(Boolean))] as number[];
 
-      logger.log(`minting_nft_${ordr.event_uuid}_${nft_index}_${paymentInfo?.collectionAddress}_${meta_data_url}`);
+      const paymentRows = paymentIds.length
+        ? await db.select().from(eventPayment).where(inArray(eventPayment.id, paymentIds)).execute()
+        : [];
 
-      const nft_address = await mintNFT(ordr.owner_address, paymentInfo?.collectionAddress, nft_index, meta_data_url);
-      if (!nft_address) {
-        logger.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_miss`);
-        return;
-      }
-      logger.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_${nft_address}`);
-      /* -------------------------------------------------------------------------- */
-      try {
-        const prefix = is_mainnet ? "" : "testnet.";
-        let username = "GIFT-USER";
-        if (ordr.user_id) username = (await selectUserById(ordr.user_id!))?.username || username;
-        // make trx hash url encoded
-        const trxHashUrl = encodeURIComponent(ordr.trx_hash || "");
-        await sendLogNotification({
-          message: `NFT ${nft_index + 1}
-<b>${paymentInfo.title}</b>
-👤user_id : <code>${ordr.user_id}</code>
-👤username : @${username}
-<a href='https://${prefix}getgems.io/collection/${paymentInfo.collectionAddress}'>🎨Collection</a>
-<a href='https://${prefix}tonviewer.com/transaction/${trxHashUrl}'>💰TRX</a>
-<a href='https://${prefix}tonviewer.com/${nft_address}'>📦NFT</a>
-          `,
-          topic: "ticket",
-        });
-        /* -------------------------------------------------------------------------- */
-      } catch (error) {
-        logger.error("MintNFTForPaid_Orders-sendLogNotification-error--:", error);
-      }
+      /* quick lookup */
+      const paymentMap = Object.fromEntries(paymentRows.map((p) => [p.id, p]));
 
-      await db.transaction(async (trx) => {
-        const updateResult = (
-          await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).returning().execute()
-        ).pop();
-        // make coupon item used
-        if (ordr.coupon_id !== null) await couponItemsDB.makeCouponItemUsedTrx(trx, ordr.coupon_id, ordr.event_uuid!);
-        // Increment Affiliate Purchase
-        if (updateResult && updateResult.utm_source)
-          await affiliateLinksDB.incrementAffiliatePurchase(updateResult.utm_source);
-        logger.log(`nft_mint_order_completed_${ordr.uuid}`);
-        await trx
-          .insert(nftItems)
-          .values({
-            event_uuid: event_uuid!,
-            order_uuid: ordr.uuid,
-            nft_address: nft_address,
-            owner: ordr.user_id,
-          })
+      /* 4️⃣  mint (or skip) per registrant */
+      let mintedAll = true;
+
+      for (const reg of regs) {
+        const pay = paymentMap[reg.event_payment_id ?? -1];
+        if (!pay) {
+          logger.error("registrant %s missing event_payment row", reg.id);
+          mintedAll = false;
+          continue;
+        }
+        if (pay.ticket_type !== "NFT") {
+          /* skip TSCSBT etc. */
+          logger.log("registrant %s ticket_type %s → skip mint", reg.id, pay.ticket_type);
+          continue;
+        }
+        if (!pay.collectionAddress) {
+          logger.error("registrant %s: no collectionAddress", reg.id);
+          mintedAll = false;
+          continue;
+        }
+        /* ── guard #1: DB lookup to avoid duplicate work ── */
+        const already = await db
+          .select()
+          .from(nftItems)
+          .where(and(eq(nftItems.order_uuid, ord.uuid), eq(nftItems.registrant_id, reg.id)))
+          .limit(1)
           .execute();
 
-        logger.log(`nft_mint_nft_item_add_${ordr.user_id}_${nft_address}`);
+        if (already.length) {
+          logger.log("order %s – registrant %s already minted (%s)", ord.uuid, reg.id, already[0].nft_address);
+          continue; // jump to next registrant
+        }
+        /* build NFT metadata ------------------------------------------------- */
+        const metaUrl = await uploadJsonToMinio(
+          {
+            name: pay.title,
+            description: pay.description,
+            image: pay.ticketImage,
+            attributes: { order_id: ord.uuid, registrant_id: reg.id },
+            buttons: [
+              {
+                label: "Open in Onton",
+                uri: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${ord.event_uuid}`,
+              },
+            ],
+          },
+          "ontonitem"
+        );
 
-        if (ordr.user_id) {
-          // if ordr.user_id === null order is manual mint(Gift)
+        /* figure out next index inside the collection */
+        const [{ count }] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(nftItems)
+          .where(eq(nftItems.event_uuid, ord.event_uuid!))
+          .execute();
+        const nftIdx = count;
+
+        /* mint -------------------------------------------------------------- */
+        const nftAddr = await mintNFT(
+          reg.mint_wallet_address ?? buyerAddress, // mint **to guest wallet** or fallback
+          pay.collectionAddress,
+          nftIdx,
+          metaUrl
+        );
+
+        if (!nftAddr) {
+          logger.error("mint failed for registrant %s (order %s)", reg.id, ord.uuid);
+          mintedAll = false;
+          continue;
+        }
+
+        /* record in DB ------------------------------------------------------- */
+        await db.transaction(async (trx) => {
+          await trx
+            .insert(nftItems)
+            .values({
+              event_uuid: ord.event_uuid!,
+              order_uuid: ord.uuid,
+              nft_address: nftAddr,
+              owner: reg.user_id,
+              registrant_id: reg.id,
+            })
+            .onConflictDoNothing();
+
           await trx
             .update(eventRegistrants)
-            .set({ status: "approved" })
-            .where(
-              and(
-                eq(eventRegistrants.event_uuid, ordr.event_uuid!),
-                eq(eventRegistrants.user_id, ordr.user_id),
-                or(eq(eventRegistrants.status, "pending"), eq(eventRegistrants.status, "rejected"))
-              )
-            )
-            .execute();
+            .set({ status: "approved", minted_token_address: nftAddr })
+            .where(eq(eventRegistrants.id, reg.id));
 
-          logger.log(`nft_mint_user_approved_${ordr.user_id}`);
+          logger.log("minted NFT %s for registrant %s", nftAddr, reg.id);
+        });
+
+        /* TG log ------------------------------------------------------------- */
+        try {
+          const prefix = is_mainnet ? "" : "testnet.";
+          const user = reg.user_id ? await selectUserById(reg.user_id) : null;
+          const username = user?.username ?? "guest";
+
+          await sendLogNotification({
+            topic: "ticket",
+            message: `NFT #${nftIdx + 1}
+<b>${pay.title}</b>
+👤 @${username} (id: <code>${reg.user_id}</code>)
+<a href='https://${prefix}getgems.io/collection/${pay.collectionAddress}'>🎨 Collection</a>
+<a href='https://${prefix}tonviewer.com/${nftAddr}'>📦 NFT</a>`,
+          });
+        } catch (err) {
+          logger.error("TG-log error: %O", err);
         }
-      });
+      } // end-for registrants
 
-      // await pushLockTTl();
-    } catch (error) {
-      logger.log(`nft_mint_error , ${error}`);
+      /* 5️⃣  finalise order if everything minted / skipped OK */
+      if (mintedAll) {
+        await db.transaction(async (trx) => {
+          await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ord.uuid));
+
+          /* coupon / affiliate housekeeping -------------------- */
+          if (ord.coupon_id) await couponItemsDB.makeCouponItemUsedTrx(trx, ord.coupon_id, ord.event_uuid!);
+          if (ord.utm_source) await affiliateLinksDB.incrementAffiliatePurchase(ord.utm_source);
+        });
+
+        logger.log("order %s COMPLETED ✅", ord.uuid);
+      } else {
+        logger.log("order %s left in processing (some NFTs failed)", ord.uuid);
+      }
+    } catch (err) {
+      logger.error("Mint loop error for order %s: %O", ord.uuid, err);
     }
   }
 };
