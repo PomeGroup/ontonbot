@@ -673,6 +673,41 @@
       "when": 1749727113210,
       "tag": "0095_regular_garia",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1750269221832,
+      "tag": "0096_abnormal_green_goblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1750271075834,
+      "tag": "0097_aromatic_mauler",
+      "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1750355829508,
+      "tag": "0098_nervous_tomorrow_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1750548143356,
+      "tag": "0099_mature_expediter",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1750888355174,
+      "tag": "0100_gray_bloodstrike",
+      "breakpoints": true
     }
   ]
 }
