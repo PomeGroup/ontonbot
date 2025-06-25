@@ -70,7 +70,7 @@ export default function SnapshotResultCard() {
 
       {pointWallets.wallets?.length && pointWallets.wallets.every((wallet) => wallet.claimStatus === "claimed") && (
         <AlertGeneric variant="info-light">
-          To claim your ONIONs for the NFTs you own, you need to disconnect your current wallet and connect a new one.
+          If you own NFTs in different wallets, you need to disconnect the current wallet and connect your other wallet.
         </AlertGeneric>
       )}
     </CustomCard>
