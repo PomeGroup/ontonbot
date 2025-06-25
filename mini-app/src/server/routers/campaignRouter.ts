@@ -586,81 +586,77 @@ export const campaignRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Claiming is time is over. Please check the campaign page for updates.",
+      if (ctx.jwt.address !== input.walletAddress) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "wallet in JWT ≠ wallet in request",
+        });
+      }
+      const userId = ctx.user.user_id;
+      const wallet = input.walletAddress;
+      //verifyTonProof(input.tonProof, input.walletAddress, ctx.user.user_id);
+      /* 1. Reject if wallet already claimed */
+      if (await tokenCampaignClaimOnionDB.walletAlreadyClaimed(wallet)) {
+        throw new TRPCError({ code: "CONFLICT", message: "Wallet already claimed." });
+      }
+
+      /* 2. Does user already have a primary? */
+      const previousClaims = await tokenCampaignClaimOnionDB.fetchClaimsByUser(userId);
+      const hasPrimary = previousClaims.some((r) => r.walletType === "primary");
+
+      /* 3. Get the breakdown for the CONNECTED wallet only */
+      const overview = await buildClaimOverview(userId, wallet);
+      const thisWalletBreakdown = overview.find((w) => w.walletAddress === wallet);
+
+      if (!thisWalletBreakdown || thisWalletBreakdown.claimStatus === "claimed") {
+        logger.error(
+          `ONION_CLAIM: No breakdown for wallet ${wallet} for userId ${userId} => overview:`,
+          overview,
+          thisWalletBreakdown
+        );
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Nothing to claim for this wallet.",
+        });
+      }
+
+      /* 4. Assemble insert payload */
+      const b = thisWalletBreakdown;
+      const insertRow: TokenCampaignClaimOnionInsert = {
+        userId,
+        walletAddress: wallet,
+        walletType: hasPrimary ? "secondary" : "primary",
+        tonProof: input.tonProof ?? null,
+        snapshotRuntime: SNAPSHOT_DATE,
+
+        /* NFT data */
+        platinumNftCount: b.nft.counts.platinum,
+        goldNftCount: b.nft.counts.gold,
+        silverNftCount: b.nft.counts.silver,
+        bronzeNftCount: b.nft.counts.bronze,
+
+        onionsFromPlatinum: b.nft.onions.platinum.toString(),
+        onionsFromGold: b.nft.onions.gold.toString(),
+        onionsFromSilver: b.nft.onions.silver.toString(),
+        onionsFromBronze: b.nft.onions.bronze.toString(),
+
+        /* Score onions: ZERO on secondaries */
+        onionsFromScore: hasPrimary ? "0" : b.scoreOnions.toString(),
+
+        totalOnions: hasPrimary ? b.nft.totalOnions.toString() : (b.nft.totalOnions + b.scoreOnions).toString(),
+      };
+
+      /* 5. Atomic transaction */
+      const [claimRow] = await db.transaction(async (tx) => {
+        /* mark snapshots only when first (primary) claim */
+        if (!hasPrimary) {
+          await markScoreRowsClaimedTx(tx, userId);
+        }
+        await markNftRowsClaimedTx(tx, wallet);
+
+        return await insertClaimRowTx(tx, insertRow);
       });
-      // if (ctx.jwt.address !== input.walletAddress) {
-      //   throw new TRPCError({
-      //     code: "FORBIDDEN",
-      //     message: "wallet in JWT ≠ wallet in request",
-      //   });
-      // }
-      // const userId = ctx.user.user_id;
-      // const wallet = input.walletAddress;
-      // //verifyTonProof(input.tonProof, input.walletAddress, ctx.user.user_id);
-      // /* 1. Reject if wallet already claimed */
-      // if (await tokenCampaignClaimOnionDB.walletAlreadyClaimed(wallet)) {
-      //   throw new TRPCError({ code: "CONFLICT", message: "Wallet already claimed." });
-      // }
-      //
-      // /* 2. Does user already have a primary? */
-      // const previousClaims = await tokenCampaignClaimOnionDB.fetchClaimsByUser(userId);
-      // const hasPrimary = previousClaims.some((r) => r.walletType === "primary");
-      //
-      // /* 3. Get the breakdown for the CONNECTED wallet only */
-      // const overview = await buildClaimOverview(userId, wallet);
-      // const thisWalletBreakdown = overview.find((w) => w.walletAddress === wallet);
-      //
-      // if (!thisWalletBreakdown || thisWalletBreakdown.claimStatus === "claimed") {
-      //   logger.error(
-      //     `ONION_CLAIM: No breakdown for wallet ${wallet} for userId ${userId} => overview:`,
-      //     overview,
-      //     thisWalletBreakdown
-      //   );
-      //   throw new TRPCError({
-      //     code: "NOT_FOUND",
-      //     message: "Nothing to claim for this wallet.",
-      //   });
-      // }
-      //
-      // /* 4. Assemble insert payload */
-      // const b = thisWalletBreakdown;
-      // const insertRow: TokenCampaignClaimOnionInsert = {
-      //   userId,
-      //   walletAddress: wallet,
-      //   walletType: hasPrimary ? "secondary" : "primary",
-      //   tonProof: input.tonProof ?? null,
-      //   snapshotRuntime: SNAPSHOT_DATE,
-      //
-      //   /* NFT data */
-      //   platinumNftCount: b.nft.counts.platinum,
-      //   goldNftCount: b.nft.counts.gold,
-      //   silverNftCount: b.nft.counts.silver,
-      //   bronzeNftCount: b.nft.counts.bronze,
-      //
-      //   onionsFromPlatinum: b.nft.onions.platinum.toString(),
-      //   onionsFromGold: b.nft.onions.gold.toString(),
-      //   onionsFromSilver: b.nft.onions.silver.toString(),
-      //   onionsFromBronze: b.nft.onions.bronze.toString(),
-      //
-      //   /* Score onions: ZERO on secondaries */
-      //   onionsFromScore: hasPrimary ? "0" : b.scoreOnions.toString(),
-      //
-      //   totalOnions: hasPrimary ? b.nft.totalOnions.toString() : (b.nft.totalOnions + b.scoreOnions).toString(),
-      // };
-      //
-      // /* 5. Atomic transaction */
-      // const [claimRow] = await db.transaction(async (tx) => {
-      //   /* mark snapshots only when first (primary) claim */
-      //   if (!hasPrimary) {
-      //     await markScoreRowsClaimedTx(tx, userId);
-      //   }
-      //   await markNftRowsClaimedTx(tx, wallet);
-      //
-      //   return await insertClaimRowTx(tx, insertRow);
-      // });
-      //
-      // return { success: true, claim: claimRow };
+
+      return { success: true, claim: claimRow };
     }),
 });
