@@ -30,6 +30,7 @@ export const events = pgTable(
     description: text("description").notNull(),
     image_url: text("image_url").notNull(),
     wallet_address: text("wallet_address"),
+    giveaway_wallet_address: text("giveaway_wallet_address"),
 
     society_hub: text("society_hub"),
     society_hub_id: text("society_hub_id"),
@@ -90,6 +91,7 @@ export const events = pgTable(
     event_uuid_unique: uniqueIndex().on(table.event_uuid),
     moderationMessageIdIndex: index("events_moderation_message_id_idx").on(table.moderationMessageId),
     categoryIdIdx: index("events_category_id_idx").on(table.category_id),
+    giveaway_wallet_address_idx: index("events_giveaway_wallet_address_idx").on(table.giveaway_wallet_address),
   })
 );
 

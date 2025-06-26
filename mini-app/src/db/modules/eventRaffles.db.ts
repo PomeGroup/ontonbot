@@ -67,11 +67,20 @@ export const getRaffleSummaryForOrganizer = async (raffle_uuid: string) => {
     raffle.prize_pool_nanoton && raffle.top_n ? raffle.prize_pool_nanoton / BigInt(raffle.top_n) : BigInt(0);
 
   return {
-    raffle,
-    wallet: { address: walletRow?.address, balanceNano: onChainBalanceNano },
+    raffle: {
+      ...raffle,
+      prize_pool_nanoton: raffle.prize_pool_nanoton?.toString(), // 👈
+    },
+    wallet: {
+      address: walletRow?.address,
+      balanceNano: onChainBalanceNano.toString(),
+    },
     eligibleCount,
-    perUserNano,
-    winners: eligibleRows,
+    perUserNano: perUserNano.toString(),
+    winners: eligibleRows.map((w) => ({
+      ...w,
+      reward_nanoton: w.reward_nanoton ? w.reward_nanoton.toString() : null,
+    })),
   };
 };
 

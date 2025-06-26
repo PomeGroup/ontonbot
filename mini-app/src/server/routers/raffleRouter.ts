@@ -5,7 +5,7 @@ import {
   initDataProtectedProcedure,
 } from "@/server/trpc";
 import { z } from "zod";
-import { toNano } from "@ton/ton";
+import { Address, toNano } from "@ton/ton";
 import eventRafflesDB from "@/db/modules/eventRaffles.db";
 import eventRaffleResultsDB from "@/db/modules/eventRaffleResults.db";
 import { db } from "@/db/db";
@@ -73,43 +73,51 @@ export const raffleRouter = router({
     .input(
       z.object({
         raffle_uuid: z.string().uuid(),
-        wallet_address: z.string().min(36).max(48), // TON addr
+        wallet_address: z.string().min(36).max(48),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { user } = ctx;
+
+      /* ── 1. look up raffle & validate state ─────────────────────────── */
       const raffle = await eventRafflesDB.fetchRaffleByUuid(input.raffle_uuid);
       if (!raffle) throw new TRPCError({ code: "NOT_FOUND", message: "raffle not found" });
-
       if (["distributing", "completed"].includes(raffle.status))
         throw new TRPCError({ code: "BAD_REQUEST", message: "raffle closed" });
 
-      // event must not have ended
-      const eventRow = await db.query.events.findFirst({
-        where: (fields) => eq(fields.event_id, raffle.event_id),
-      });
+      /* ── 2. has this user already spun? ─────────────────────────────── */
+      const existing = await eventRaffleResultsDB.fetchUserScore(raffle.raffle_id, user.user_id);
+      if (existing) {
+        return { score: existing.score, alreadyPlayed: true };
+      }
 
+      /* ── 3. check event & timing ────────────────────────────────────── */
+      const eventRow = await db.query.events.findFirst({
+        where: (f) => eq(f.event_id, raffle.event_id),
+      });
       if (!eventRow) throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
       if (!eventRow.enabled) throw new TRPCError({ code: "BAD_REQUEST", message: "event not enabled" });
       if (!eventRow.activity_id) throw new TRPCError({ code: "BAD_REQUEST", message: "event not associated with activity" });
-
-      const nowSec = Math.floor(Date.now() / 1000);
-      if (eventRow && nowSec > Number(eventRow.end_date))
+      if (Date.now() / 1000 > Number(eventRow.end_date))
         throw new TRPCError({ code: "BAD_REQUEST", message: "event ended" });
 
-      // insert score once
+      /* ── 4. generate score & insert row ─────────────────────────────── */
       const score = randomInt(1, 1_000_000);
+      const addrRaw = (() => {
+        const p = Address.parse(input.wallet_address);
+        return `${p.workChain}:${p.hash.toString("hex")}`;
+      })();
+
       await eventRaffleResultsDB.addUserScore({
         raffle_id: raffle.raffle_id,
         user_id: user.user_id,
         score,
-        wallet_address: input.wallet_address,
+        wallet_address: addrRaw,
       });
 
-      // recompute ranking
       await eventRaffleResultsDB.computeTopN(raffle.raffle_id, raffle.top_n);
 
-      return { score };
+      return { score, alreadyPlayed: false };
     }),
 
   /* 5. USER VIEW ---------------------------------------------------------- */

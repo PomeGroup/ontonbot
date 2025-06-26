@@ -1,76 +1,75 @@
-// jobs/createEventWallets.ts
 import { db } from "@/db/db";
 import { events } from "@/db/schema/events";
-import { isNotNull, gt, eq, and, isNull } from "drizzle-orm";
+import { isNotNull, gt, and, isNull, eq } from "drizzle-orm";
+
 import { mnemonicNew, mnemonicToWalletKey } from "@ton/crypto";
-import { WalletContractV4 } from "@ton/ton";
+import { WalletContractV5R1 } from "@ton/ton"; // ← V5 wallet factory
+
 import eventWalletDB from "@/db/modules/eventWallets.db";
-import { encrypt } from "@/lib/cryptoHelpers"; // <= your encryption helper
+import { encrypt } from "@/lib/cryptoHelpers";
 import { logger } from "@/server/utils/logger";
 
 /**
- * Generate TON wallets for **up-coming** events that already have an activity_id
- * but no wallet yet.  Runs sequentially so you can schedule it in a cron.
+ * Finds all future events that already have an activity_id but
+ * lack a giveaway wallet, then creates a **V5-R1 wallet** for each.
  */
 export async function createWalletsForUpcomingEvents(): Promise<void> {
   const nowSec = Math.floor(Date.now() / 1000);
 
-  /* ---------------------------------------------------------------------- */
-  /*   1. FETCH CANDIDATE EVENTS                                            */
-  /* ---------------------------------------------------------------------- */
+  /* 1️⃣  candidates ------------------------------------------------------ */
   const candidates = await db
-    .select({
-      id: events.event_id,
-      uuid: events.event_uuid,
-      title: events.title,
-    })
+    .select({ id: events.event_id, title: events.title })
     .from(events)
     .where(
       and(
-        isNotNull(events.activity_id), // activity already registered
-        gt(events.end_date, nowSec), // future event
-        isNull(events.wallet_address) // ← wallet_address IS NULL
+        isNotNull(events.activity_id), // activity mapped
+        gt(events.end_date, nowSec), // event still in future
+        isNull(events.giveaway_wallet_address)
       )
     )
     .execute();
 
-  logger.log(`[wallet-creator] Found ${candidates.length} upcoming events with activity_id and no wallet.`);
+  logger.log(`[wallet-creator] ${candidates.length} events need V5 wallets`);
 
-  /* ---------------------------------------------------------------------- */
-  /*   2. PROCESS ONE-BY-ONE                                                */
-  /* ---------------------------------------------------------------------- */
+  /* 2️⃣  loop ------------------------------------------------------------ */
   for (const ev of candidates) {
+    logger.log(`[wallet-creator] → event ${ev.id}`);
+
+    /* skip if some parallel worker already inserted */
+    if (await eventWalletDB.fetchEventWalletByEventId(ev.id)) {
+      logger.log(`[wallet-creator]   already has wallet – skip`);
+      continue;
+    }
+
     try {
-      /* ---------- skip if another worker did it in the meantime ---------- */
-      const existing = await eventWalletDB.fetchEventWalletByEventId(ev.id);
-      if (existing) {
-        logger.log(`[wallet-creator] Wallet already exists for event ${ev.id} – skipping.`);
-        continue;
-      }
+      /* A. generate keys & wallet -------------------------------------- */
+      const mnemonic = await mnemonicNew(); // 24-word BIP-39
+      const keys = await mnemonicToWalletKey(mnemonic);
 
-      /* ----------------------- create TON Wallet V4 ---------------------- */
-      const mnemonic = await mnemonicNew(); // 24 words
-      const keyPair = await mnemonicToWalletKey(mnemonic);
-      const wallet = WalletContractV4.create({
+      const wallet = WalletContractV5R1.create({
         workchain: 0,
-        publicKey: keyPair.publicKey,
+        publicKey: keys.publicKey,
       });
-      const address = wallet.address.toString(); // bounceable
 
-      /* ------------------------- persist to DB --------------------------- */
+      const addr = wallet.address.toString({ urlSafe: true });
+      logger.log(`[wallet-creator]   built V5 wallet ${addr}`);
+
+      /* B. insert into event_wallets ----------------------------------- */
       await eventWalletDB.insertEventWallet({
         event_id: ev.id,
-        wallet_address: address,
-        public_key: Buffer.from(keyPair.publicKey).toString("base64"),
+        wallet_address: addr,
+        public_key: Buffer.from(keys.publicKey).toString("base64"),
         mnemonic: encrypt(mnemonic.join(" ")), // 🔐
       });
 
-      // mirror address into events table for convenience
-      await db.update(events).set({ wallet_address: address }).where(eq(events.event_id, ev.id)).execute();
+      /* C. mirror into events table ------------------------------------ */
+      await db.update(events).set({ giveaway_wallet_address: addr }).where(eq(events.event_id, ev.id)).execute();
 
-      logger.log(`[wallet-creator] ✅ Wallet ${address} created for event ${ev.id} (${ev.title}).`);
+      logger.log(`[wallet-creator]   ✔ stored ${addr}`);
     } catch (err) {
-      logger.error(`[wallet-creator] ❌ Failed to create wallet for event ${ev.id}`, err);
+      logger.error(`[wallet-creator]   ❌ event ${ev.id} failed`, err);
     }
   }
+
+  logger.log(`[wallet-creator] done`);
 }

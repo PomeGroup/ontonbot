@@ -111,6 +111,14 @@ export const markManyPaid = async (ids: number[], nanoTon: bigint, txHash: strin
     .where(inArray(eventRaffleResults.id, ids))
     .execute();
 
+export const fetchUserScore = async (raffleId: number, userId: number) =>
+  db
+    .select()
+    .from(eventRaffleResults)
+    .where(and(eq(eventRaffleResults.raffle_id, raffleId), eq(eventRaffleResults.user_id, userId)))
+    .execute()
+    .then((r) => r[0] ?? null);
+
 const eventRaffleResultsDB = {
   addUserScore,
   computeTopN,
@@ -120,5 +128,6 @@ const eventRaffleResultsDB = {
   getUserView,
   listEligible,
   markManyPaid,
+  fetchUserScore,
 };
 export default eventRaffleResultsDB;
