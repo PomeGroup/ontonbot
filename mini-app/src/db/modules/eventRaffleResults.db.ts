@@ -1,0 +1,124 @@
+import { db } from "@/db/db";
+import { eventRaffleResults } from "@/db/schema/eventRaffleResults";
+import { eq, desc, and, inArray } from "drizzle-orm";
+import eventRafflesDB from "./eventRaffles.db";
+import { users } from "@/db/schema";
+
+/* ------------------------- INSERT USER SCORE ---------------------------- */
+export const addUserScore = async (params: { raffle_id: number; user_id: number; score: number; wallet_address: string }) =>
+  db.insert(eventRaffleResults).values(params).onConflictDoNothing().execute();
+
+/* ------------------------- RANK & ELIGIBILITY -------------------------- */
+export const computeTopN = async (raffleId: number, topN: number) => {
+  // 1. rank by score DESC, id ASC (tie-breaker)
+  const rows = await db
+    .select()
+    .from(eventRaffleResults)
+    .where(eq(eventRaffleResults.raffle_id, raffleId))
+    .orderBy(desc(eventRaffleResults.score), eventRaffleResults.id)
+    .execute();
+
+  // 2. update rank & status
+  for (let i = 0; i < rows.length; i++) {
+    const rank = i + 1;
+    await db
+      .update(eventRaffleResults)
+      .set({
+        rank,
+        status: rank <= topN ? "eligible" : "pending",
+      })
+      .where(eq(eventRaffleResults.id, rows[i].id))
+      .execute();
+  }
+};
+
+/* --------------------------- PAYOUT HELPERS ---------------------------- */
+export const fetchEligibleForPayout = (raffleId: number) =>
+  db
+    .select()
+    .from(eventRaffleResults)
+    .where(and(eq(eventRaffleResults.raffle_id, raffleId), eq(eventRaffleResults.status, "eligible")));
+
+export const markPaid = (id: number, nanoTon: bigint, txHash: string) =>
+  db
+    .update(eventRaffleResults)
+    .set({
+      status: "paid",
+      reward_nanoton: nanoTon,
+      tx_hash: txHash,
+    })
+    .where(eq(eventRaffleResults.id, id))
+    .execute();
+
+export const markFailed = (id: number) =>
+  db.update(eventRaffleResults).set({ status: "failed" }).where(eq(eventRaffleResults.id, id)).execute();
+
+export const getUserView = async (raffle_uuid: string, user_id: number) => {
+  // 1. raffle row
+  const raffle = await eventRafflesDB.fetchRaffleByUuid(raffle_uuid);
+  if (!raffle) return null;
+
+  // 2. user’s own result (if any)
+  const my = (
+    await db
+      .select()
+      .from(eventRaffleResults)
+      .where(and(eq(eventRaffleResults.raffle_id, raffle.raffle_id), eq(eventRaffleResults.user_id, user_id)))
+      .execute()
+  ).pop();
+
+  // 3. winners list (only after completed)
+  let winners: unknown[] = [];
+  if (raffle.status === "completed") {
+    winners = await db
+      .select({
+        rank: eventRaffleResults.rank,
+        score: eventRaffleResults.score,
+        username: users.username,
+        first_name: users.first_name,
+        last_name: users.last_name,
+        photo_url: users.photo_url,
+        reward_nanoton: eventRaffleResults.reward_nanoton,
+        tx_hash: eventRaffleResults.tx_hash,
+      })
+      .from(eventRaffleResults)
+      .innerJoin(users, eq(users.user_id, eventRaffleResults.user_id))
+      .where(and(eq(eventRaffleResults.raffle_id, raffle.raffle_id), eq(eventRaffleResults.status, "paid")))
+      .orderBy(eventRaffleResults.rank)
+      .execute();
+  }
+
+  return { raffle, my, winners };
+};
+/* list all eligible winners (status = 'eligible') */
+export const listEligible = (raffleId: number) =>
+  db
+    .select()
+    .from(eventRaffleResults)
+    .where(and(eq(eventRaffleResults.raffle_id, raffleId), eq(eventRaffleResults.status, "eligible")))
+    .orderBy(eventRaffleResults.rank)
+    .execute();
+
+/* bulk-mark rows as paid */
+export const markManyPaid = async (ids: number[], nanoTon: bigint, txHash: string) =>
+  db
+    .update(eventRaffleResults)
+    .set({
+      status: "paid",
+      reward_nanoton: nanoTon,
+      tx_hash: txHash,
+    })
+    .where(inArray(eventRaffleResults.id, ids))
+    .execute();
+
+const eventRaffleResultsDB = {
+  addUserScore,
+  computeTopN,
+  fetchEligibleForPayout,
+  markPaid,
+  markFailed,
+  getUserView,
+  listEligible,
+  markManyPaid,
+};
+export default eventRaffleResultsDB;

@@ -335,6 +335,7 @@ export const cacheKeys = {
   getTournamentsByIds: "getTournamentsByIds:",
   category_id: "category_id:",
   category_uuid: "category_uuid:",
+  event_wallet_event_id: "event_wallet_event_id:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes

@@ -187,6 +187,15 @@ import {
   TokenCampaignClaimOnionRow,
   TokenCampaignClaimOnionInsert,
 } from "./schema/tokenCampaignClaimOnion";
+import { eventWallets, EventWalletRow } from "./schema/eventWallets";
+import { eventRaffles, raffleStatus, EventRaffleInsert, EventRaffleRow, RaffleStatusType } from "./schema/eventRaffles";
+import {
+  eventRaffleResults,
+  EventRaffleResultRow,
+  EventRaffleResultInsert,
+  eventRaffleResultStatus,
+  eventRaffleResultStatusType,
+} from "./schema/eventRaffleResults";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -227,6 +236,11 @@ export {
   snapshotCollections,
   claimStatusEnum,
   walletTypeEnum,
+  eventWallets,
+  eventRaffles,
+  raffleStatus,
+  eventRaffleResults,
+  eventRaffleResultStatus,
 };
 
 // export all the tables and relations
@@ -409,4 +423,11 @@ export type {
   TokenCampaignClaimOnionRow,
   TokenCampaignClaimOnionInsert,
   CouponMessageSendStatus,
+  EventWalletRow,
+  EventRaffleRow,
+  EventRaffleInsert,
+  EventRaffleResultRow,
+  EventRaffleResultInsert,
+  eventRaffleResultStatusType,
+  RaffleStatusType,
 };

@@ -24,6 +24,7 @@ import { router } from "./trpc";
 import { campaignRouter } from "@/server/routers/campaignRouter";
 import { tasksRouter } from "@/server/routers/tasksRouter";
 import { tonProofRouter } from "@/server/routers/tonProofRouter";
+import { raffleRouter } from "@/server/routers/raffleRouter";
 
 export const appRouter = router({
   users: usersRouter,
@@ -49,6 +50,7 @@ export const appRouter = router({
   campaign: campaignRouter,
   task: tasksRouter,
   tonProof: tonProofRouter,
+  raffle: raffleRouter,
 });
 
 export type AppRouter = typeof appRouter;
