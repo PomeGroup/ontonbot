@@ -54,12 +54,12 @@ export const markFailed = (id: number) =>
   db.update(eventRaffleResults).set({ status: "failed" }).where(eq(eventRaffleResults.id, id)).execute();
 
 export const getUserView = async (raffle_uuid: string, user_id: number) => {
-  // 1. raffle row
+  /* 1) raffle row ---------------------------------------------------- */
   const raffle = await eventRafflesDB.fetchRaffleByUuid(raffle_uuid);
   if (!raffle) return null;
 
-  // 2. user’s own result (if any)
-  const my = (
+  /* 2) user’s own result (if any) ----------------------------------- */
+  const myRaw = (
     await db
       .select()
       .from(eventRaffleResults)
@@ -67,10 +67,28 @@ export const getUserView = async (raffle_uuid: string, user_id: number) => {
       .execute()
   ).pop();
 
-  // 3. winners list (only after completed)
-  let winners: unknown[] = [];
+  /* normalise: bigint ➜ string so JSON can handle it */
+  const my = myRaw
+    ? {
+        ...myRaw,
+        reward_nanoton: myRaw.reward_nanoton ? myRaw.reward_nanoton.toString() : null,
+      }
+    : null;
+
+  /* 3) winners list (only after completed) -------------------------- */
+  let winners: {
+    rank: number | null;
+    score: number | null;
+    username: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    photo_url: string | null;
+    reward_nanoton: string | null;
+    tx_hash: string | null;
+  }[] = [];
+
   if (raffle.status === "completed") {
-    winners = await db
+    const rows = await db
       .select({
         rank: eventRaffleResults.rank,
         score: eventRaffleResults.score,
@@ -86,9 +104,22 @@ export const getUserView = async (raffle_uuid: string, user_id: number) => {
       .where(and(eq(eventRaffleResults.raffle_id, raffle.raffle_id), eq(eventRaffleResults.status, "paid")))
       .orderBy(eventRaffleResults.rank)
       .execute();
+
+    winners = rows.map((w) => ({
+      ...w,
+      reward_nanoton: w.reward_nanoton ? w.reward_nanoton.toString() : null,
+    }));
   }
 
-  return { raffle, my, winners };
+  /* 4) stringify bigint inside the raffle row too ------------------- */
+  return {
+    raffle: {
+      ...raffle,
+      prize_pool_nanoton: raffle.prize_pool_nanoton ? raffle.prize_pool_nanoton.toString() : undefined,
+    },
+    my,
+    winners,
+  };
 };
 /* list all eligible winners (status = 'eligible') */
 export const listEligible = (raffleId: number) =>

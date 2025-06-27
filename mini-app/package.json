@@ -130,6 +130,7 @@
     "react-icons": "^5.4.0",
     "react-intersection-observer": "^9.13.1",
     "react-loading": "^2.0.3",
+    "react-split-flap": "^0.1.7",
     "redis": "^4.7.0",
     "sharp": "^0.33.5",
     "socket.io": "^4.8.1",

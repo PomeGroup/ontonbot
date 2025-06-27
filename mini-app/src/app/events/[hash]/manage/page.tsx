@@ -212,6 +212,16 @@ export default function ManageIndexPage() {
             ]}
           />
         )}
+
+        {hasAdminOrOrganizerAccess && (
+          <ActionCard
+            onClick={() => router.push(`/events/${eventData.event_uuid}/manage/raffle-setup`)}
+            iconSrc={coOrganizerIcon}
+            title="Raffles"
+            subtitle="Set up and manage raffles"
+            footerTexts={[]}
+          />
+        )}
       </div>
     </div>
   );

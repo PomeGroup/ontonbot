@@ -1,17 +1,12 @@
 /**
  * distributeRaffleTon.ts
  * ────────────────────────────────────────────────────────────────
- * ▸ all event wallets are WalletContractV5R1 (64-msg soft limit)
- * ▸ pays winners in ≤ 32-msg chunks (safe on main- & test-net)
- * ▸ polls seqno after every chunk to avoid racing the network
+ * • event wallets are **WalletContractV5 R1** (64-msg soft-limit)
+ * • pays winners in ≤ CHUNK_SIZE_RAFFLE batches
+ * • fee maths uses the SAME bigint **nano-TON** constants as the UI
  */
 
-import {
-  WalletContractV5R1, // ← V5-R1 wallet factory
-  internal,
-  toNano,
-  SendMode,
-} from "@ton/ton";
+import { WalletContractV5R1, internal, SendMode } from "@ton/ton";
 import { mnemonicToWalletKey } from "@ton/crypto";
 import { Address, comment } from "@ton/core";
 import { is_mainnet, v2_client } from "@/services/tonCenter";
@@ -25,134 +20,140 @@ import { toWords } from "@/server/utils/mnemonic";
 import { logger } from "@/server/utils/logger";
 import { sendTelegramWithRetryRaffle } from "@/cronJobs/helper/sendTelegramWithRetryRaffle";
 
-/* ── constants ────────────────────────────────────────────────── */
-const CHUNK_SIZE = 254; // keep well below 64-msg hard-cap
-const EXT_FEE = toNano("0.05"); // gas for each external
-const INT_FEE = toNano("0.02"); // gas per internal
-const SAFETY_FLOOR = toNano("0.01"); // leave a little dust
+/* shared fee constants (nano-TON) */
+import { CHUNK_SIZE_RAFFLE, EXT_FEE_NANO, INT_FEE_NANO, SAFETY_FLOOR_NANO } from "@/constants";
+
+/* ------------------------------------------------------------ */
 const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/* ── cron entry ───────────────────────────────────────────────── */
+/* ── cron entry ─────────────────────────────────────────────── */
 export async function distributeRafflesTon(): Promise<void> {
   const raffles = await eventRafflesDB.listByStatus("distributing");
   for (const r of raffles) {
     try {
       logger.log(`raffle ${r.raffle_id} payout started`);
       await payOneRaffle(r.raffle_id, r.event_id);
-    } catch (e) {
-      logger.error(`raffle ${r.raffle_id} payout failed`, e);
+    } catch (err) {
+      logger.error(`raffle ${r.raffle_id} payout failed`, err);
     }
   }
 }
 
-/* ── worker ───────────────────────────────────────────────────── */
+/* ── worker for a single raffle ─────────────────────────────── */
 async function payOneRaffle(raffleId: number, eventId: number): Promise<void> {
   const BASE_URL = is_mainnet ? "https://tonviewer.com/" : "https://testnet.tonviewer.com/";
-  /* 1. winners --------------------------------------------------- */
+
+  /* 1. winners */
   const winners = await eventRaffleResultsDB.listEligible(raffleId);
   if (!winners.length) return;
 
-  /* 2. wallet row + (auto-)deploy ------------------------------- */
+  /* 2. event wallet row */
   const row = await eventWalletDB.getWalletWithMnemonic(eventId);
   if (!row) throw new Error("event wallet not found");
-  // print row.mnemonicWords;  separated by spaces
+
   logger.log(
     `raffle ${raffleId}: winners ${winners.length}, wallet ${row.wallet_address}`,
     toWords(row.mnemonicWords).join(" ")
   );
-  if (!(await deployWallet(row.mnemonicWords, row.wallet_address))) {
-    // deploy tx just broadcast – come back next cron tick
+
+  /* 3. deploy wallet (first run) */
+  if (!(await deployWallet(row.mnemonicWords, row.wallet_address))) return;
+
+  /* 4. fee budget & per-user share */
+  const batchCount = Math.ceil(winners.length / CHUNK_SIZE_RAFFLE);
+  const balanceNano = await fetchTonBalance(row.wallet_address);
+
+  const gasBudget = EXT_FEE_NANO * BigInt(batchCount) + INT_FEE_NANO * BigInt(winners.length);
+
+  const prizePoolNano = balanceNano - gasBudget - SAFETY_FLOOR_NANO;
+
+  if (prizePoolNano <= BigInt(0)) {
+    logger.warn(`raffle ${raffleId}: wallet needs top-up (balance ${Number(balanceNano) / 1e9} TON)`);
     return;
   }
 
-  /* 3. fee & per-user budget ------------------------------------ */
-  const chunkCount = Math.ceil(winners.length / CHUNK_SIZE);
-  const balance = await fetchTonBalance(row.wallet_address);
-  const gasBudget = EXT_FEE * BigInt(chunkCount) + INT_FEE * BigInt(winners.length);
-  const prizePool = balance - gasBudget - SAFETY_FLOOR;
-
-  if (prizePool <= BigInt(0)) {
-    logger.warn(`raffle ${raffleId}: wallet needs top-up (balance=${balance})`);
-    return;
-  }
-
-  const perUser = prizePool / BigInt(winners.length);
-  if (perUser === BigInt(0)) {
+  const perUserNano = prizePoolNano / BigInt(winners.length);
+  if (perUserNano === BigInt(0)) {
     logger.warn(`raffle ${raffleId}: pool too small per user`);
     return;
   }
 
-  /* 4. reconstruct V5 wallet ------------------------------------ */
-  const kp = await mnemonicToWalletKey(toWords(row.mnemonicWords));
-  const wallet = WalletContractV5R1.create({ workchain: 0, publicKey: kp.publicKey });
-  const addr = wallet.address;
+  /* 5. re-create wallet contract */
+  const keyPair = await mnemonicToWalletKey(toWords(row.mnemonicWords));
+  const wallet = WalletContractV5R1.create({
+    workchain: 0,
+    publicKey: keyPair.publicKey,
+  });
 
-  if (!addr.equals(Address.parse(row.wallet_address))) {
+  if (!wallet.address.equals(Address.parse(row.wallet_address))) {
     throw new Error("Mnemonic ↔ stored address mismatch (V5-R1)");
   }
 
-  const client = v2_client();
-  const provider = client.provider(addr);
+  const provider = v2_client().provider(wallet.address);
 
-  logger.log(`raffle ${raffleId}: chunks ${chunkCount}, winners ${winners.length}, perUser ${perUser} nano`);
+  logger.log(
+    `raffle ${raffleId}: ${batchCount} batches – ` +
+      `${winners.length} winners – ` +
+      `~${Number(perUserNano) / 1e9} TON each`
+  );
 
-  /* 5. chunked payouts ------------------------------------------ */
-  for (let i = 0; i < winners.length; i += CHUNK_SIZE) {
+  /* 6. send batches */
+  for (let i = 0; i < winners.length; i += CHUNK_SIZE_RAFFLE) {
     const seqno = await wallet.getSeqno(provider);
 
-    const msgs = winners.slice(i, i + CHUNK_SIZE).map((w) =>
+    const msgs = winners.slice(i, i + CHUNK_SIZE_RAFFLE).map((w) =>
       internal({
         to: Address.parse(w.wallet_address),
-        value: perUser,
+        value: perUserNano,
         bounce: false,
         body: comment(`uid:${w.user_id} raffle:${raffleId} rank:${w.rank}`),
       })
     );
 
-    logger.log(`raffle ${raffleId}: chunk ${i / CHUNK_SIZE + 1}/${chunkCount} → seqno ${seqno}`);
+    logger.log(`raffle ${raffleId}: batch ${i / CHUNK_SIZE_RAFFLE + 1}/${batchCount} – seqno ${seqno}`);
 
     await wallet.sendTransfer(provider, {
       seqno,
-      secretKey: kp.secretKey as Buffer,
+      secretKey: keyPair.secretKey as Buffer,
       sendMode: SendMode.PAY_GAS_SEPARATELY + SendMode.IGNORE_ERRORS,
       messages: msgs,
     });
 
-    /* wait until seqno increments (≤20 s) */
+    /* wait until seqno increments */
     for (let t = 0; t < 10; t++) {
-      await pause(2000);
+      await pause(2_000);
       if ((await wallet.getSeqno(provider)) > seqno) break;
       if (t === 9) throw new Error("seqno did not advance – network lag?");
     }
   }
 
-  /* 6. DB bookkeeping ------------------------------------------- */
+  /* 7. DB bookkeeping */
   await eventRaffleResultsDB.markManyPaid(
     winners.map((w) => w.id),
-    perUser,
+    perUserNano,
     "toncenter-batch"
   );
   await eventRafflesDB.completeRaffle(raffleId);
 
   logger.log(`raffle ${raffleId} completed ✓`);
-  /* 7. Notify each winner on Telegram --------------------------- */ // NEW
+
+  /* 8. Telegram notifications (best-effort) */
   for (const w of winners) {
     try {
       const msg =
-        `🎉 You just received **${Number(perUser) / 1e9} TON** ` +
+        `🎉 You just received **${Number(perUserNano) / 1e9} TON** ` +
         `for ranking #${w.rank} in the raffle!\n\n` +
-        `Tx hash will appear in your wallet shortly.`;
+        `Transaction will appear shortly.`;
       await sendTelegramWithRetryRaffle({
-        chat_id: w.user_id, // assuming Telegram chat_id === user_id
+        chat_id: w.user_id,
         message: msg,
         link: BASE_URL + w.wallet_address,
-        linkText: "View transaction",
+        linkText: "View on TON Viewer",
       });
-      logger.log(`[tg-notify] sent to user ${w.user_id}`);
+      logger.log(`[tg] notified ${w.user_id}`);
     } catch (err) {
-      logger.error(`[tg-notify] FAILED for user ${w.user_id}`, err);
+      logger.error(`[tg] FAIL ${w.user_id}`, err);
     }
-
-    await pause(300); // tiny pause so you don’t hit flood-limits
+    await pause(300); // respect flood-limits
   }
 }

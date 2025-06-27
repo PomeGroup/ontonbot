@@ -1,10 +1,14 @@
 import { db } from "@/db/db";
 import { eventRaffles, RaffleStatusType } from "@/db/schema/eventRaffles";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { eventRaffleResults, eventWallets, users } from "../schema";
 import { fetchTonBalance } from "@/lib/tonBalance";
-
+export type RaffleUpdatableFields = {
+  top_n?: number;
+  prize_pool_nanoton?: bigint;
+  status?: RaffleStatusType;
+};
 export const createRaffle = async (eventId: number, topN: number) => {
   const [row] = await db
     .insert(eventRaffles)
@@ -14,6 +18,22 @@ export const createRaffle = async (eventId: number, topN: number) => {
       top_n: topN,
     })
     .returning();
+  return row;
+};
+
+/* update top_n and/or prize_pool */
+export const updateRaffle = async (raffleId: number, fields: RaffleUpdatableFields) => {
+  /* build a partial object only with keys that are actually provided */
+  const patch: Record<string, unknown> = {
+    updated_at: new Date(),
+  };
+
+  if (fields.top_n !== undefined) patch.top_n = fields.top_n;
+  if (fields.prize_pool_nanoton !== undefined) patch.prize_pool_nanoton = fields.prize_pool_nanoton;
+  if (fields.status !== undefined) patch.status = fields.status;
+
+  const [row] = await db.update(eventRaffles).set(patch).where(eq(eventRaffles.raffle_id, raffleId)).returning();
+
   return row;
 };
 
@@ -55,11 +75,12 @@ export const getRaffleSummaryForOrganizer = async (raffle_uuid: string) => {
       photo_url: users.photo_url,
       reward_nanoton: eventRaffleResults.reward_nanoton,
       tx_hash: eventRaffleResults.tx_hash,
+      rank: eventRaffleResults.rank,
     })
     .from(eventRaffleResults)
     .innerJoin(users, eq(users.user_id, eventRaffleResults.user_id))
-    .where(and(eq(eventRaffleResults.raffle_id, raffle.raffle_id), eq(eventRaffleResults.status, "eligible")))
-    .orderBy(eventRaffleResults.rank)
+    .where(and(eq(eventRaffleResults.raffle_id, raffle.raffle_id))) // eq(eventRaffleResults.status, "eligible")
+    .orderBy(desc(eventRaffleResults.rank))
     .execute();
 
   const eligibleCount = eligibleRows.length;
@@ -104,5 +125,6 @@ const eventRafflesDB = {
   triggerDistribution,
   listByStatus,
   completeRaffle,
+  updateRaffle,
 };
 export default eventRafflesDB;

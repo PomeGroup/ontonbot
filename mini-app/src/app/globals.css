@@ -241,3 +241,11 @@ ul > li > div > div > div.text-sm {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+/* Guarantees the split-flap’s outer height never changes */
+.splitflap-cage {
+  height: 80px;               /* 40 px row × 2 DOM rows (size="large") */
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

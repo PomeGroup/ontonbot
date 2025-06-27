@@ -1,77 +1,68 @@
 /**
- * deployWallet.ts   –  V5-R1 edition
+ * deployWallet.ts — V5-R1
  * ───────────────────────────────────────────────────────────────
- * • Derives the V5-R1 address from the mnemonic (same factory you used
- *   when creating the wallet).
- * • If seqno === 0 ➜ broadcasts a self-transfer (0.06 TON) to deploy.
- * • Returns:
- *       true   – wallet already active
- *       false  – deploy tx just sent; cron should retry after 1-2 blocks
+ * • Re-creates the V5-R1 wallet from the mnemonic.
+ * • If `seqno === 0` → sends a self-transfer for `DEPLOY_FEE_NANO`
+ *   (≈ 0 .06 TON) to initialise the contract.
+ * • Returns
+ *     true   – wallet is already deployed
+ *     false  – deploy tx just broadcast; try again after 1-2 blocks
  */
-
-import {
-  WalletContractV5R1, // ← NEW wallet class
-  internal,
-  toNano,
-  SendMode,
-} from "@ton/ton";
+import { WalletContractV5R1, internal, SendMode } from "@ton/ton";
 import { mnemonicToWalletKey } from "@ton/crypto";
 import { Address } from "@ton/core";
 import { v2_client } from "@/services/tonCenter";
 import { logger } from "@/server/utils/logger";
+import { DEPLOY_FEE_NANO } from "@/constants"; // bigint nano-TON (60_000_000n)
 
-/* 0.06 TON covers deployment + a bit of storage */
-const INIT_VALUE = toNano("0.06");
-
-/* helper: accept string or string[] */
-const toWords = (src: string | string[]): string[] => (Array.isArray(src) ? src : src.trim().split(/\s+/));
+/* helper – accept either a string or an array of words */
+const toWords = (src: string | string[]) => (Array.isArray(src) ? src : src.trim().split(/\s+/));
 
 export async function deployWallet(mnemonic: string | string[], storedAddress: string): Promise<boolean> {
-  /* 1. derive address from mnemonic (V5-R1) */
-  const words = toWords(mnemonic);
-  const keyPair = await mnemonicToWalletKey(words);
+  /* 1️⃣  derive wallet from mnemonic */
+  const keyPair = await mnemonicToWalletKey(toWords(mnemonic));
   const wallet = WalletContractV5R1.create({
     workchain: 0,
     publicKey: keyPair.publicKey,
   });
-  const derivedAddr = wallet.address;
-  const storedAddr = Address.parse(storedAddress);
 
-  if (!derivedAddr.equals(storedAddr)) {
+  const derived = wallet.address;
+  const stored = Address.parse(storedAddress);
+
+  if (!derived.equals(stored)) {
     logger.error(
       `Mnemonic ↔ address mismatch:
-  stored  : ${storedAddr.toString({ urlSafe: true })}
-  derived : ${derivedAddr.toString({ urlSafe: true })}`
+  stored : ${stored.toString({ urlSafe: true })}
+  derived: ${derived.toString({ urlSafe: true })}`
     );
-    return false; // cannot safely deploy
+    return false;
   }
 
-  /* 2. seqno check  –  already active? */
-  const client = v2_client();
-  const provider = client.provider(derivedAddr);
+  /* 2️⃣  is it already active? */
+  const provider = v2_client().provider(derived);
   const seqno = await wallet.getSeqno(provider);
 
   if (seqno !== 0) {
-    logger.log(`wallet ${derivedAddr.toString({ urlSafe: true })} already active (seqno ${seqno})`);
+    logger.log(`wallet ${derived.toString({ urlSafe: true })} active (seqno ${seqno})`);
     return true;
   }
 
-  /* 3. first external message (deploy) */
-  logger.log(`deploying wallet ${derivedAddr.toString({ urlSafe: true })}`);
+  /* 3️⃣  deploy with a self-transfer */
+  logger.log(`deploying wallet ${derived.toString({ urlSafe: true })}`);
 
   await wallet.sendTransfer(provider, {
-    seqno: 0, // first ext-msg
+    seqno: 0,
     secretKey: keyPair.secretKey as Buffer,
-    sendMode: SendMode.PAY_GAS_SEPARATELY, // pay gas from msg value
+    sendMode: SendMode.PAY_GAS_SEPARATELY, // gas taken from message value
     messages: [
       internal({
-        to: derivedAddr, // self-transfer
-        value: INIT_VALUE,
+        to: derived, // self-transfer
+        value: DEPLOY_FEE_NANO, // 60 000 000 nano-TON ≈ 0 .06 TON
         bounce: false,
       }),
     ],
   });
 
-  logger.log("deploy tx sent – wait one block then retry");
-  return false; // will be active next cron run
+  logger.log("deploy tx broadcast → retry after the next block");
+  return false;
 }

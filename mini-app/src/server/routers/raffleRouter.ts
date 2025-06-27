@@ -9,16 +9,26 @@ import { Address, toNano } from "@ton/ton";
 import eventRafflesDB from "@/db/modules/eventRaffles.db";
 import eventRaffleResultsDB from "@/db/modules/eventRaffleResults.db";
 import { db } from "@/db/db";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { randomInt } from "crypto";
+import { eventRaffles, RaffleStatusType } from "@/db/schema/eventRaffles";
+import { CHUNK_SIZE_RAFFLE, DEPLOY_FEE_NANO, EXT_FEE_NANO, INT_FEE_NANO, SAFETY_FLOOR_NANO } from "@/constants";
+import { fetchTonBalance } from "@/lib/tonBalance";
+import { logger } from "@/server/utils/logger";
 
+function serializeRaffle(row: typeof eventRaffles.$inferSelect) {
+  return {
+    ...row,
+    prize_pool_nanoton: row.prize_pool_nanoton ? row.prize_pool_nanoton.toString() : null,
+  };
+}
 /* -------------------------------------------------------------------------- */
 /*                              tRPC Raffle API                               */
 /* -------------------------------------------------------------------------- */
 export const raffleRouter = router({
   /* 1. DEFINE (organiser) ------------------------------------------------- */
-  define: eventManagementProtectedProcedure
+  defineOrUpdate: eventManagementProtectedProcedure
     .input(
       z.object({
         event_uuid: z.string().uuid(),
@@ -28,29 +38,92 @@ export const raffleRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const eventId = ctx.event.event_id;
-      const nanoTon = toNano(input.prize_pool_ton.toString()); // convert TON → nano
+      const nanoTon = toNano(input.prize_pool_ton.toString());
 
       const existing = await eventRafflesDB.fetchRaffleByEvent(eventId);
-      if (existing)
+
+      /* 1) CREATE */
+      if (!existing) {
+        const raffle = await eventRafflesDB.createRaffle(eventId, input.top_n);
+        await eventRafflesDB.setPrizePool(raffle.raffle_id, nanoTon);
+
+        return serializeRaffle(raffle);
+      }
+
+      /* 2) UPDATE (allowed while waiting_funding | funded) */
+      const allowed = ["waiting_funding", "funded"] as RaffleStatusType[];
+      if (!allowed.includes(existing.status as RaffleStatusType)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Raffle already defined for this event",
+          message: `Raffle already ${existing.status}; cannot modify.`,
         });
+      }
 
-      const raffle = await eventRafflesDB.createRaffle(eventId, input.top_n);
-      await eventRafflesDB.setPrizePool(raffle.raffle_id, nanoTon);
-      return raffle;
+      const updated = await eventRafflesDB.updateRaffle(existing.raffle_id, {
+        top_n: input.top_n,
+        prize_pool_nanoton: nanoTon,
+      });
+
+      return serializeRaffle(updated);
     }),
 
   /* 2. ORGANISER DASHBOARD INFO ------------------------------------------ */
-  infoForOrganizer: eventManagementProtectedProcedure
-    .input(z.object({ raffle_uuid: z.string().uuid() }))
-    .query(async ({ input }) => {
-      const summary = await eventRafflesDB.getRaffleSummaryForOrganizer(input.raffle_uuid);
-      if (!summary) throw new TRPCError({ code: "NOT_FOUND", message: "raffle not found" });
-      return summary;
-    }),
+  infoForOrganizer: eventManagementProtectedProcedure.query(async ({ ctx }) => {
+    const eventId = ctx.event.event_id;
 
+    /* 1. raffle row ------------------------------------------------ */
+    const raffle = await eventRafflesDB.fetchRaffleByEvent(eventId);
+    if (!raffle) return null; // nothing yet
+
+    /* 2. DB-level summary ----------------------------------------- */
+    const summary = await eventRafflesDB.getRaffleSummaryForOrganizer(raffle.raffle_uuid);
+    if (!summary) throw new TRPCError({ code: "NOT_FOUND", message: "raffle disappeared" });
+
+    /* 3. live wallet probe ---------------------------------------- */
+    let balanceNano = BigInt(0); // 0 → not deployed
+    let deployed = true;
+
+    try {
+      balanceNano = await fetchTonBalance(summary.wallet.address!);
+    } catch {
+      deployed = false; // 404 → not deployed
+    }
+
+    (summary.wallet as any).balanceNano = balanceNano.toString();
+    (summary.wallet as any).deployed = deployed;
+
+    /* 4. fund-check & *conditional* status flip  ★ ---------------- */
+    if (
+      raffle.status !== "distributing" && // ← DO NOT touch
+      raffle.status !== "completed"
+    ) {
+      if (deployed) {
+        const batches = BigInt(Math.ceil(raffle.top_n / CHUNK_SIZE_RAFFLE));
+        const poolNano = BigInt(raffle.prize_pool_nanoton ?? "0");
+        const needNano =
+          poolNano + EXT_FEE_NANO * batches + INT_FEE_NANO * BigInt(raffle.top_n) + DEPLOY_FEE_NANO + SAFETY_FLOOR_NANO;
+
+        const funded = balanceNano >= needNano;
+
+        // promote
+        if (funded && raffle.status === "waiting_funding") {
+          await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: "funded" });
+          (summary.raffle as any).status = "funded";
+        }
+        // demote
+        if (!funded && raffle.status === "funded") {
+          await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: "waiting_funding" });
+          (summary.raffle as any).status = "waiting_funding";
+        }
+      } else if (raffle.status === "funded") {
+        /* wallet was never deployed → revert to waiting_funding */
+        await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: "waiting_funding" });
+        (summary.raffle as any).status = "waiting_funding";
+      }
+    }
+
+    return summary;
+  }),
   /* 3. TRIGGER DISTRIBUTION ---------------------------------------------- */
   trigger: eventManagementProtectedProcedure
     .input(z.object({ raffle_uuid: z.string().uuid() }))
@@ -123,7 +196,12 @@ export const raffleRouter = router({
   /* 5. USER VIEW ---------------------------------------------------------- */
   view: initDataProtectedProcedure.input(z.object({ raffle_uuid: z.string().uuid() })).query(async ({ ctx, input }) => {
     const data = await eventRaffleResultsDB.getUserView(input.raffle_uuid, ctx.user.user_id);
-    if (!data) throw new TRPCError({ code: "NOT_FOUND", message: "raffle not found" });
+    if (!data) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "raffle not found",
+      });
+    }
     return data;
   }),
 });
