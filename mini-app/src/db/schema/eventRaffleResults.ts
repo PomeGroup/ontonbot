@@ -4,7 +4,13 @@ import { users } from "@/db/schema/users";
 import { eventRaffles } from "@/db/schema/eventRaffles";
 
 /* ------------------------------ ENUM ------------------------------------ */
-export const eventRaffleResultStatus = pgEnum("raffle_result_status", ["pending", "eligible", "paid", "failed"]);
+export const eventRaffleResultStatus = pgEnum("raffle_result_status", [
+  "pending",
+  "eligible",
+  "paid",
+  "failed",
+  "not_eligible",
+]);
 
 /* ------------------------- TABLE DEFINITION ----------------------------- */
 export const eventRaffleResults = pgTable(

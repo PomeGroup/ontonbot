@@ -130,14 +130,19 @@ export const raffleRouter = router({
     .mutation(async ({ input }) => {
       const raffle = await eventRafflesDB.fetchRaffleByUuid(input.raffle_uuid);
       if (!raffle) throw new TRPCError({ code: "NOT_FOUND", message: "raffle not found" });
+      if (raffle.status !== "funded") throw new TRPCError({ code: "BAD_REQUEST", message: "raffle not funded yet" });
 
-      if (raffle.status !== "funded")
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "raffle not funded yet",
-        });
+      /* everything atomically */
+      await db.transaction(async (tx) => {
+        await eventRaffleResultsDB.setEligibilityForRaffle(tx, raffle.raffle_id, raffle.top_n);
 
-      await eventRafflesDB.triggerDistribution(raffle.raffle_id);
+        await tx
+          .update(eventRaffles)
+          .set({ status: "distributing", updated_at: new Date() })
+          .where(eq(eventRaffles.raffle_id, raffle.raffle_id))
+          .execute();
+      });
+
       return { ok: true };
     }),
 

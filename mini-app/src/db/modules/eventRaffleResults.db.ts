@@ -150,6 +150,44 @@ export const fetchUserScore = async (raffleId: number, userId: number) =>
     .execute()
     .then((r) => r[0] ?? null);
 
+export async function setEligibilityForRaffle(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0], // 🔸 transaction from caller
+  raffleId: number,
+  topN: number
+) {
+  /* lock all rows – nobody can change them while we work */
+  const rows = await tx
+    .select({
+      id: eventRaffleResults.id,
+      rank: eventRaffleResults.rank,
+    })
+    .from(eventRaffleResults)
+    .where(eq(eventRaffleResults.raffle_id, raffleId))
+    .for("update")
+    .execute();
+
+  const winners: number[] = [];
+  const nonWinners: number[] = [];
+
+  for (const r of rows) {
+    // rank is computed already (NULL until you call computeTopN)
+    if (r.rank !== null && r.rank <= topN) winners.push(r.id);
+    else nonWinners.push(r.id);
+  }
+
+  if (winners.length) {
+    await tx.update(eventRaffleResults).set({ status: "eligible" }).where(inArray(eventRaffleResults.id, winners)).execute();
+  }
+
+  if (nonWinners.length) {
+    await tx
+      .update(eventRaffleResults)
+      .set({ status: "not_eligible" }) // ← change literal if you prefer
+      .where(inArray(eventRaffleResults.id, nonWinners))
+      .execute();
+  }
+}
+
 const eventRaffleResultsDB = {
   addUserScore,
   computeTopN,
@@ -160,5 +198,6 @@ const eventRaffleResultsDB = {
   listEligible,
   markManyPaid,
   fetchUserScore,
+  setEligibilityForRaffle,
 };
 export default eventRaffleResultsDB;

@@ -1,33 +1,32 @@
-/* RaffleDefineForm.tsx
- * organiser dashboard for one raffle
- */
+/* RaffleDefineForm.tsx — organiser dashboard (share & copy ready) */
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { z } from "zod";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FiUser } from "react-icons/fi";
 import { Block, BlockTitle, List, ListInput, ListItem, Preloader } from "konsta/react";
+import { Button } from "@/components/ui/button";
+import { Share as ShareIcon } from "lucide-react";
 
 import { trpc } from "@/app/_trpc/client";
 import type { RouterOutput } from "@/server";
 import CustomButton from "@/app/_components/Button/CustomButton";
 import { CHUNK_SIZE_RAFFLE, DEPLOY_FEE_NANO, EXT_FEE_NANO, INT_FEE_NANO, SAFETY_FLOOR_NANO } from "@/constants";
 
-/* ─ helpers ─ */
-const nanoToTonStr = (n?: bigint | string | null, d = 3) => (n ? (Number(n) / 1e9).toFixed(d) : "—");
-const truncate = (s: string, m = 18) => (s.length <= m ? s : `${s.slice(0, m - 1)}…`);
-const bestName = (u: { username: string | null; first_name: string | null; last_name: string | null; user_id: number }) =>
-  u.username ?? ([u.first_name, u.last_name].filter(Boolean).join(" ").trim() || String(u.user_id));
+/* ───────────────────────── helpers ────────────────────────── */
+const fmtNano = (n?: bigint | string | null, d = 3) => (n ? (Number(n) / 1e9).toFixed(d) : "—");
+const trunc = (s: string, m = 18) => (s.length <= m ? s : `${s.slice(0, m - 1)}…`);
+const bestName = (u: { username?: string | null; first_name?: string | null; last_name?: string | null; user_id: number }) =>
+  u.username ?? ([u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.user_id);
 
-/* ─ types ─ */
+/* ───────────────────────── types / schema ─────────────────── */
 type OrgInfo = NonNullable<RouterOutput["raffle"]["infoForOrganizer"]>;
 
-/* ─ form schema ─ */
 const schema = z.object({
   event_uuid: z.string().uuid(),
   top_n: z.coerce.number().int().min(1).max(100),
@@ -36,7 +35,7 @@ const schema = z.object({
 type FormVals = z.infer<typeof schema>;
 
 /* ------------------------------------------------------------ */
-/*                          Children                            */
+/*                         sub-components                       */
 /* ------------------------------------------------------------ */
 
 function RaffleForm({
@@ -106,47 +105,89 @@ function RaffleForm({
 }
 
 function SummaryCard({ info }: { info: OrgInfo }) {
-  const { raffle } = info;
+  const r = info.raffle;
   const wallet = info.wallet as typeof info.wallet & { deployed?: boolean };
 
-  const batches = BigInt(Math.ceil(raffle.top_n / CHUNK_SIZE_RAFFLE));
-  const poolNano = BigInt(raffle.prize_pool_nanoton ?? "0");
-  const gasBudget = EXT_FEE_NANO * batches + INT_FEE_NANO * BigInt(raffle.top_n) + SAFETY_FLOOR_NANO;
-  const perUser = poolNano > gasBudget ? (poolNano - gasBudget) / BigInt(raffle.top_n) : BigInt(0);
+  /* fee maths */
+  const batches = Math.ceil(r.top_n / CHUNK_SIZE_RAFFLE);
+  const pool = BigInt(r.prize_pool_nanoton ?? "0");
+  const feeExt = EXT_FEE_NANO * BigInt(batches);
+  const feeInt = INT_FEE_NANO * BigInt(r.top_n);
+  const deploy = DEPLOY_FEE_NANO;
+  const floor = SAFETY_FLOOR_NANO;
+
+  const need = pool + deploy + feeExt + feeInt + floor;
+  const bal = BigInt(wallet.balanceNano ?? "0");
+  const short = need > bal ? need - bal : BigInt(0);
+
+  const perWinner = pool > feeExt + feeInt + floor ? (pool - feeExt - feeInt - floor) / BigInt(r.top_n) : BigInt(0);
+
+  const showHints = r.status === "waiting_funding" || r.status === "funded";
+
+  const f = (x: bigint) => (Number(x) / 1e9).toFixed(3);
 
   return (
     <>
-      <BlockTitle>Raffle summary</BlockTitle>
+      <BlockTitle className="mb-3">Raffle summary</BlockTitle>
       <Block
         strong
-        className="space-y-1 text-sm"
+        className="space-y-2 text-sm"
       >
         <p>
-          <b>Status:</b> {raffle.status}
+          <b>Status:</b> {r.status}
         </p>
-        <p>
-          <b>Wallet:</b> {wallet.address ? <span className="break-all">{wallet.address}</span> : "—"}
-        </p>
-        {wallet.deployed === false && (
-          <p className="text-xs text-red-500">Wallet not deployed – deposit {nanoToTonStr(DEPLOY_FEE_NANO)} TON.</p>
-        )}
-        {wallet.deployed && (
+
+        {wallet.address && (
           <p>
-            <b>On-chain balance:</b> {nanoToTonStr(wallet.balanceNano)} TON
+            <b>Wallet:</b> <span className="break-all">{wallet.address}</span>
           </p>
         )}
+
+        <Block className="space-y-1 text-xs bg-[#F8F9FB] p-2 rounded-lg">
+          <p>
+            <b>Prize pool:</b> {f(pool)} TON
+          </p>
+          <p>
+            <b>Wallet deploy:</b> {f(deploy)} TON
+          </p>
+          <p>
+            <b>Ext. tx gas:</b> {batches} × {f(EXT_FEE_NANO)} = {f(feeExt)} TON
+          </p>
+          <p>
+            <b>Int. tx gas:</b> {r.top_n} × {f(INT_FEE_NANO)} = {f(feeInt)} TON
+          </p>
+          <p>
+            <b>Safety floor:</b> {f(floor)} TON
+          </p>
+        </Block>
+
         <p>
-          <b>Prize pool (db):</b> {nanoToTonStr(poolNano)} TON
+          <b>Total needed:</b> {f(need)} TON
+          {showHints && short > BigInt(0) && (
+            <>
+              {" "}
+              – <span className="text-red-600 font-medium">add {f(short)} TON more</span>
+            </>
+          )}
         </p>
+
+        {wallet.deployed ? (
+          <p>
+            <b>On-chain balance:</b> {f(bal)} TON
+          </p>
+        ) : (
+          showHints && <p className="text-red-500 text-xs">Wallet not deployed – deposit {f(deploy)} TON first.</p>
+        )}
+
         <p>
-          <b>Each winner (est.):</b> {nanoToTonStr(perUser)} TON
+          <b>Each winner (est.):</b> {f(perWinner)} TON
         </p>
       </Block>
     </>
   );
 }
 
-function WinnersTable({ winners, status }: { winners: OrgInfo["winners"]; status: OrgInfo["raffle"]["status"] }) {
+function WinnersTable({ winners }: { winners: OrgInfo["winners"] }) {
   if (!winners.length) return null;
   return (
     <>
@@ -154,7 +195,7 @@ function WinnersTable({ winners, status }: { winners: OrgInfo["winners"]; status
       <List className="w-full">
         {winners.map((w) => (
           <ListItem
-            key={w.rank}
+            key={w.score}
             className="py-1"
             media={
               w.photo_url ? (
@@ -169,14 +210,8 @@ function WinnersTable({ winners, status }: { winners: OrgInfo["winners"]; status
                 <FiUser className="w-6 h-6 text-gray-400" />
               )
             }
-            title={<span className="text-sm font-medium text-primary">#{w.rank}</span>}
-            after={
-              status === "completed" && w.reward_nanoton
-                ? `${nanoToTonStr(w.reward_nanoton)} TON`
-                : status === "completed"
-                  ? "—"
-                  : "eligible"
-            }
+            title={<span className="text-sm font-medium text-primary">#{w.score}</span>}
+            after={w.status === "paid" && w.reward_nanoton ? `${fmtNano(w.reward_nanoton)} TON` : w.status}
             subtitle={
               w.username ? (
                 <a
@@ -185,10 +220,10 @@ function WinnersTable({ winners, status }: { winners: OrgInfo["winners"]; status
                   rel="noopener noreferrer"
                   className="text-sm text-blue-600 underline truncate max-w-[180px]"
                 >
-                  @{truncate(w.username)}
+                  @{trunc(w.username)}
                 </a>
               ) : (
-                <span className="text-sm truncate max-w-[180px]">{truncate(bestName(w))}</span>
+                <span className="text-sm truncate max-w-[180px]">{trunc(bestName(w).toString())}</span>
               )
             }
           />
@@ -199,14 +234,14 @@ function WinnersTable({ winners, status }: { winners: OrgInfo["winners"]; status
 }
 
 /* ------------------------------------------------------------ */
-/*                         Main page                            */
+/*                           page                               */
 /* ------------------------------------------------------------ */
 
 export default function RaffleDefineForm() {
   const { hash: eventUuid } = useParams<{ hash: string }>();
   const router = useRouter();
 
-  /* ─── hooks (MUST run every render) ───────────────────────── */
+  /* form -------------------- */
   const {
     control,
     handleSubmit,
@@ -218,55 +253,102 @@ export default function RaffleDefineForm() {
     defaultValues: { event_uuid: eventUuid, top_n: 10, prize_pool_ton: 1 },
   });
 
+  /* queries & mutations */
   const saveMut = trpc.raffle.defineOrUpdate.useMutation();
   const trigMut = trpc.raffle.trigger.useMutation();
   const summaryQ = trpc.raffle.infoForOrganizer.useQuery({ event_uuid: eventUuid }, { staleTime: 20_000 });
-
-  /* ─── derived data (may be undefined while loading) ───────── */
+  const eventQ = trpc.events.getEvent.useQuery({ event_uuid: eventUuid }); // 🆕 fetch event meta
   const data = summaryQ.data;
   const raffle = data?.raffle;
   const canEdit = raffle && (raffle.status === "waiting_funding" || raffle.status === "funded");
 
-  /* ─── save & trigger handlers ─────────────────────────────── */
-  const handleSave = handleSubmit((d) =>
-    toast.promise(saveMut.mutateAsync(d), {
-      loading: "Saving…",
-      success: "Saved",
-      error: (e) => e?.message ?? "Error",
-    })
-  );
-
-  const onTrigger = () => {
-    if (!raffle) return;
-    const p = trigMut.mutateAsync({ event_uuid: eventUuid, raffle_uuid: raffle.raffle_uuid });
-    toast.promise(p, {
-      loading: "Starting distribution…",
-      success: "Distribution started!",
-      error: (e) => e?.message ?? "Failed",
-    });
-    p.then(() => summaryQ.refetch());
-  };
-
-  /* reset form defaults after a (successful) save */
+  /* initialise form with DB values */
   useEffect(() => {
-    if (saveMut.isSuccess && raffle) {
+    if (data) {
       reset({
         event_uuid: eventUuid,
-        top_n: saveMut.data.top_n,
-        prize_pool_ton: Number(saveMut.data.prize_pool_nanoton) / 1e9,
+        top_n: data.raffle.top_n,
+        prize_pool_ton: Number(data.raffle.prize_pool_nanoton) / 1e9,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [saveMut.isSuccess]);
+  }, [data, eventUuid, reset]);
 
-  /* ---------------------------------------------------------- */
-  /*                     Render section                         */
-  /* ---------------------------------------------------------- */
+  /* save action */
+  const handleSave = handleSubmit((d) =>
+    toast.promise(
+      saveMut.mutateAsync(d).then(() => summaryQ.refetch()),
+      {
+        loading: "Saving…",
+        success: "Raffle saved",
+        error: (e) => e?.message ?? "Error",
+      }
+    )
+  );
+
+  /* distribution trigger */
+  const triggerPayout = () => {
+    if (!raffle) return;
+    toast.promise(
+      trigMut.mutateAsync({ event_uuid: eventUuid, raffle_uuid: raffle.raffle_uuid }).then(() => summaryQ.refetch()),
+      {
+        loading: "Starting distribution…",
+        success: "Distribution started!",
+        error: (e) => e?.message ?? "Failed",
+      }
+    );
+  };
+
+  /* ---------- public participant link ---------- */
+  /* ---------------- public URL ----------------------------- */
+  const publicUrl = useMemo(() => {
+    if (!raffle) return "";
+    const payload = `${eventUuid}-raffle-${raffle.raffle_uuid}`;
+    return `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${payload}`;
+  }, [eventUuid, raffle]);
+
+  /* ---------------- share / copy --------------------------- */
+  const copyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      toast.success("Link copied!");
+    } catch {
+      toast.error("Couldn’t copy – please try again.");
+    }
+  };
+
+  const shareUrl = async () => {
+    const title = eventQ.data?.title ?? "Join this event raffle"; // 🆕
+    const text = `\n${title}\n\n🤞 Join the raffle and win TON! 🤞\n\n${publicUrl} \n\nPowered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`;
+
+    /* 1️⃣ Telegram “share” dialog */
+    try {
+      window.Telegram?.WebApp?.openTelegramLink?.(
+        `https://t.me/share/url?url=${encodeURIComponent(publicUrl)}&text=${encodeURIComponent(text)}`
+      );
+      return;
+    } catch {
+      /* fall back */
+    }
+
+    /* 2️⃣ Web-Share API */
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url: publicUrl });
+        return;
+      } catch (err: any) {
+        if (["AbortError", "NotAllowedError"].includes(err?.name)) return;
+      }
+    }
+
+    /* 3️⃣ clipboard */
+    await copyUrl();
+  };
+
+  /* ---------------- render ---------------- */
   return (
     <div className="min-h-screen flex flex-col bg-[#EFEFF4] pb-24">
       <h1 className="font-bold text-2xl p-4">Raffle Setup</h1>
 
-      {/* 1) loading / empty ******************************************* */}
       {summaryQ.isLoading && (
         <div className="flex flex-1 items-center justify-center">
           <Preloader />
@@ -279,7 +361,6 @@ export default function RaffleDefineForm() {
         </div>
       )}
 
-      {/* 2) main content (only when data exists) ********************** */}
       {data && (
         <>
           <RaffleForm
@@ -293,29 +374,45 @@ export default function RaffleDefineForm() {
           <div className="px-4 pt-6 space-y-4">
             <SummaryCard info={data} />
 
-            {/* public page link */}
-            <CustomButton
-              variant="outline"
-              className="w-full justify-center"
-              onClick={() => router.push(`/events/${eventUuid}/raffle-ui/${raffle!.raffle_uuid}`)}
-            >
-              Open participant page
-            </CustomButton>
+            {/* public page + share */}
+            <div className="space-y-2">
+              <CustomButton
+                variant="outline"
+                className="w-full justify-center"
+                onClick={() => router.push(`/events/${eventUuid}/raffle-ui/${raffle!.raffle_uuid}`)}
+              >
+                Open participant page
+              </CustomButton>
+
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  variant="secondary"
+                  onClick={copyUrl}
+                >
+                  Copy link
+                </Button>
+                <Button
+                  className="aspect-square"
+                  variant="default"
+                  onClick={shareUrl}
+                >
+                  <ShareIcon size={20} />
+                </Button>
+              </div>
+            </div>
 
             {raffle!.status === "funded" && (
               <CustomButton
                 className="w-full justify-center"
                 isLoading={trigMut.isLoading}
-                onClick={onTrigger}
+                onClick={triggerPayout}
               >
                 Start sending TON to users
               </CustomButton>
             )}
 
-            <WinnersTable
-              winners={data.winners}
-              status={raffle!.status}
-            />
+            <WinnersTable winners={data.winners} />
           </div>
         </>
       )}

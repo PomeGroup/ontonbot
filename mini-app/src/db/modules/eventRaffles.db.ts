@@ -76,11 +76,13 @@ export const getRaffleSummaryForOrganizer = async (raffle_uuid: string) => {
       reward_nanoton: eventRaffleResults.reward_nanoton,
       tx_hash: eventRaffleResults.tx_hash,
       rank: eventRaffleResults.rank,
+      score: eventRaffleResults.score,
+      status: eventRaffleResults.status,
     })
     .from(eventRaffleResults)
     .innerJoin(users, eq(users.user_id, eventRaffleResults.user_id))
     .where(and(eq(eventRaffleResults.raffle_id, raffle.raffle_id))) // eq(eventRaffleResults.status, "eligible")
-    .orderBy(desc(eventRaffleResults.rank))
+    .orderBy(desc(eventRaffleResults.score))
     .execute();
 
   const eligibleCount = eligibleRows.length;

@@ -729,6 +729,13 @@
       "when": 1750909594372,
       "tag": "0103_clear_gamma_corps",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1751000919758,
+      "tag": "0104_zippy_vertigo",
+      "breakpoints": true
     }
   ]
 }
