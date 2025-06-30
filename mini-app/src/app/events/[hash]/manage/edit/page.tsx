@@ -1,6 +1,6 @@
 "use client";
 
-import ManageEvent from "@/app/_components/organisms/events/ManageEvent";
+import ManageEvent from "@/app/_components/organisms/events/manageEvent/ManageEvent";
 import { useGetEvent } from "@/hooks/events.hooks";
 
 interface CreateEventAdminPageProps {

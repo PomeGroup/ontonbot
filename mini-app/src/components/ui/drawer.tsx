@@ -6,15 +6,21 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { useSheetStackStore } from "@/zustand/sheet-stack.store";
 import { Button, Sheet } from "konsta/react";
-import { X } from "lucide-react";
 import { createPortal } from "react-dom";
+import { IoCloseCircleOutline } from "react-icons/io5";
+import Typography from "../Typography";
 
-const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root
-    shouldScaleBackground={shouldScaleBackground}
-    {...props}
-  />
-);
+const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
+  return (
+    <DrawerPrimitive.Root
+      onOpenChange={(state) => {
+        props.onOpenChange?.(state);
+      }}
+      shouldScaleBackground={shouldScaleBackground}
+      {...props}
+    />
+  );
+};
 Drawer.displayName = "Drawer";
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
@@ -46,18 +52,29 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-cn-background p-4",
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-white p-4 gap-5 max-h-[97%]",
         className
       )}
       {...props}
     >
       {/* Conditionally render the DrawerClose button */}
       {showCloseButton && (
-        <DrawerClose asChild>
-          <button className="ms-auto mr-2 flex items-center justify-center h-6 w-6 rounded-full bg-cn-muted">
-            <X className="h-4 w-4" />
-          </button>
-        </DrawerClose>
+        <div className="flex items-center justify-between gap-3">
+          {props.title && (
+            <Typography
+              variant="title3"
+              weight="normal"
+              className="align-middle line-clamp-1"
+            >
+              {props.title}
+            </Typography>
+          )}
+          <DrawerClose asChild>
+            <button className="ms-auto">
+              <IoCloseCircleOutline className="w-7 h-7" />
+            </button>
+          </DrawerClose>
+        </div>
       )}
       {children}
     </DrawerPrimitive.Content>

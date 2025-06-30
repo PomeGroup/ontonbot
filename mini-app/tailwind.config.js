@@ -98,6 +98,7 @@ module.exports = konstaConfig({
           dark: "#575757",
           light: "#F8F8F8",
         },
+
         bronze: "#D3766A",
         gold: {
           DEFAULT: "#F5DA8A",
@@ -135,6 +136,7 @@ module.exports = konstaConfig({
         "cn-muted": {
           DEFAULT: "hsla(var(--shadcn-muted))",
           foreground: "hsl(var(--shadcn-muted-foreground))",
+          text: "#6D6D72",
         },
         "cn-accent": {
           DEFAULT: "hsl(var(--shadcn-accent))",
