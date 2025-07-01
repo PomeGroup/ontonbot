@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { eventRaffleResults } from "@/db/schema/eventRaffleResults";
-import { eq, desc, and, inArray } from "drizzle-orm";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import eventRafflesDB from "./eventRaffles.db";
 import { users } from "@/db/schema";
 
@@ -188,6 +188,22 @@ export async function setEligibilityForRaffle(
   }
 }
 
+/**
+ * How many distinct score-rows are recorded for a TON raffle?
+ * @returns number (0-n)
+ */
+export const countParticipantsForRaffle = async (
+  raffleId: number,
+  /* allow passing a transactional client */
+  tx = db
+): Promise<number> => {
+  const [{ cnt }] = await tx
+    .select({ cnt: sql<number>`count(*)` })
+    .from(eventRaffleResults)
+    .where(eq(eventRaffleResults.raffle_id, raffleId));
+
+  return Number(cnt);
+};
 const eventRaffleResultsDB = {
   addUserScore,
   computeTopN,
@@ -199,5 +215,6 @@ const eventRaffleResultsDB = {
   markManyPaid,
   fetchUserScore,
   setEligibilityForRaffle,
+  countParticipantsForRaffle,
 };
 export default eventRaffleResultsDB;

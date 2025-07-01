@@ -7,6 +7,7 @@ import {
   index,
   integer,
   json,
+  pgEnum,
   pgTable,
   serial,
   text,
@@ -14,6 +15,8 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+
+export const raffleKindEnum = pgEnum("raffle_kind", ["ton", "merch"]);
 
 export const events = pgTable(
   "events",
@@ -31,7 +34,7 @@ export const events = pgTable(
     image_url: text("image_url").notNull(),
     wallet_address: text("wallet_address"),
     giveaway_wallet_address: text("giveaway_wallet_address"),
-
+    raffleKind: raffleKindEnum("raffle_kind"),
     society_hub: text("society_hub"),
     society_hub_id: text("society_hub_id"),
     activity_id: integer("activity_id"),
@@ -96,3 +99,4 @@ export const events = pgTable(
 );
 
 export type EventRow = InferSelectModel<typeof events>;
+export type RaffleKindType = EventRow["raffleKind"];

@@ -24,6 +24,14 @@ export async function middleware(req: NextRequest) {
         console.log("redirecting to organizer profile");
         return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
       }
+
+      if (tgAppStartParam && tgAppStartParam.includes("-merch-raffle-")) {
+        const [eventUuid, raffleUuid] = tgAppStartParam.split("-merch-raffle-");
+        if (eventUuid && raffleUuid) {
+          return NextResponse.redirect(new URL(`/events/${eventUuid}/merch-raffle/${raffleUuid}`, req.nextUrl.origin));
+        }
+        // fallthrough → malformed, continue with other rules
+      }
       if (tgAppStartParam && tgAppStartParam.includes("-raffle-")) {
         const [eventUuid, raffleUuid] = tgAppStartParam.split("-raffle-");
         if (eventUuid && raffleUuid) {

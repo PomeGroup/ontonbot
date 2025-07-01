@@ -115,6 +115,30 @@ export const triggerDistribution = async (raffle_id: number) => setRaffleStatus(
 export const listByStatus = (status: RaffleStatusType) =>
   db.select().from(eventRaffles).where(eq(eventRaffles.status, status)).execute();
 
+/**
+ * Create a raffle row if none exists for the event – or update the existing
+ * row’s top_n / prize pool. Returns the resulting row either way.
+ */
+export const upsert = async (eventId: number, topN: number, prizeNano?: bigint) => {
+  const existing = await fetchRaffleByEvent(eventId);
+  if (!existing) {
+    /* create ───────────────────────────────────────────── */
+    const raffle = await createRaffle(eventId, topN);
+    if (prizeNano !== undefined) {
+      await setPrizePool(raffle.raffle_id, prizeNano);
+      raffle.prize_pool_nanoton = prizeNano;
+    }
+    return raffle;
+  }
+
+  /* update ─────────────────────────────────────────────── */
+  const patch: RaffleUpdatableFields = {};
+  if (existing.top_n !== topN) patch.top_n = topN;
+  if (prizeNano !== undefined) patch.prize_pool_nanoton = prizeNano;
+
+  return Object.keys(patch).length ? updateRaffle(existing.raffle_id, patch) : existing;
+};
+
 /* CONVENIENCE: complete raffle in one call */
 export const completeRaffle = (raffleId: number) => setRaffleStatus(raffleId, "completed");
 const eventRafflesDB = {
@@ -128,5 +152,6 @@ const eventRafflesDB = {
   listByStatus,
   completeRaffle,
   updateRaffle,
+  upsert,
 };
 export default eventRafflesDB;

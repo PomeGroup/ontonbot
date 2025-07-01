@@ -1,4 +1,4 @@
-/* RaffleUiPage.tsx – stable & simple scenario 🚀 */
+/* RaffleUiPage.tsx – spin-button now appears in both waiting_funding & funded */
 "use client";
 
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -18,22 +18,18 @@ import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "@/app/_trpc/client";
 import { CHUNK_SIZE_RAFFLE, EXT_FEE_NANO, INT_FEE_NANO, SAFETY_FLOOR_NANO } from "@/constants";
 
-/* ───────────────── helpers ───────────────── */
+/* ───────── helpers ───────── */
 const random6 = () =>
   Math.floor(Math.random() * 1_000_000)
     .toString()
     .padStart(6, "0");
-
 const truncate = (s: string, m = 18) => (s.length <= m ? s : `${s.slice(0, m - 1)}…`);
-
 const bestName = (u: { username: string | null; first_name: string | null; last_name: string | null; user_id: number }) =>
   u.username ?? ([u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.user_id);
-
 const ton = (n?: string | bigint | null) => (n ? (Number(n) / 1e9).toFixed(3) : "—");
-
 const toBounce = (raw: string) => Address.parse(raw).toString({ bounceable: true, urlSafe: true });
 
-/* ───────────────── memo bits ───────────────── */
+/* ───────── small memo bits ───────── */
 const EventImage = memo(({ url }: { url: string }) => (
   <Images.Event
     width={300}
@@ -51,26 +47,17 @@ const EventTitle = memo(({ t }: { t: string }) => (
   </Typography>
 ));
 
-/* split-flap whose outer height never changes */
+/* fixed-height split-flap wrapper */
 const ScoreDisplay = memo(({ value }: { value: string }) => {
   const inner = useRef<HTMLDivElement>(null);
   const [h, setH] = useState<number | null>(null);
 
   useLayoutEffect(() => {
-    if (inner.current && h === null) {
-      setH(inner.current.getBoundingClientRect().height);
-    }
+    if (inner.current && h === null) setH(inner.current.getBoundingClientRect().height);
   }, [h]);
 
   return (
-    <div
-      style={{
-        height: h ?? "auto",
-        overflow: "hidden",
-        display: "flex",
-        justifyContent: "center",
-      }}
-    >
+    <div style={{ height: h ?? "auto", overflow: "hidden", display: "flex", justifyContent: "center" }}>
       <div ref={inner}>
         <SplitFlap
           value={value}
@@ -85,7 +72,7 @@ const ScoreDisplay = memo(({ value }: { value: string }) => {
 });
 ScoreDisplay.displayName = "ScoreDisplay";
 
-/* MainButton wrapper (only mounts when visible) */
+/* Telegram main-button wrapper */
 const TGButton = memo(
   ({ visible, label, busy, onClick }: { visible: boolean; label: string; busy: boolean; onClick: () => void }) =>
     visible ? (
@@ -96,15 +83,12 @@ const TGButton = memo(
       />
     ) : null
 );
+TGButton.displayName = "TGButton";
 
-/* ───────────────── component ───────────────── */
+/* ───────── page component ───────── */
 export default function RaffleUiPage() {
-  /* URL params */
-  const { hash: eventUuid, "raffle-uuid": raffleUuid } = useParams<{
-    hash: string;
-    "raffle-uuid": string;
-  }>();
-
+  /* params */
+  const { hash: eventUuid, "raffle-uuid": raffleUuid } = useParams<{ hash: string; "raffle-uuid": string }>();
   if (!eventUuid || !raffleUuid) return <p className="text-center mt-10 text-red-500">Bad URL</p>;
 
   /* queries */
@@ -113,99 +97,89 @@ export default function RaffleUiPage() {
   const spinMut = trpc.raffle.spin.useMutation();
 
   /* wallet */
-  const liveWallet = useTonAddress();
+  const wallet = useTonAddress();
+  const hasWallet = !!wallet;
   const modal = useTonConnectModal();
-  const hasWallet = !!liveWallet;
 
-  /* split-flap value */
-  const [score, setScore] = useState("000000"); // static until spin
-  const [rolling, setRolling] = useState(false);
-  const final = useRef<string>("000000");
+  /* split-flap state */
+  const [score, setScore] = useState("000000");
+  const [rolling, setRoll] = useState(false);
+  const finalScore = useRef("000000");
 
-  /* start/stop rolling helpers */
-  const startRolling = () => {
-    setRolling(true);
-  };
-  const stopRolling = () => setRolling(false);
-
-  /* random generator loop */
+  /* random loop */
   useEffect(() => {
-    const id = setInterval(() => {
-      if (rolling) setScore(random6());
-    }, 100);
+    const id = setInterval(() => rolling && setScore(random6()), 100);
     return () => clearInterval(id);
   }, [rolling]);
 
-  /* if already spun earlier → show stored score */
+  /* show stored score if user already spun */
   useEffect(() => {
     if (viewQ.data?.my?.score !== undefined) {
-      final.current = viewQ.data.my.score.toString().padStart(6, "0");
-      setScore(final.current);
+      finalScore.current = viewQ.data.my.score.toString().padStart(6, "0");
+      setScore(finalScore.current);
     }
   }, [viewQ.data?.my?.score]);
 
-  /* shorthand refs */
+  /* aliases */
   const raffle = viewQ.data?.raffle;
   const my = viewQ.data?.my;
   const winners = viewQ.data?.winners ?? [];
 
-  /* wallet to display */
-  const raw = my?.wallet_address || (hasWallet ? Address.parse(liveWallet).toRawString() : undefined);
-  const walletB = raw ? toBounce(raw) : null;
+  /* wallet display */
+  const rawAddr = my?.wallet_address || (hasWallet ? Address.parse(wallet).toRawString() : undefined);
+  const walletB = rawAddr ? toBounce(rawAddr) : null;
 
   /* prize maths */
-  const pool = BigInt(raffle?.prize_pool_nanoton ?? "0");
+  const pool = BigInt(raffle?.prize_pool_nanoton ?? 0);
   const batches = BigInt(Math.ceil((raffle?.top_n ?? 1) / CHUNK_SIZE_RAFFLE));
   const gas = EXT_FEE_NANO * batches + INT_FEE_NANO * BigInt(raffle?.top_n ?? 1) + SAFETY_FLOOR_NANO;
-  const perWinner = pool > gas ? (pool - gas) / BigInt(raffle?.top_n ?? 1) : BigInt(0);
+  const perPrize = pool > gas ? (pool - gas) / BigInt(raffle?.top_n ?? 1) : BigInt(0);
 
-  /* click handler */
-  const handleClick = useCallback(() => {
+  /* spin handler */
+  const spin = useCallback(() => {
     if (!hasWallet) {
       modal.open();
       return;
     }
 
-    /* hide button immediately by making it no longer visible */
-    startRolling();
+    setRoll(true); // start eye-candy immediately
 
-    toast.promise(
-      spinMut.mutateAsync({
-        raffle_uuid: raffleUuid,
-        wallet_address: liveWallet,
-      }),
-      {
-        loading: "Spinning…",
-        success: (d) => {
-          // Slow-down & land on real score
-          final.current = d.score.toString().padStart(6, "0");
-          const pace = [150, 200, 300, 450, 700];
-          let i = 0;
-          const tick = () => {
-            setScore(random6());
-            if (i < pace.length) setTimeout(tick, pace[i++]);
-            else {
-              stopRolling();
-              setScore(final.current);
-              viewQ.refetch();
-            }
-          };
-          tick();
-          return `Your score: ${d.score}`;
-        },
-        error: (e) => {
-          stopRolling();
-          setScore("000000");
-          return e?.message ?? "Spin failed";
-        },
-      }
-    );
-  }, [hasWallet, modal, spinMut, raffleUuid, liveWallet, viewQ]);
+    toast.promise(spinMut.mutateAsync({ raffle_uuid: raffleUuid, wallet_address: wallet }), {
+      loading: "Spinning…",
+      success: (res) => {
+        finalScore.current = res.score.toString().padStart(6, "0");
+        /* slow-down */
+        const p = [150, 200, 300, 450, 700];
+        let i = 0;
+        const tick = () => {
+          setScore(random6());
+          if (i < p.length) setTimeout(tick, p[i++]);
+          else {
+            setRoll(false);
+            setScore(finalScore.current);
+            viewQ.refetch();
+          }
+        };
+        tick();
+        return `Your score: ${res.score}`;
+      },
+      error: (e) => {
+        setRoll(false);
+        setScore("000000");
+        return e?.message ?? "Spin failed";
+      },
+    });
+  }, [hasWallet, modal, spinMut, raffleUuid, wallet, viewQ]);
 
-  /* MainButton visibility */
-  const btnVisible = !my && raffle?.status === "waiting_funding" && !spinMut.isLoading;
+  /* WHEN to show the button?
+     – user hasn’t spun yet       ( !my )
+     – raffle is either waiting_funding OR funded
+     – request not in-flight      ( !spinMut.isLoading )
+  */
+  const canSpin = raffle && !my && ["waiting_funding", "funded"].includes(raffle.status);
+  const btnVisible = canSpin && !spinMut.isLoading;
 
-  /* loading */
+  /* loading states */
   if (eventQ.isLoading || viewQ.isLoading)
     return (
       <div className="flex justify-center pt-20">
@@ -221,10 +195,10 @@ export default function RaffleUiPage() {
   return (
     <>
       <TGButton
-        visible={btnVisible}
+        visible={btnVisible ?? false}
         label={hasWallet ? "Spin" : "Connect wallet"}
         busy={spinMut.isLoading}
-        onClick={handleClick}
+        onClick={spin}
       />
 
       <div className="min-h-screen bg-[#EFEFF4] pb-24 px-4">
@@ -247,8 +221,7 @@ export default function RaffleUiPage() {
           )}
 
           <p className="text-center font-semibold text-lg">
-            🏆 Pool {ton(pool)} TON • Top&nbsp;
-            {raffle?.top_n} get {ton(perWinner)} TON each
+            🏆 Pool {ton(pool)} TON • Top&nbsp;{raffle?.top_n} get {ton(perPrize)} TON each
           </p>
 
           {my?.reward_nanoton && (

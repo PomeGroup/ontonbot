@@ -36,7 +36,7 @@ import { eventPayment, EventTicketType, organizerPaymentStatus, pgTicketTypes, t
 import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults";
 import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
-import { events } from "./schema/events";
+import { events, raffleKindEnum, RaffleKindType } from "./schema/events";
 import { giataCity } from "./schema/giataCity";
 import { moderationLog, ModerationLogActionType } from "./schema/moderation_log";
 import { nftItems } from "./schema/nft_items";
@@ -196,6 +196,30 @@ import {
   eventRaffleResultStatus,
   eventRaffleResultStatusType,
 } from "./schema/eventRaffleResults";
+import { eventMerchRaffles } from "./schema/eventMerchRaffles";
+import {
+  eventMerchRaffleResults,
+  merchResultStatus,
+  MerchResultStatusType,
+  EventMerchRaffleResultRow,
+} from "./schema/eventMerchRaffleResults";
+import {
+  eventMerchPrizes,
+  eventMerchFulfilMethod,
+  eventMerchPrizeStatus,
+  EventMerchFulfilMethodType,
+  EventMerchPrizeRow,
+  EventMerchPrizeInsert,
+  EventMerchPrizeStatusType,
+} from "./schema/eventMerchPrizes";
+
+import {
+  eventMerchPrizeResults,
+  eventMerchPrizeResultStatus,
+  EventMerchPrizeResultStatusType,
+  EventMerchPrizeResultInsert,
+  EventMerchPrizeResultRow,
+} from "./schema/eventMerchPrizeResults";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -241,6 +265,15 @@ export {
   raffleStatus,
   eventRaffleResults,
   eventRaffleResultStatus,
+  eventMerchRaffles,
+  eventMerchRaffleResults,
+  merchResultStatus,
+  eventMerchFulfilMethod,
+  eventMerchPrizeStatus,
+  eventMerchPrizes,
+  eventMerchPrizeResults,
+  eventMerchPrizeResultStatus,
+  raffleKindEnum,
 };
 
 // export all the tables and relations
@@ -430,4 +463,14 @@ export type {
   EventRaffleResultInsert,
   eventRaffleResultStatusType,
   RaffleStatusType,
+  EventMerchRaffleResultRow,
+  MerchResultStatusType,
+  EventMerchPrizeRow,
+  EventMerchPrizeInsert,
+  EventMerchFulfilMethodType,
+  EventMerchPrizeStatusType,
+  EventMerchPrizeResultRow,
+  EventMerchPrizeResultInsert,
+  EventMerchPrizeResultStatusType,
+  RaffleKindType,
 };

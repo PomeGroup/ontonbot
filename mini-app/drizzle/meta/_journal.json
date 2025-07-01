@@ -736,6 +736,27 @@
       "when": 1751000919758,
       "tag": "0104_zippy_vertigo",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1751307774573,
+      "tag": "0105_normal_warhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1751312317658,
+      "tag": "0106_far_vindicator",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1751321465923,
+      "tag": "0107_fuzzy_mysterio",
+      "breakpoints": true
     }
   ]
 }
