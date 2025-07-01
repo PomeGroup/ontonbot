@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "merch_results_notif_sent_at_idx" ON "event_merch_prize_results" USING btree ("notif_status","updated_at");

@@ -1,8 +1,8 @@
-/* organiser dashboard – TON giveaway | multi-reward merch raffle */
+/* organiser dashboard – TON giveaway / multi-reward merch raffle */
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { useParams, useRouter } from "next/navigation";
@@ -17,22 +17,25 @@ import { trpc } from "@/app/_trpc/client";
 import CustomButton from "@/app/_components/Button/CustomButton";
 import { CHUNK_SIZE_RAFFLE, DEPLOY_FEE_NANO, EXT_FEE_NANO, INT_FEE_NANO, SAFETY_FLOOR_NANO } from "@/constants";
 
-/* ───── utils ───── */
+/* ------------------------------------------------------------------ *
+ * helpers                                                            *
+ * ------------------------------------------------------------------ */
 type Kind = "ton" | "merch";
-const nanoFmt = (v?: string | bigint | null, d = 3) => (v ? (Number(v) / 1e9).toFixed(d) : "—");
+
+const fmtNano = (x?: string | bigint | null, d = 3) => (x ? (Number(x) / 1e9).toFixed(d) : "—");
 const trunc = (s = "", m = 18) => (s.length <= m ? s : `${s.slice(0, m - 1)}…`);
 const bestName = (u: any) => u.username ?? ([u.first_name, u.last_name].filter(Boolean).join(" ") || u.user_id);
 
-const shareLink = async (url: string, txt: string) => {
+const shareLink = async (url: string, text: string) => {
   try {
     window.Telegram?.WebApp?.openTelegramLink?.(
-      `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(txt)}`
+      `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`
     );
     return;
   } catch {}
   if (navigator.share) {
     try {
-      await navigator.share({ url, text: txt });
+      await navigator.share({ url, text });
       return;
     } catch {}
   }
@@ -40,7 +43,9 @@ const shareLink = async (url: string, txt: string) => {
   toast.success("Link copied!");
 };
 
-/* ───── form schemas ───── */
+/* ------------------------------------------------------------------ *
+ * zod schemas                                                        *
+ * ------------------------------------------------------------------ */
 const tonSchema = z.object({
   event_uuid: z.string().uuid(),
   top_n: z.coerce.number().int().min(1).max(100),
@@ -56,7 +61,9 @@ const prizeSchema = z.object({
 });
 type PrizeVals = z.infer<typeof prizeSchema>;
 
-/* ───── TON giveaway form ───── */
+/* ------------------------------------------------------------------ *
+ * small TON components                                               *
+ * ------------------------------------------------------------------ */
 function TonForm({
   control,
   errors,
@@ -125,10 +132,10 @@ function TonForm({
   );
 }
 
-/* ───── tiny TON summary card ───── */
 function SummaryTon({ info }: { info: any }) {
   const r = info.raffle;
   const w = info.wallet ?? {};
+
   const batches = Math.ceil(r.top_n / CHUNK_SIZE_RAFFLE);
   const pool = BigInt(r.prize_pool_nanoton ?? 0);
   const need = pool + DEPLOY_FEE_NANO + EXT_FEE_NANO * BigInt(batches) + INT_FEE_NANO * BigInt(r.top_n) + SAFETY_FLOOR_NANO;
@@ -139,7 +146,7 @@ function SummaryTon({ info }: { info: any }) {
       <BlockTitle className="mb-2">Raffle summary</BlockTitle>
       <Block
         strong
-        className="space-y-1 text-sm"
+        className="text-sm space-y-1"
       >
         <p>
           <b>Status:</b> {r.status}
@@ -150,13 +157,13 @@ function SummaryTon({ info }: { info: any }) {
           </p>
         )}
         <p>
-          <b>Prize pool:</b> {nanoFmt(pool)} TON
+          <b>Prize pool:</b> {fmtNano(pool)} TON
         </p>
         <p>
-          <b>Total needed:</b> {nanoFmt(need)} TON
+          <b>Total needed:</b> {fmtNano(need)} TON
         </p>
         <p>
-          <b>Balance:</b> {nanoFmt(bal)} TON
+          <b>Balance:</b> {fmtNano(bal)} TON
         </p>
       </Block>
 
@@ -183,7 +190,7 @@ function SummaryTon({ info }: { info: any }) {
                     trunc(bestName(w))
                   )
                 }
-                after={w.status}
+                after={r.item_name}
                 media={
                   w.photo_url ? (
                     <Image
@@ -206,7 +213,9 @@ function SummaryTon({ info }: { info: any }) {
   );
 }
 
-/* ───── overlay prize editor ───── */
+/* ------------------------------------------------------------------ *
+ * prize editor overlay                                               *
+ * ------------------------------------------------------------------ */
 function PrizeEditor({
   initial,
   onSave,
@@ -228,10 +237,9 @@ function PrizeEditor({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <Block className="w-[90%] max-w-md rounded-lg bg-white p-4">
+      <Block className="bg-white rounded-lg w-[90%] max-w-md p-4">
         <form className="space-y-3">
           <BlockTitle>{initial.item_name ? "Edit reward" : "Add reward"}</BlockTitle>
-
           <List>
             <Controller
               control={control}
@@ -317,22 +325,71 @@ function PrizeEditor({
   );
 }
 
-/* ───── MAIN PAGE ───── */
+/* ------------------------------------------------------------------ *
+ * tiny modal to view shipping info                                   *
+ * ------------------------------------------------------------------ */
+// ⭐ NEW
+function UserDialog({ user, onClose }: { user: any; onClose: () => void }) {
+  if (!user) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <Block className="bg-white rounded-lg w-[90%] max-w-md p-4 space-y-2">
+        <BlockTitle>Participant details</BlockTitle>
+
+        <p>
+          <b>Username / name:</b> {bestName(user)}
+        </p>
+        {user.full_name && (
+          <p>
+            <b>Full name:</b> {user.full_name}
+          </p>
+        )}
+        {user.shipping_address && (
+          <p className="break-words">
+            <b>Address:</b> {user.shipping_address}
+          </p>
+        )}
+        {user.phone && (
+          <p>
+            <b>Phone:</b> {user.phone}
+          </p>
+        )}
+        <p>
+          <b>Status:</b> {user.status ?? "—"}
+        </p>
+
+        <Button
+          className="w-full mt-4"
+          onClick={onClose}
+        >
+          Close
+        </Button>
+      </Block>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * MAIN COMPONENT                                                     *
+ * ------------------------------------------------------------------ */
 export default function RaffleDefineForm() {
   const { hash: eventUuid } = useParams<{ hash: string }>();
   const router = useRouter();
-
-  /* event (for raffleKind) */
+  const [viewUser, setViewUser] = useState<any | null>(null);
+  /* ─── base event (raffleKind) ─── */
   const eventQ = trpc.events.getEvent.useQuery({ event_uuid: eventUuid });
 
-  /* flavour state – free until raffleKind is set in DB */
+  /* ─── kind radio ─── */
   const [kind, setKind] = useState<Kind>("ton");
   const [locked, setLocked] = useState<Kind | null>(null);
 
-  /* prize-editor overlay */
-  const [editing, setEditing] = useState<{ prizeId?: number; initial: Partial<PrizeVals> } | null>(null);
+  /* ─── overlay state ─── */
+  const [editing, setEditing] = useState<{
+    prizeId?: number;
+    initial: Partial<PrizeVals>;
+  } | null>(null);
 
-  /* TON hooks ---------------------------------------------------------------- */
+  /* ─── TON queries & mut ─── */
   const tonForm = useForm<TonVals>({
     resolver: zodResolver(tonSchema),
     defaultValues: { event_uuid: eventUuid, top_n: 10, prize_pool_ton: 1 },
@@ -341,22 +398,24 @@ export default function RaffleDefineForm() {
   const saveTon = trpc.raffle.defineOrUpdate.useMutation();
   const trigTon = trpc.raffle.trigger.useMutation();
 
-  /* MERCH hooks -------------------------------------------------------------- */
+  /* ─── MERCH queries & mut ─── */
   const merchDashQ = trpc.raffle.infoForOrganizerMerch.useQuery({ event_uuid: eventUuid });
   const ensureRaffle = trpc.raffle.ensureMerchRaffle.useMutation();
   const savePrize = trpc.raffle.saveMerchPrize.useMutation();
-  const trigPrize = trpc.raffle.triggerMerchPrize.useMutation();
+  const trigPrize = trpc.raffle.triggerMerchPrize.useMutation({
+    onSuccess: () => merchDashQ.refetch(), // <= RESPOND IMMEDIATELY AFTER TRIGGER
+  });
 
-  /* reflect raffleKind from DB (=> lock radio once chosen) */
+  /* ─── reflect raffleKind ─── */
   useEffect(() => {
     const rk = eventQ.data?.raffleKind as Kind | null | undefined;
     if (rk === "ton" || rk === "merch") {
       setKind(rk);
-      setLocked(rk); // lock after first definition saved
+      setLocked(rk);
     }
   }, [eventQ.data?.raffleKind]);
 
-  /* TON save */
+  /* ─── TON save ─── */
   const handleSaveTon = tonForm.handleSubmit((v) =>
     toast.promise(
       saveTon.mutateAsync(v).then(() => tonQ.refetch()),
@@ -368,7 +427,7 @@ export default function RaffleDefineForm() {
     )
   );
 
-  /* merch prize save */
+  /* ─── merch prize save ─── */
   const handleSavePrize = async (vals: PrizeVals) => {
     const raffleUuid =
       merchDashQ.data?.raffle?.merchRaffleUuid ??
@@ -388,7 +447,7 @@ export default function RaffleDefineForm() {
     setEditing(null);
   };
 
-  /* share links */
+  /* ─── share URLs ─── */
   const tonUrl = useMemo(() => {
     const id = tonQ.data?.raffle?.raffle_uuid;
     return id ? `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}-raffle-${id}` : "";
@@ -399,7 +458,7 @@ export default function RaffleDefineForm() {
     return id ? `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}-merch-raffle-${id}` : "";
   }, [merchDashQ.data, eventUuid]);
 
-  /* loading */
+  /* loading splash */
   if (eventQ.isLoading || tonQ.isLoading || merchDashQ.isLoading)
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#EFEFF4]">
@@ -412,12 +471,14 @@ export default function RaffleDefineForm() {
   const tonData = tonQ.data;
   const merchData = merchDashQ.data;
 
-  /* ───────── render ───────── */
+  /* ------------------------------------------------------------------ *
+   * RENDER                                                             *
+   * ------------------------------------------------------------------ */
   return (
     <div className="flex min-h-screen flex-col bg-[#EFEFF4] pb-24">
       <h1 className="p-4 text-2xl font-bold">Raffle setup</h1>
 
-      {/* type selector */}
+      {/* ── raffle kind selector ── */}
       <Block className="px-4">
         <BlockTitle>Choose type</BlockTitle>
         <Block className="flex gap-6">
@@ -428,7 +489,6 @@ export default function RaffleDefineForm() {
             >
               <Radio
                 checked={kind === v}
-                /* only disable AFTER a type was saved */
                 disabled={locked !== null && locked !== v}
                 onChange={() => setKind(v)}
               />
@@ -438,7 +498,7 @@ export default function RaffleDefineForm() {
         </Block>
       </Block>
 
-      {/* ---------- TON ---------- */}
+      {/* ================= TON ================= */}
       {kind === "ton" && (
         <>
           <TonForm
@@ -498,15 +558,34 @@ export default function RaffleDefineForm() {
         </>
       )}
 
-      {/* ---------- MERCH ---------- */}
+      {/* ================= MERCH ================= */}
       {kind === "merch" && (
         <div className="space-y-4 px-4">
-          {/* prize list */}
           {merchData?.prizes?.length ? (
             merchData.prizes.map((row) => {
               if (!row) return null;
-              const { prize, winners } = row;
-              const list = winners ?? [];
+
+              // ⬇️ provide a default empty array when guests key is absent
+              const {
+                prize,
+                winners = [],
+                guests: rawGuests,
+              } = row as {
+                prize: {
+                  merch_prize_id: number;
+                  item_name: string;
+                  item_description: string | null;
+                  top_n: number;
+                  fulfil_method: "ship" | "pickup";
+                  status: "draft" | "active" | "distributing" | "completed" | "cancelled";
+                };
+                winners?: any[];
+                guests?: any[];
+              };
+
+              const guests = rawGuests ?? []; // fallback for TypeScript
+              const showWinners = prize.status !== "draft" && winners.length > 0;
+              const listToShow = showWinners ? winners : guests;
 
               return (
                 <Block
@@ -514,6 +593,12 @@ export default function RaffleDefineForm() {
                   strong
                   className="space-y-2"
                 >
+                  {viewUser && (
+                    <UserDialog
+                      user={viewUser}
+                      onClose={() => setViewUser(null)}
+                    />
+                  )}
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{prize.item_name}</p>
@@ -540,19 +625,26 @@ export default function RaffleDefineForm() {
                     </Button>
                   </div>
 
-                  {!!list.length && (
+                  {!!listToShow.length && (
                     <List>
-                      {list.map((w) => (
+                      {listToShow.map((u: any, idx: number) => (
                         <ListItem
-                          key={w.user_id}
+                          key={u.user_id}
                           className="py-1"
-                          title={<span className="font-medium text-primary">#{w.rank}</span>}
-                          subtitle={bestName(w)}
-                          after={w.status}
+                          title={
+                            showWinners ? (
+                              <span className="font-medium text-primary">#{u.rank}</span>
+                            ) : (
+                              <span className="font-medium text-gray-400">{idx + 1}</span>
+                            )
+                          }
+                          subtitle={bestName(u)}
+                          after={u.status ?? "—"}
+                          onClick={() => setViewUser(u)}
                           media={
-                            w.photo_url ? (
+                            u.photo_url ? (
                               <Image
-                                src={w.photo_url}
+                                src={u.photo_url}
                                 width={28}
                                 height={28}
                                 alt=""
@@ -579,7 +671,7 @@ export default function RaffleDefineForm() {
             </Block>
           )}
 
-          {/* pick winners button */}
+          {/* pick winners – only when at least one prize still in draft */}
           {merchData?.prizes?.some((p) => p && p.prize.status === "draft") && (
             <CustomButton
               className="w-full justify-center"
@@ -592,10 +684,12 @@ export default function RaffleDefineForm() {
                 if (!draftIds.length) return;
 
                 toast.promise(
-                  Promise.all(
-                    draftIds.map((id) => trigPrize.mutateAsync({ merch_prize_id: id, event_uuid: eventUuid }))
-                  ).then(() => merchDashQ.refetch()),
-                  { loading: "Picking winners…", success: "Winners selected!", error: (e) => e?.message ?? "Error" }
+                  Promise.all(draftIds.map((id) => trigPrize.mutateAsync({ merch_prize_id: id, event_uuid: eventUuid }))),
+                  {
+                    loading: "Picking winners…",
+                    success: "Winners selected!",
+                    error: (e) => e?.message ?? "Error",
+                  }
                 );
               }}
             >
@@ -603,7 +697,6 @@ export default function RaffleDefineForm() {
             </CustomButton>
           )}
 
-          {/* public page + share */}
           {merchData?.raffle && (
             <>
               <Button
@@ -633,7 +726,6 @@ export default function RaffleDefineForm() {
             </>
           )}
 
-          {/* add reward */}
           <Button
             className="flex w-full justify-center gap-2"
             onClick={() => setEditing({ prizeId: undefined, initial: {} })}

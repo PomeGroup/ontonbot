@@ -239,18 +239,37 @@ export const raffleRouter = router({
   triggerMerchPrize: eventManagementProtectedProcedure
     .input(z.object({ merch_prize_id: z.number() }))
     .mutation(async ({ input }) => {
+      /* ① fetch prize */
       const prize = await eventMerchPrizesDB.fetchPrizeById(input.merch_prize_id);
-      if (!prize || prize.status !== "draft") throw new TRPCError({ code: "BAD_REQUEST" });
+      if (!prize || prize.status !== "draft") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Prize is closed" });
+      }
 
-      /* <-- use the helper */
-      const n = await eventMerchPrizeResultsDB.countParticipantsForMerchPrize(prize.merch_prize_id);
-      if (n === 0)
+      /* ② un-assigned pool for this raffle (new helper!) */
+      const pool = await eventMerchPrizeResultsDB.fetchUnassignedScores(prize.merch_raffle_id);
+      if (pool.length === 0) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "No eligible participants yet",
+          message: "No participants yet",
         });
+      }
 
-      await eventMerchPrizeResultsDB.computeTopN(prize.merch_prize_id);
+      /* ③ top-N by score DESC */
+      const winners = pool.slice(0, prize.top_n);
+
+      /* ④ assign prize + rank */
+      await Promise.all(
+        winners.map((row, i) =>
+          eventMerchPrizeResultsDB.assignPrize({
+            id: row.id,
+            merch_prize_id: prize.merch_prize_id,
+            rank: i + 1,
+            status: "pending",
+          })
+        )
+      );
+
+      /* ⑤ flip status */
       await eventMerchPrizesDB.updatePrize(prize.merch_prize_id, {
         status: "distributing",
       });
@@ -258,37 +277,58 @@ export const raffleRouter = router({
       return { ok: true };
     }),
 
+  // src/server/routers/raffle.ts  (or wherever you keep the router)
+
   listMerchPrizes: initDataProtectedProcedure
     .input(z.object({ merch_raffle_uuid: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const { user } = ctx; // may be null (unauth user in Web-App)
+      const { user } = ctx;
+
+      /* 1 . raffle & prizes ------------------------------------------------- */
       const raffle = await eventMerchRafflesDB.fetchMerchRaffleByUuid(input.merch_raffle_uuid);
       if (!raffle) throw new TRPCError({ code: "NOT_FOUND" });
 
-      /* all prizes that belong to this merch raffle */
       const prizes = await eventMerchPrizesDB.listPrizesForRaffle(raffle.merchRaffleId);
 
-      /* decorate each prize with: winners[] (only when completed) + my{}  */
+      /* 2 . un-assigned row for this viewer (only one per raffle) ----------- */
+      let myUnassigned: Awaited<ReturnType<typeof eventMerchPrizeResultsDB.fetchUnassignedRow>> | null = null;
+      if (user) {
+        myUnassigned = await eventMerchPrizeResultsDB.fetchUnassignedRow({
+          merch_raffle_id: raffle.merchRaffleId,
+          user_id: user.user_id,
+        });
+      }
+
+      /* 3 . decorate every prize ------------------------------------------- */
       const rows = await Promise.all(
         prizes.map(async (p) => {
-          /* winners only after organiser pressed “Pick winners” and distribution finished */
+          /* winners – only after completion */
           const winners =
-            p.status === "completed"
-              ? await eventMerchPrizeResultsDB.getPrizeWithWinners(p.merch_prize_id) // you already have that helper
-              : [];
+            p.status === "completed" ? await eventMerchPrizeResultsDB.getPrizeWithWinners(p.merch_prize_id) : [];
 
-          /* my rank/score/status (if user logged-in & already spun) */
-          let my = null;
+          /* guests – show *everyone* while prize still open */
+          const guests =
+            p.status === "completed"
+              ? [] // hide after winners picked
+              : await eventMerchPrizeResultsDB.listParticipantsForPrize(p.merch_prize_id);
+
+          /* viewer row: look for exact prize row first, fall back to un-assigned */
+          let my: typeof myUnassigned | null = null;
           if (user) {
-            my = await eventMerchPrizeResultsDB.fetchUserRow({ merch_prize_id: p.merch_prize_id, user_id: user.user_id });
+            my =
+              (await eventMerchPrizeResultsDB.fetchUserRow({
+                merch_prize_id: p.merch_prize_id,
+                user_id: user.user_id,
+              })) || myUnassigned;
           }
 
-          return { prize: p, winners, my };
+          return { prize: p, winners, guests, my };
         })
       );
 
       return { raffle, prizes: rows };
     }),
+
   /* ───────────────── TON GIVE-AWAY  (unchanged logic) ───────────────── */
   spinTon: initDataProtectedProcedure
     .input(
@@ -333,7 +373,7 @@ export const raffleRouter = router({
         await Promise.all(
           prizes.map((p) =>
             eventMerchPrizeResultsDB.addUserScore({
-              merch_prize_id: p.merch_prize_id,
+              merch_raffle_id: merchRaffle.merchRaffleId,
               user_id: user.user_id,
               score,
             })
@@ -353,42 +393,31 @@ export const raffleRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { user } = ctx;
 
-      /* 1. load merch raffle + its prizes */
+      /* ① raffle */
       const merch = await eventMerchRafflesDB.fetchMerchRaffleByUuid(input.merch_raffle_uuid);
       if (!merch) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const prizes = await eventMerchPrizesDB.listPrizesForRaffle(merch.merchRaffleId);
-      const open = prizes.filter((p) => p.status !== "completed");
-      if (!open.length) throw new TRPCError({ code: "BAD_REQUEST", message: "No active prizes" });
-
-      /* 2. already spun?  — test by looking at *one* prize */
-      const firstResult = await eventMerchPrizeResultsDB.fetchUserRow({
-        merch_prize_id: prizes[0].merch_prize_id,
+      /* ② already spun?  ─── any row, assigned or not */
+      const existing = await eventMerchPrizeResultsDB.fetchRowByRaffleAndUser({
+        merch_raffle_id: merch.merchRaffleId,
         user_id: user.user_id,
       });
-      if (firstResult) return { alreadyPlayed: true, score: firstResult.score };
+      if (existing) return { alreadyPlayed: true, score: existing.score };
 
-      /* 3. event still open? (same helper as TON version) */
+      /* ③ date window */
       await ensureDateWindowOK(merch.eventId);
 
-      /* 4. generate score & write it for every prize */
+      /* ④ single score row (un-assigned) */
       const score = randomInt(1, 1_000_000);
-
-      await Promise.all(
-        prizes.map((p) =>
-          eventMerchPrizeResultsDB.addUserScore({
-            merch_prize_id: p.merch_prize_id,
-            user_id: user.user_id,
-            score,
-          })
-        )
-      );
-
-      /* 5. recompute ranks for each prize individually */
-      await Promise.all(prizes.map((p) => eventMerchPrizeResultsDB.computeTopN(p.merch_prize_id)));
+      await eventMerchPrizeResultsDB.addUserScore({
+        merch_raffle_id: merch.merchRaffleId,
+        user_id: user.user_id,
+        score,
+      });
 
       return { alreadyPlayed: false, score };
     }),
+
   /* ───────────────── USER VIEWS ───────────────── */
 
   view: initDataProtectedProcedure
@@ -404,4 +433,40 @@ export const raffleRouter = router({
       };
     })
   ),
+  submitShippingInfo: initDataProtectedProcedure
+    .input(
+      z.object({
+        merch_prize_id: z.number(),
+        full_name: z.string().min(3).max(80),
+        shipping_address: z.string().min(10).max(255),
+        phone: z.string().min(6).max(32),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { user } = ctx;
+
+      // ① locate winner row
+      const row = await eventMerchPrizeResultsDB.fetchUserRow({
+        merch_prize_id: input.merch_prize_id,
+        user_id: user.user_id,
+      });
+      if (!row) throw new TRPCError({ code: "FORBIDDEN", message: "Not a winner of this prize" });
+
+      // ② fetch prize to know fulfil-method
+      const prize = await eventMerchPrizesDB.fetchPrizeById(input.merch_prize_id);
+      if (!prize) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // ③ write address / phone
+      await eventMerchPrizeResultsDB.setContactInfo({
+        merch_prize_id: input.merch_prize_id,
+        user_id: user.user_id,
+        full_name: input.full_name,
+        shipping_address: input.shipping_address,
+        phone: input.phone,
+      });
+
+      // ④ bump status for pickup flow
+
+      return { ok: true };
+    }),
 });

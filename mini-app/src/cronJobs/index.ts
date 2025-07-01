@@ -34,6 +34,7 @@ import { syncPlay2WinScores } from "@/cronJobs/tasks/syncPlay2WinScores";
 import { sendPendingPromoCodes } from "@/cronJobs/tasks/promoCron";
 import { createWalletsForUpcomingEvents } from "@/cronJobs/tasks/createEventWallets";
 import { distributeRafflesTon } from "@/cronJobs/tasks/distributeRaffleTon";
+import { sendAllPendingPrizeNotifications } from "@/cronJobs/tasks/sendAllPendingPrizeNotifications";
 
 const cronJobs = {
   CheckTransactions,
@@ -71,6 +72,7 @@ const cronJobs = {
   sendPendingPromoCodes,
   createWalletsForUpcomingEvents,
   distributeRafflesTon,
+  sendAllPendingPrizeNotifications,
 };
 export { cronJobRunner };
 export default cronJobs;

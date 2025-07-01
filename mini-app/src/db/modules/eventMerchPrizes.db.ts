@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { eventMerchPrizes } from "@/db/schema/eventMerchPrizes";
-import { InferSelectModel, eq, desc } from "drizzle-orm";
-import { eventMerchPrizeResults } from "@/db/schema/eventMerchPrizeResults";
+import { InferSelectModel, eq, desc, isNotNull, and } from "drizzle-orm";
+import { EventMerchNotifStatusType, eventMerchPrizeResults } from "@/db/schema/eventMerchPrizeResults";
 import { users } from "../schema";
 
 export type PrizeRow = InferSelectModel<typeof eventMerchPrizes>;
@@ -72,6 +72,7 @@ const fetchPrizeById = async (prizeId: number) => {
   const [prize] = await db.select().from(eventMerchPrizes).where(eq(eventMerchPrizes.merch_prize_id, prizeId)).limit(1);
   return prize;
 };
+
 const eventMerchPrizesDB = {
   createPrize,
   updatePrize,

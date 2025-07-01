@@ -219,6 +219,8 @@ import {
   EventMerchPrizeResultStatusType,
   EventMerchPrizeResultInsert,
   EventMerchPrizeResultRow,
+  eventMerchNotifStatus,
+  EventMerchNotifStatusType,
 } from "./schema/eventMerchPrizeResults";
 export {
   accessRoleEnum,
@@ -274,6 +276,7 @@ export {
   eventMerchPrizeResults,
   eventMerchPrizeResultStatus,
   raffleKindEnum,
+  eventMerchNotifStatus,
 };
 
 // export all the tables and relations
@@ -473,4 +476,5 @@ export type {
   EventMerchPrizeResultInsert,
   EventMerchPrizeResultStatusType,
   RaffleKindType,
+  EventMerchNotifStatusType,
 };
