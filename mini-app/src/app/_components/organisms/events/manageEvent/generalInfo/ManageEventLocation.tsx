@@ -6,12 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronRight } from "lucide-react";
 import ManageEventCard from "../ManageEventCard";
 
-import dynamic from "next/dynamic";
-
-const ManageEventMap = dynamic(() => import("./ManageEventMap"), {
-  ssr: false,
-});
-
 const ManageEventCountry = () => {
   return (
     <Drawer>
@@ -145,15 +139,22 @@ const ManageEventLocation = () => {
                 <ManageEventCity />
                 <Input
                   label="Detail"
-                  title="Name of the event"
-                  name="name"
+                  title="Your Event's Location Details"
+                  name="address-info"
                   placeholder="Your Event's Location Details"
                   type="text"
                   info="Type info’s detail and choose it on the map so attendees can access easier"
                 />
-                <ManageEventMap posix={[4.79029, -75.69003]} />
               </TabsContent>
-              <TabsContent value="online">Change your password here.</TabsContent>
+              <TabsContent value="online">
+                <Input
+                  label="Event's Link"
+                  title="Event's Link"
+                  name="eventLink"
+                  placeholder="Even location link"
+                  type="text"
+                />
+              </TabsContent>
             </Tabs>
           </ScrollArea>
 
