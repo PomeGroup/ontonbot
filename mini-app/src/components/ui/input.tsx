@@ -7,6 +7,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   errors?: (string | undefined)[];
   prefix_icon?: React.ReactNode;
   label?: React.ReactNode;
+  info?: React.ReactNode;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, ...props }, ref) => {
@@ -38,6 +39,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type,
           {...props}
         />
       </div>
+      {props.info && (
+        <div className="mt-0.5 px-4 flex-1 font-normal text-[13px] leading-4 tracking-normal text-[#3C3C4399]">
+          {props.info}
+        </div>
+      )}
       {props.errors?.map((error) => (
         <div
           className="text-red-400 pl-3 pt-1 text-sm flex items-center"
