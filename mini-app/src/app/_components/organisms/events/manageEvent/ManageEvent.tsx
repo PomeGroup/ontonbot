@@ -1,12 +1,13 @@
 "use client";
 
-import Typography from "@/components/Typography"
-import { useUpdateSearchParams } from "@/hooks/useUpdateSearchParams"
-import { RouterOutput } from "@/server"
-import { cn } from "@/utils"
-import { useSearchParams } from "next/navigation"
-import ManageEventAttendance from "./ManageEventAttendance"
-import ManageEventGeneral from "./ManageEventGeneral"
+import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
+import Typography from "@/components/Typography";
+import { useUpdateSearchParams } from "@/hooks/useUpdateSearchParams";
+import { RouterOutput } from "@/server";
+import { cn } from "@/utils";
+import { useSearchParams } from "next/navigation";
+import ManageEventAttendance from "./ManageEventAttendance";
+import ManageEventGeneral from "./ManageEventGeneral";
 
 export type ManageEventPageT = "general" | "attendance";
 
@@ -40,20 +41,28 @@ const ManageEvent = (props: ManageEventProps) => {
       {/* Tabs */}
       <div className="flex rounded-md overflow-hidden text-center bg-white">
         <button
+          type="button"
           className={cn(
             "flex-1 p-2 font-normal text-cn-muted-text text-xs leading-[16px]",
             page === "general" && "bg-primary font-bold text-white"
           )}
-          onClick={() => handlePageChange("general")}
+          onClick={(e) => {
+            e.preventDefault();
+            handlePageChange("general");
+          }}
         >
           1. General
         </button>
         <button
+          type="button"
           className={cn(
             "flex-1 p-2 font-normal text-cn-muted-text text-xs leading-[16px]",
             page === "attendance" && "bg-primary font-bold text-white"
           )}
-          onClick={() => handlePageChange("attendance")}
+          onClick={(e) => {
+            e.preventDefault();
+            handlePageChange("attendance");
+          }}
         >
           2. Attendance
         </button>
@@ -61,10 +70,25 @@ const ManageEvent = (props: ManageEventProps) => {
 
       {/* Content */}
       {page === "general" ? (
-        // General and Attendace
-        <ManageEventGeneral />
+        <>
+          <ManageEventGeneral />
+          <MainButton
+            text="Continue"
+            onClick={() => {
+              handlePageChange("attendance");
+            }}
+          />
+        </>
       ) : (
-        <ManageEventAttendance />
+        <>
+          <ManageEventAttendance />
+          <MainButton
+            text="Submit"
+            onClick={() => {
+              handlePageChange("attendance");
+            }}
+          />
+        </>
       )}
     </div>
   );

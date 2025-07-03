@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
+import useWebApp from "@/hooks/useWebApp";
 import { cn } from "@/lib/utils";
 import { useSheetStackStore } from "@/zustand/sheet-stack.store";
 import { Button, Sheet } from "konsta/react";
@@ -11,10 +12,25 @@ import { IoCloseCircleOutline } from "react-icons/io5";
 import Typography from "../Typography";
 
 const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
+  const webapp = useWebApp();
+
+  const [mainButton, setMainButton] = React.useState(false);
+
   return (
     <DrawerPrimitive.Root
       onOpenChange={(state) => {
         props.onOpenChange?.(state);
+        if (state) {
+          if (webapp?.MainButton.isVisible) {
+            webapp.MainButton.hide();
+            setMainButton(true);
+          } else {
+            setMainButton(false);
+          }
+        } else if (mainButton) {
+          webapp?.MainButton.show();
+          setMainButton(false);
+        }
       }}
       shouldScaleBackground={shouldScaleBackground}
       {...props}

@@ -11,7 +11,7 @@ export type GeneralFormErrors = {
   category_id?: string[];
 };
 
-export type TimePlaceFormErorrs = {
+export type TimePlaceFormErrors = {
   start_date?: string[];
   end_date?: string[];
   timezone?: string[];

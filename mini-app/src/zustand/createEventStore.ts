@@ -1,4 +1,4 @@
-import { GeneralFormErrors, RewardFormErrors, TimePlaceFormErorrs } from "@/app/_components/Event/steps/types";
+import { GeneralFormErrors, RewardFormErrors, TimePlaceFormErrors } from "@/app/_components/Event/steps/types";
 import { EventTicketType } from "@/db/schema";
 import { EventDataSchemaAllOptional, PaidEventSchema, PaidEventType } from "@/types";
 import type {} from "@redux-devtools/extension";
@@ -49,12 +49,12 @@ export type CreateEventStoreType = {
 
   // form errors
   generalStepErrors?: GeneralFormErrors;
-  timeplaceStepErrors?: TimePlaceFormErorrs;
+  timeplaceStepErrors?: TimePlaceFormErrors;
   rewardStepErrors?: RewardFormErrors;
 
   // set errors
   setGeneralStepErrors: (_: GeneralFormErrors) => void;
-  setTimePlaceStepErrors: (_: TimePlaceFormErorrs) => void;
+  setTimePlaceStepErrors: (_: TimePlaceFormErrors) => void;
   setRewardStepErrors: (_: RewardFormErrors) => void;
 
   // clear errors
@@ -110,6 +110,7 @@ const defaultState = {
     paid_event: {
       has_payment: false,
     },
+    eventLocationType: "in_person" as const,
   },
   step: 1,
 };
