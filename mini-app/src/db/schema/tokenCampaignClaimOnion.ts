@@ -48,9 +48,8 @@ export const tokenCampaignClaimOnion = pgTable(
     onionsFromSilver: numeric("onions_from_silver", { precision: 20, scale: 6 }).default("0"),
     onionsFromBronze: numeric("onions_from_bronze", { precision: 20, scale: 6 }).default("0"),
     onionsFromScore: numeric("onions_from_score", { precision: 20, scale: 6 }).default("0"),
-
+    onionsFromPartnership: numeric("onions_from_partnership", { precision: 20, scale: 6 }).default("0"),
     totalOnions: numeric("total_onions", { precision: 20, scale: 6 }).notNull(),
-
     /* bookkeeping */
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     txHash: varchar("tx_hash", { length: 128 }), // optional: on-chain transfer hash
@@ -62,4 +61,7 @@ export const tokenCampaignClaimOnion = pgTable(
 );
 
 export type TokenCampaignClaimOnionRow = InferSelectModel<typeof tokenCampaignClaimOnion>;
-export type TokenCampaignClaimOnionInsert = Omit<TokenCampaignClaimOnionRow, "id" | "createdAt" | "txHash">;
+export type TokenCampaignClaimOnionInsert = Omit<
+  TokenCampaignClaimOnionRow,
+  "id" | "createdAt" | "txHash" | "onionsFromPartnership"
+>;
