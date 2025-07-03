@@ -75,7 +75,10 @@ const ManageEvent = (props: ManageEventProps) => {
           <MainButton
             text="Continue"
             onClick={() => {
-              handlePageChange("attendance");
+              if (document.activeElement instanceof HTMLElement) {
+                document.activeElement?.blur();
+              }
+              setTimeout(() => handlePageChange("attendance"), 100);
             }}
           />
         </>

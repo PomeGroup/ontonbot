@@ -268,6 +268,22 @@ const ManageEventLocation = () => {
 
   const isLocationError = errors?.cityId || errors?.countryId || errors?.location;
 
+  const countries = trpc.location.getCountries.useQuery(
+    {},
+    {
+      staleTime: Infinity,
+    }
+  );
+
+  // Fetch city details by cityId when editing
+  const { data: cityData } = trpc.location.getCityById.useQuery(
+    {
+      cityId: eventData?.cityId!,
+    },
+    {
+      enabled: Boolean(eventData?.cityId),
+    }
+  );
   return (
     <ManageEventCard title="Location">
       <Drawer
@@ -291,9 +307,21 @@ const ManageEventLocation = () => {
               variant="ghost"
               className={cn("w-full flex-1 bg-brand-divider", isLocationError && "border-red-500 border border-solid")}
             >
-              {/* Placeholder text */}
-              <p className="text-[#8f8f90]">Select location</p>
-              <ChevronRight className="ml-auto h-5.5 text-[#3C3C434D]" />
+              {eventData.eventLocationType === "in_person" ? (
+                eventData.countryId || eventData.cityId ? (
+                  <p className="truncate">
+                    {cityData?.title}, {countries.data?.find((i) => i.id === eventData.countryId)?.title}
+                  </p>
+                ) : (
+                  <p className="text-[#8f8f90]">Select location</p>
+                )
+              ) : eventData.location ? (
+                <p className="truncate">{eventData.location}</p>
+              ) : (
+                <p className="text-[#8f8f90]">Select location</p>
+              )}
+
+              <ChevronRight className="ml-auto min-w-5.5 h-5.5 text-[#3C3C434D]" />
             </Button>
             {isLocationError && (
               <p className="flex-1 font-normal py-1 text-[13px] leading-4 tracking-normal text-red-400">

@@ -4,12 +4,17 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { UploadImageFile } from "@/components/ui/upload-file";
 import useWebApp from "@/hooks/useWebApp";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 import ManageEventCard from "../ManageEventCard";
+import ManageEventCategory from "./ManageEventCategory";
 import ManageEventDescription from "./ManageEventDescription";
 import ManageEventHub from "./ManageEventHub";
 
 const ManageEventGeneralInfo = () => {
   const webApp = useWebApp();
+  const eventData = useCreateEventStore((state) => state.eventData);
+  const setEventData = useCreateEventStore((state) => state.setEventData);
+  const errors = useCreateEventStore((state) => state.generalStepErrors);
 
   return (
     <ManageEventCard title={"General Info"}>
@@ -19,6 +24,12 @@ const ManageEventGeneralInfo = () => {
         name="name"
         placeholder="What is this event called?"
         type="text"
+        defaultValue={eventData.title}
+        errors={errors?.title}
+        onBlur={(e) => {
+          e.preventDefault();
+          setEventData({ title: e.target.value });
+        }}
       />
       <Input
         label="Subtitle"
@@ -26,12 +37,18 @@ const ManageEventGeneralInfo = () => {
         name="subtitle"
         placeholder="What happens in the event?"
         type="text"
+        defaultValue={eventData.subtitle}
+        errors={errors?.subtitle}
+        onBlur={(e) => {
+          e.preventDefault();
+          setEventData({ title: e.target.value });
+        }}
       />
 
       {/* Hub and Category */}
       <div className="flex gap-4">
         <ManageEventHub />
-        <ManageEventHub />
+        <ManageEventCategory />
       </div>
 
       {/* Description */}
@@ -63,6 +80,7 @@ const ManageEventGeneralInfo = () => {
         <UploadImageFile
           triggerText="Upload Event’s Image"
           drawerDescriptionText="Upload your event's poster from your device"
+          isError={!!errors?.image_url}
           infoText={
             <span>
               <span className="font-semibold">Limitations: </span>
@@ -71,6 +89,11 @@ const ManageEventGeneralInfo = () => {
             </span>
           }
           changeText="Change Image"
+          onImageChange={(fileUrl) => {
+            setEventData({
+              image_url: fileUrl,
+            });
+          }}
         />
       </div>
 
