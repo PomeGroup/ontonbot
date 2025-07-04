@@ -10,6 +10,8 @@ export type ManageEventCardProps = {
     When the switch is toggled off, the children content is hidden.
   */
   hasSwitch?: boolean;
+  switchState?: boolean;
+  onSwitch?: () => void;
   hiddenContent?: ReactNode;
 };
 
@@ -29,14 +31,29 @@ const ManageEventCard = (props: ManageEventCardProps) => {
         </Typography>
         {props.hasSwitch && (
           <Switch
-            checked={switchToggled}
-            onClick={() => setSwitchToggled(!switchToggled)}
+            checked={typeof props.switchState === "boolean" ? props.switchState : switchToggled}
+            onClick={(e) => {
+              e.preventDefault();
+              if (typeof props.switchState === "boolean") {
+                props.onSwitch?.();
+              } else {
+                setSwitchToggled(!switchToggled);
+              }
+            }}
           />
         )}
       </div>
 
       {/* Content */}
-      {props.hasSwitch ? (switchToggled ? props.children : props.hiddenContent) : props.children}
+      {props.hasSwitch
+        ? typeof props.switchState === "boolean"
+          ? props.switchState
+            ? props.children
+            : props.hiddenContent
+          : switchToggled
+            ? props.children
+            : props.hiddenContent
+        : props.children}
     </div>
   );
 };
