@@ -49,7 +49,7 @@ export default function ClaimPointsModal({ wallet }: { wallet: WalletSummary }) 
         }}
         isLoading={claimPoints.isLoading}
       >
-        Stablize ONIONS
+        Stabilize ONIONS
       </Button>
       <CustomSheet
         opened={isOpen}
