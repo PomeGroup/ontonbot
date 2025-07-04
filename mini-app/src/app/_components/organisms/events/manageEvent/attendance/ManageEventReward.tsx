@@ -1,8 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 import { SbtOptionContent } from "../../SbtOptionContent";
 import ManageEventCard from "../ManageEventCard";
 
 const ManageEventReward = () => {
+  const { errors, clearImageErrors, clearVideoErrors } = useCreateEventStore((state) => ({
+    clearImageErrors: state.clearImageErrors,
+    clearVideoErrors: state.clearVideoErrors,
+    errors: state.rewardStepErrors,
+  }));
   return (
     <ManageEventCard title="Has Reward">
       <Tabs
@@ -19,17 +25,17 @@ const ManageEventReward = () => {
         >
           <SbtOptionContent
             sbtOption={"default"}
-            errors={{}}
-            clearImageError={() => {}}
-            clearVideoError={() => {}}
+            errors={errors ?? {}}
+            clearImageError={clearImageErrors}
+            clearVideoError={clearVideoErrors}
           />
         </TabsContent>
         <TabsContent value="custom">
           <SbtOptionContent
             sbtOption={"custom"}
-            errors={{}}
-            clearImageError={() => {}}
-            clearVideoError={() => {}}
+            errors={errors ?? {}}
+            clearImageError={clearImageErrors}
+            clearVideoError={clearVideoErrors}
           />
         </TabsContent>
       </Tabs>
