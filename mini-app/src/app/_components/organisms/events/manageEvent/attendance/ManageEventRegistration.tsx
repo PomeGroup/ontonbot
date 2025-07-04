@@ -7,9 +7,12 @@ import ManageEventCard from "../ManageEventCard";
 import ManageEventDivider from "../ManageEventDivider";
 
 const ManageEventRegistration = () => {
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const errors = useCreateEventStore((state) => state.rewardStepErrors);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
+  const { errors, eventData, toggleRegistration, setEventData } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    errors: state.rewardStepErrors,
+    setEventData: state.setEventData,
+    toggleRegistration: state.toggleHasRegistration,
+  }));
 
   return (
     <ManageEventCard title="Registration">
@@ -24,11 +27,7 @@ const ManageEventRegistration = () => {
           </Typography>
           <Switch
             checked={eventData.has_registration}
-            onCheckedChange={(checked) => {
-              setEventData({
-                has_registration: checked,
-              });
-            }}
+            onCheckedChange={toggleRegistration}
           />
         </div>
         <div className="mt-1 flex-1 font-normal text-[13px] leading-4 tracking-normal text-[#3C3C4399]">
