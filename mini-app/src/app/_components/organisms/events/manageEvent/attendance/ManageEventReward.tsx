@@ -9,6 +9,7 @@ const ManageEventReward = () => {
     clearVideoErrors: state.clearVideoErrors,
     errors: state.rewardStepErrors,
   }));
+
   return (
     <ManageEventCard title="Has Reward">
       <Tabs
