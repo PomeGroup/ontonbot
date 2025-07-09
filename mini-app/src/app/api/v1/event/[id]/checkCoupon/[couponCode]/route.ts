@@ -1,13 +1,13 @@
-import { z } from "zod";
-import { logger } from "@/server/utils/logger";
-import { getAuthenticatedUser } from "@/server/auth";
-import { couponItemsDB } from "@/db/modules/couponItems.db";
-import { couponDefinitionsDB } from "@/db/modules/couponDefinitions.db";
-import eventDB from "@/db/modules/events.db";
-import { checkRateLimit } from "@/lib/checkRateLimit";
-import { NextResponse } from "next/server";
 import { db } from "@/db/db";
+import { couponDefinitionsDB } from "@/db/modules/couponDefinitions.db";
+import { couponItemsDB } from "@/db/modules/couponItems.db";
+import eventDB from "@/db/modules/events.db";
 import { applyCouponDiscount } from "@/lib/applyCouponDiscount";
+import { checkRateLimit } from "@/lib/checkRateLimit";
+import { getAuthenticatedUser } from "@/server/auth";
+import { logger } from "@/server/utils/logger";
+import { NextResponse } from "next/server";
+import { z } from "zod";
 /* -------------------------------------------------------------------------- */
 /*                             Schema Definition                              */
 /* -------------------------------------------------------------------------- */
@@ -20,10 +20,11 @@ const couponCheckSchema = z.object({
 /*                                Route Handler                               */
 
 /* -------------------------------------------------------------------------- */
-export async function GET(request: Request, { params }: { params: { id: number; couponCode: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ id: number; couponCode: string }> }) {
+  const params = await props.params;
   try {
     // If your auth returns [userId, error] or similar:
-    const [userId, authError] = getAuthenticatedUser();
+    const [userId, authError] = await getAuthenticatedUser();
     if (authError && !userId) {
       return authError;
     }

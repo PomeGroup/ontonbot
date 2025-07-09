@@ -5,7 +5,7 @@ import { cn, fileToBase64 } from "@/lib/utils";
 import { Block, BlockTitle, Sheet } from "konsta/react";
 import { CircleArrowUp } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type JSX } from "react";
 import { createPortal } from "react-dom";
 import { BsArrowUpCircleFill } from "react-icons/bs";
 import { Button, KButton } from "./button";

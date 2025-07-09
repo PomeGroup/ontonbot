@@ -1,13 +1,15 @@
-"use client";
+"use client";;
+import { use } from "react";
 import ActionCard from "@/ActionCard";
 import ChannelInfoCard from "@/app/_components/channels/ChannelInfoCard";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
 import { trpc } from "@/app/_trpc/client";
 import { useRouter } from "next/navigation";
 
-type Props = { params: { id: string } };
+type Props = { params: Promise<{ id: string }> };
 
-export default function ChannelPage({ params }: Props) {
+export default function ChannelPage(props: Props) {
+  const params = use(props.params);
   const { data, isLoading, isError } = trpc.organizers.getOrganizer.useQuery({ user_id: Number(params.id) });
 
   const router = useRouter();

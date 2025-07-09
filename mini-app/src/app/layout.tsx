@@ -29,7 +29,13 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      // this is for hydration error
+      className="light"
+      // @ts-expect-error - hyderation error fix
+      style={{ "color-scheme": "light" }}
+    >
       <head>
         {process.env.NODE_ENV === "production" && (
           <>

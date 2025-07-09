@@ -1,12 +1,12 @@
 import { db } from "@/db/db";
-import { eventRegistrants, nftItems, orders, tickets } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
-import { z } from "zod";
-import { type NextRequest } from "next/server";
+import { eventRegistrants, nftItems } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
-import tonCenter from "@/services/tonCenter";
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { logger } from "@/server/utils/logger";
+import tonCenter from "@/services/tonCenter";
+import { and, eq } from "drizzle-orm";
+import { type NextRequest } from "next/server";
+import { z } from "zod";
 const updateTicketSchema = z.object({
   data: z.object({
     full_name: z.string(),
@@ -17,7 +17,8 @@ const updateTicketSchema = z.object({
   proof_token: z.string(),
 });
 
-export async function PUT(req: NextRequest, { params }: { params: { nftaddress: string } }) {
+export async function PUT(req: NextRequest, props: { params: Promise<{ nftaddress: string }> }) {
+  const params = await props.params;
   try {
     const nft_address = params.nftaddress;
 
@@ -34,7 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: { nftaddress: 
     }
     /* -------------------------------------------------------------------------- */
     /* ---------------------------------- Auth ---------------------------------- */
-    const [userId, unauthorized] = getAuthenticatedUser();
+    const [userId, unauthorized] = await getAuthenticatedUser();
     /* -------------------------------------------------------------------------- */
 
     if (unauthorized) {

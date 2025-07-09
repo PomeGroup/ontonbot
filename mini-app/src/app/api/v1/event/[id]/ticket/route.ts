@@ -4,9 +4,10 @@ import "@/lib/gracefullyShutdown";
 import { getAuthenticatedUser } from "@/server/auth";
 import { and, eq, or } from "drizzle-orm";
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const event_uuid = params.id;
-  const [userId, unauthorized] = getAuthenticatedUser();
+  const [userId, unauthorized] = await getAuthenticatedUser();
 
   if (unauthorized) {
     return unauthorized;

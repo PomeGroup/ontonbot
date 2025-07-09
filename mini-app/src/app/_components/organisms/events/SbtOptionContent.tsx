@@ -15,6 +15,8 @@ interface SbtOptionContentProps {
   errors: { ts_reward_url?: string[]; video_url?: string[] };
   clearImageError: () => void;
   clearVideoError: () => void;
+  onImageUpload?: (url: string) => void;
+  onVideoUpload?: (url: string) => void;
 }
 
 export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
@@ -22,6 +24,8 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
   errors,
   clearImageError,
   clearVideoError,
+  onImageUpload,
+  onVideoUpload,
 }) => {
   const eventData = useCreateEventStore((state) => state.eventData);
   const setEventData = useCreateEventStore((state) => state.setEventData);
@@ -137,6 +141,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
           onDone={(url) => {
             setEventData({ ts_reward_url: url });
             clearImageError();
+            onImageUpload?.(url);
           }}
           isError={Boolean(errors?.ts_reward_url)}
         />
@@ -158,6 +163,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
           onDone={(url) => {
             setEventData({ video_url: url });
             clearVideoError();
+            onVideoUpload?.(url);
           }}
           isError={Boolean(errors?.video_url)}
         />

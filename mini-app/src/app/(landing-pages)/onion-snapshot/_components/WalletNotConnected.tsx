@@ -53,7 +53,7 @@ const WalletNotConnected: React.FC<WalletNotConnectedProps> = ({
   /* local state */
   const [proof, setProof] = useState<string>(); // stringified proof
   const [jwtOk, setJwtOk] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
     if (tonConnectAddress?.account.address) {
