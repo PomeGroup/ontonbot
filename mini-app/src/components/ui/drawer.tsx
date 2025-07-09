@@ -18,6 +18,8 @@ const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProp
 
   return (
     <DrawerPrimitive.Root
+      {...props}
+      shouldScaleBackground={shouldScaleBackground}
       onOpenChange={(state) => {
         props.onOpenChange?.(state);
         if (state) {
@@ -32,8 +34,6 @@ const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProp
           setMainButton(false);
         }
       }}
-      shouldScaleBackground={shouldScaleBackground}
-      {...props}
     />
   );
 };

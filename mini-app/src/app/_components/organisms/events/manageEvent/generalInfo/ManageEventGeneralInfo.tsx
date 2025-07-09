@@ -41,7 +41,7 @@ const ManageEventGeneralInfo = () => {
         errors={errors?.subtitle}
         onBlur={(e) => {
           e.preventDefault();
-          setEventData({ title: e.target.value });
+          setEventData({ subtitle: e.target.value });
         }}
       />
 

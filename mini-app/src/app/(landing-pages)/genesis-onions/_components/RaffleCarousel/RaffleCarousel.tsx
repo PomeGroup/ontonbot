@@ -25,7 +25,7 @@ interface Props {
 export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance, onSpinStart, onSpinEnd }: Props) => {
   const [play1] = useSound(sound1);
   const [play2] = useSound(sound2);
-  const swiperRef = useRef<SwiperType>();
+  const swiperRef = useRef<SwiperType>(undefined);
   const [isSpinning, setIsSpinning] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const { slides, isLoadingCollections, isErrorCollections, spin } = useSpin();

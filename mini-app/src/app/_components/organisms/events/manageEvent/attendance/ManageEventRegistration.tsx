@@ -27,6 +27,7 @@ const ManageEventRegistration = () => {
           </Typography>
           <Switch
             checked={eventData.has_registration}
+            disabled={eventData.eventLocationType === "in_person"}
             onCheckedChange={toggleRegistration}
           />
         </div>
@@ -34,11 +35,11 @@ const ManageEventRegistration = () => {
           Participants need to fill out a form with their information when joining your event.
         </div>
       </div>
-      {/* Divider */}
-      <ManageEventDivider />
 
       {eventData.has_registration && (
         <>
+          {/* Divider */}
+          <ManageEventDivider />
           {/* Has Approval */}
           <div>
             <div className="flex justify-between items-center">
@@ -74,8 +75,8 @@ const ManageEventRegistration = () => {
               </Typography>
             </div>
             <div className="mt-1 flex-1 font-normal text-[13px] leading-4 tracking-normal text-[#3C3C4399]">
-              Max Capacity is 100 guests. Automatically closes registration once capacity is reached, Counting only approved
-              guests.
+              Max Capacity is {eventData.capacity || 100} guests. Automatically closes registration once capacity is reached,
+              Counting only approved guests.
             </div>
             <Input
               label="Max Capacity"
@@ -92,42 +93,46 @@ const ManageEventRegistration = () => {
               }}
             />
           </div>
-          {/* Divider */}
-          <ManageEventDivider />
         </>
       )}
 
       {/* Proof of attendance */}
-      <div className="flex flex-col gap-3">
-        <div>
-          <div className="flex justify-between items-center">
-            <Typography
-              variant="body"
-              weight="medium"
-            >
-              Proof of Attendance
-            </Typography>
+      {eventData.eventLocationType === "online" && (
+        <>
+          {/* Divider */}
+          <ManageEventDivider />
+          <div className="flex flex-col gap-3">
+            <div>
+              <div className="flex justify-between items-center">
+                <Typography
+                  variant="body"
+                  weight="medium"
+                >
+                  Proof of Attendance
+                </Typography>
+              </div>
+              <div className="mt-1 flex-1 font-normal text-[13px] leading-4 tracking-normal text-[#3C3C4399]">
+                Setting a password prevents unexpected check-ins and rewards without attending the event.
+              </div>
+            </div>
+            <Input
+              label="Event Password"
+              placeholder="Your Event’s Passkey"
+              errors={errors?.secret_phrase}
+              name="event_password"
+              defaultValue={eventData.secret_phrase || ""}
+              onBlur={(e) => {
+                e.preventDefault();
+                if (Boolean(e?.target?.value?.trim()))
+                  setEventData({
+                    secret_phrase: (e.target.value as string).toLowerCase().trim(),
+                  });
+              }}
+            />
+            <AlertGeneric variant="info-light">Password is case-insensitive and must be at least 4 characters.</AlertGeneric>
           </div>
-          <div className="mt-1 flex-1 font-normal text-[13px] leading-4 tracking-normal text-[#3C3C4399]">
-            Setting a password prevents unexpected check-ins and rewards without attending the event.
-          </div>
-        </div>
-        <Input
-          label="Event Password"
-          placeholder="Your Event’s Passkey"
-          errors={errors?.secret_phrase}
-          name="event_password"
-          defaultValue={eventData.secret_phrase || ""}
-          onBlur={(e) => {
-            e.preventDefault();
-            if (Boolean(e?.target?.value?.trim()))
-              setEventData({
-                secret_phrase: (e.target.value as string).toLowerCase().trim(),
-              });
-          }}
-        />
-        <AlertGeneric variant="info-light">Password is case-insensitive and must be at least 4 characters.</AlertGeneric>
-      </div>
+        </>
+      )}
     </ManageEventCard>
   );
 };

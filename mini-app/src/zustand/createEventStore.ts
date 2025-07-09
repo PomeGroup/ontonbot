@@ -19,9 +19,18 @@ export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
   paid_event: Partial<PaidEventType> & {
     bought_capacity?: number;
   };
+
+  /*
+   * SBT type
+   */
+  reward: {
+    type: SBTRewardType;
+  };
 };
 
-type PaymentType = "USDT" | "TON" | "STAR";
+export type SBTRewardType = "default" | "custom";
+
+export type PaymentType = "USDT" | "TON" | "STAR";
 
 type PaidInfoErrors = {
   has_payment?: string[] | undefined;
@@ -43,6 +52,7 @@ export type CreateEventStoreType = {
   edit?: {
     eventHash?: string;
   };
+
   setEventData: (_data: Partial<StoreEventData>) => void;
   setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
@@ -75,6 +85,7 @@ export type CreateEventStoreType = {
   changePaymentType: (paymentType: PaymentType) => void;
   changeTicketType: (ticketType: EventTicketType) => void;
   changePaymentAmount: (amount: number) => void;
+
   // --- // nft info
   changeNFTImage: (url: string) => void;
   changeNFTVideo: (url: string) => void;
@@ -87,6 +98,9 @@ export type CreateEventStoreType = {
   /**** ⭕ PAID EVENT INPUT ERRORS ⭕ ****/
   paid_info_errors: PaidInfoErrors;
   setPaidInfoErrors: (_key: keyof PaidInfoErrors, _value: any) => void;
+
+  /* Reward Type */
+  setRewardType: (rewardType: SBTRewardType) => void;
 };
 
 const defaultState = {
@@ -106,11 +120,15 @@ const defaultState = {
     has_registration: false,
     has_approval: false,
     has_waiting_list: false,
-    capacity: null,
+    capacity: 100,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     paid_event: {
       has_payment: false,
     },
-    eventLocationType: "in_person" as const,
+    eventLocationType: "online" as const,
+    reward: {
+      type: "default" as const,
+    },
   },
   step: 1,
 };
@@ -121,6 +139,16 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
       currentStep: defaultState.step,
       eventData: defaultState.event,
       paid_info_errors: {},
+
+      /*
+       * Set sbt reward type
+       */
+      setRewardType: (rewardType: SBTRewardType) => {
+        set((state) => {
+          state.eventData.reward.type = rewardType;
+        });
+      },
+
       clearImageErrors: () => {
         set((state) => ({
           ...state,
@@ -181,6 +209,10 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
             ...data,
           };
 
+          if (newData.eventLocationType === "in_person") {
+            newData.has_registration = true;
+          }
+
           state.eventData = newData;
           state.eventData.hasEnded = !!(
             state.edit?.eventHash &&
@@ -213,7 +245,12 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
       },
       toggleHasRegistration: () => {
         set((state) => {
-          state.eventData.has_registration = !state.eventData.has_registration;
+          const hasRegistrationValue =
+            // if it's in person then we need to make true
+            state.eventData.eventLocationType === "in_person" || !state.eventData.has_registration;
+
+          state.eventData.has_registration = hasRegistrationValue;
+
           if (state.eventData.has_registration) {
             state.eventData.paid_event.has_payment = false;
             state.eventData.capacity = null;

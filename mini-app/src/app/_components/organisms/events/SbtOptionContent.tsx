@@ -2,13 +2,13 @@ import { AlertGeneric } from "@/components/ui/alert";
 import { UploadImageFile } from "@/components/ui/upload-file";
 import { UploadVideoFile } from "@/components/ui/upload-video-file";
 import { BiSolidLeftArrow, BiSolidRightArrow } from "react-icons/bi";
-import LazyLoadVideo from "./LazyLoadVideo";
 
 import { trpc } from "@/app/_trpc/client";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import useEmblaCarousel from "embla-carousel-react";
 import { Block, BlockHeader, Preloader } from "konsta/react";
 import React, { useEffect, useState } from "react";
+import LazyLoadVideo from "./LazyLoadVideo";
 
 interface SbtOptionContentProps {
   sbtOption: "custom" | "default";

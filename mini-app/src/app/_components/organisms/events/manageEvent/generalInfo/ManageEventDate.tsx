@@ -5,7 +5,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import ManageEventCard from "../ManageEventCard";
 
@@ -88,6 +88,7 @@ const ManageEventDate = () => {
                 <TimePicker
                   className="[&_svg]:w-0 [&>div]:relative [&>div>div]:ms-0 [&>div>div]:absolute [&>div>div]:w-full [&_button]:h-full [&_button]:w-full [&_input]:px-[10px] [&_input]:py-[12px] [&_input]:text-[12px] [&_fieldset]:border-none bg-brand-divider rounded-2lg [&>div]:pe-0 max-w-[120px]"
                   onChange={(v) => setStartTime(v)}
+                  value={eventData.start_date ? dayjs(eventData.start_date * 1000) : null}
                 />
               </div>
               <div className="flex flex-col">
@@ -104,6 +105,7 @@ const ManageEventDate = () => {
                       className: "text-primary p-0",
                     },
                   }}
+                  value={eventData.start_date ? dayjs(eventData.start_date * 1000) : null}
                   onChange={(v) => setStartDay(v)}
                 />
               </div>
@@ -132,6 +134,7 @@ const ManageEventDate = () => {
                 <TimePicker
                   className="[&_svg]:w-0 [&_input]:px-[10px] [&>div]:relative [&>div>div]:ms-0 [&>div>div]:absolute [&>div>div]:w-full [&_button]:h-full [&_button]:w-full [&_input]:py-[10px] [&_input]:text-[12px] [&_fieldset]:border-none bg-brand-divider rounded-2lg [&>div]:pe-0 max-w-[120px]"
                   onChange={(v) => setEndTime(v)}
+                  value={eventData.end_date ? dayjs(eventData.end_date * 1000) : null}
                 />
               </div>
               <div className="flex flex-col">
@@ -149,6 +152,7 @@ const ManageEventDate = () => {
                     },
                   }}
                   onChange={(v) => setEndDay(v)}
+                  value={eventData.end_date ? dayjs(eventData.end_date * 1000) : null}
                 />
               </div>
             </div>
