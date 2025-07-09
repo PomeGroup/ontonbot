@@ -1,15 +1,11 @@
-"use client";;
-import { use } from "react";
+"use client";
 
 import ManageEvent from "@/app/_components/organisms/events/manageEvent/ManageEvent";
 import { useGetEvent } from "@/hooks/events.hooks";
+import { useParams } from "next/navigation";
 
-interface CreateEventAdminPageProps {
-  params: Promise<{ hash: string }>;
-}
-
-export default function CreateEventAdminPage(props: CreateEventAdminPageProps) {
-  const params = use(props.params);
+export default function CreateEventAdminPage() {
+  const params = useParams<{ hash: string }>();
   const event = useGetEvent(params.hash);
 
   if (event.error) {

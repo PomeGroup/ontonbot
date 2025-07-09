@@ -17,7 +17,7 @@ interface Props {
 export const PackagesModal = ({ open, onClose, onOrderPaid, onOrderPaymentFailed }: Props) => {
   const [allowBuy, setAllowBuy] = useState(true);
   const { packages, isErrorPackages, isLoadingPackages } = usePackage();
-  const timerId = useRef<NodeJS.Timeout>();
+  const timerId = useRef<NodeJS.Timeout>(null);
 
   if (isLoadingPackages) return null;
   if (isErrorPackages) return <div>Error! Try again later...</div>;
