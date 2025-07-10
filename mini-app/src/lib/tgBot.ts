@@ -1,14 +1,14 @@
 import { TG_SUPPORT_GROUP } from "@/constants";
+import moderationLogDB from "@/db/modules/moderationLogger.db";
 import { EventRow } from "@/db/schema/events";
 import { removeKey, removeSecretKey } from "@/lib/utils";
 import { getNoticeEmoji } from "@/moderationBot/helpers";
 import { configProtected } from "@/server/config";
-import moderationLogDB from "@/db/modules/moderationLogger.db";
+import { is_local_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
 import axios, { AxiosError } from "axios";
 import { Bot, InputFile } from "grammy";
 import { InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo } from "grammy/types";
-import { is_local_env } from "@/server/utils/evnutils";
 
 interface MediaGroupItem {
   type: "photo" | "video";
@@ -34,7 +34,9 @@ export async function getEventsChannelBotInstance() {
 
   // Wait for the token to be available
   const startTime = Date.now();
+
   while (!configProtected.onton_events_publisher_bot) {
+    console.log("onton_events_publisher_bot", configProtected);
     if (Date.now() - startTime > MAX_WAIT_TIME) {
       throw new Error("Timed out waiting for bot token to be available.");
     }

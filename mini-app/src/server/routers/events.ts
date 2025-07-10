@@ -4,6 +4,7 @@ import eventCategoriesDB from "@/db/modules/eventCategories.db";
 import eventFieldsDB from "@/db/modules/eventFields.db";
 import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
 import eventDB from "@/db/modules/events.db";
+import { upsertCapacityOrder } from "@/db/modules/orders.db";
 import { organizerTsVerified, userHasModerationAccess } from "@/db/modules/userFlags.db";
 import { userRolesDB } from "@/db/modules/userRoles.db";
 import { getUserCacheKey, usersDB } from "@/db/modules/users.db";
@@ -44,7 +45,6 @@ import {
   router,
 } from "../trpc";
 import { internal_server_error } from "../utils/error_utils";
-import { upsertCapacityOrder } from "@/db/modules/orders.db";
 
 dotenv.config();
 
@@ -231,6 +231,10 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
 // private
 const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: EventDataSchema })).mutation(async (opts) => {
   const input_event_data = opts.input.eventData;
+
+  if (process.env.USE_PLACEHOLDER_IMAGES?.toLowerCase() === "true") {
+    input_event_data.image_url = "https://app.onton.live/template-images/default.webp";
+  }
 
   const user_id = opts.ctx.user.user_id;
   const userCacheKey = getUserCacheKey(user_id);
