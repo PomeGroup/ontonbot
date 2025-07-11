@@ -1,13 +1,12 @@
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { trpc } from "@/app/_trpc/client";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Drawer, DrawerClose, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/utils";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { ChevronRight } from "lucide-react";
-import { useState } from "react";
 
 const ManageEventCategory = () => {
   const categoriesQuery = trpc.events.getCategories.useQuery();
@@ -15,21 +14,11 @@ const ManageEventCategory = () => {
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const errors = useCreateEventStore((state) => state.generalStepErrors);
 
-  const [open, setOpen] = useState(false);
-
   const categoryError = errors?.category_id?.[0];
 
   return (
     // a button and a drawer from buttom opens
-    <Drawer
-      open={open}
-      onClose={() => {
-        setOpen(false);
-      }}
-      onOpenChange={(state) => {
-        setOpen(state);
-      }}
-    >
+    <Drawer>
       <DrawerTrigger asChild>
         <div>
           <label
@@ -92,16 +81,14 @@ const ManageEventCategory = () => {
           </RadioGroup>
         </ScrollArea>
 
-        <Button
-          type="button"
-          variant="primary"
-          onClick={(e) => {
-            e.preventDefault();
-            setOpen(false);
-          }}
-        >
-          Save
-        </Button>
+        <DrawerClose asChild>
+          <Button
+            type="button"
+            variant="primary"
+          >
+            Save
+          </Button>
+        </DrawerClose>
       </DrawerContent>
     </Drawer>
   );

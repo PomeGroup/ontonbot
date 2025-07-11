@@ -213,6 +213,10 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
             newData.has_registration = true;
           }
 
+          if (data.countryId) {
+            newData.cityId = undefined;
+          }
+
           state.eventData = newData;
           state.eventData.hasEnded = !!(
             state.edit?.eventHash &&

@@ -1,7 +1,7 @@
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { trpc } from "@/app/_trpc/client";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Drawer, DrawerClose, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,7 +10,7 @@ import { cn } from "@/utils";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useDebouncedState } from "@mantine/hooks";
 import { ChevronRight } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import isURL from "validator/lib/isURL";
 import ManageEventCard from "../ManageEventCard";
 
@@ -19,23 +19,13 @@ const ManageEventCountry = () => {
   const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
-  const [open, setOpen] = React.useState(false);
-
   // Fetch countries without search parameter
   const countries = trpc.location.getCountries.useQuery({});
 
   const countryError = errors?.countryId?.[0];
 
   return (
-    <Drawer
-      open={open}
-      onOpenChange={(state) => {
-        setOpen(state);
-      }}
-      onClose={() => {
-        setOpen(false);
-      }}
-    >
+    <Drawer>
       <DrawerTrigger asChild>
         <div>
           <label
@@ -89,16 +79,14 @@ const ManageEventCountry = () => {
             ))}
           </RadioGroup>
         </ScrollArea>
-        <Button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            setOpen(false);
-          }}
-          variant="primary"
-        >
-          Save
-        </Button>
+        <DrawerClose asChild>
+          <Button
+            type="button"
+            variant="primary"
+          >
+            Save
+          </Button>
+        </DrawerClose>
       </DrawerContent>
     </Drawer>
   );
@@ -107,7 +95,6 @@ const ManageEventCountry = () => {
 const ManageEventCity = () => {
   const eventData = useCreateEventStore((state) => state.eventData);
 
-  const [open, setOpen] = React.useState(false);
   // Determine if the city combobox should be disabled
   const isCountrySelected = Boolean(eventData?.countryId);
 
@@ -142,22 +129,21 @@ const ManageEventCity = () => {
   );
 
   useEffect(() => {
+    if (!eventData.cityId) {
+      setCitySearch("");
+      setCitySearchD("");
+      return;
+    }
+
     // Prepopulate city data when editing
     if (cityData && !citySearchD) {
       setCitySearchD(cityData.title);
+      setCitySearch(cityData.title);
     }
   }, [cityData]);
 
   return (
-    <Drawer
-      open={isCountrySelected ? open : false}
-      onOpenChange={(state) => {
-        setOpen(state);
-      }}
-      onClose={() => {
-        setOpen(false);
-      }}
-    >
+    <Drawer open={isCountrySelected ? undefined : false}>
       <DrawerTrigger
         disabled={!isCountrySelected}
         asChild
@@ -244,16 +230,14 @@ const ManageEventCity = () => {
           </>
         )}
 
-        <Button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            setOpen(false);
-          }}
-          variant="primary"
-        >
-          Save
-        </Button>
+        <DrawerClose asChild>
+          <Button
+            type="button"
+            variant="primary"
+          >
+            Save
+          </Button>
+        </DrawerClose>
       </DrawerContent>
     </Drawer>
   );
@@ -263,8 +247,6 @@ const ManageEventLocation = () => {
   const eventData = useCreateEventStore((state) => state.eventData);
   const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
   const setEventData = useCreateEventStore((state) => state.setEventData);
-
-  const [open, setOpen] = React.useState(false);
 
   const isLocationError = errors?.cityId || errors?.countryId || errors?.location;
 
@@ -284,17 +266,10 @@ const ManageEventLocation = () => {
       enabled: Boolean(eventData?.cityId),
     }
   );
+
   return (
     <ManageEventCard title="Location">
-      <Drawer
-        open={open}
-        onOpenChange={(state) => {
-          setOpen(state);
-        }}
-        onClose={() => {
-          setOpen(false);
-        }}
-      >
+      <Drawer>
         <DrawerTrigger asChild>
           <div>
             <label
@@ -390,16 +365,14 @@ const ManageEventLocation = () => {
             </Tabs>
           </ScrollArea>
 
-          <Button
-            type="button"
-            variant="primary"
-            onClick={(e) => {
-              e.preventDefault();
-              setOpen(false);
-            }}
-          >
-            Submit
-          </Button>
+          <DrawerClose asChild>
+            <Button
+              type="button"
+              variant="primary"
+            >
+              Submit
+            </Button>
+          </DrawerClose>
         </DrawerContent>
       </Drawer>
     </ManageEventCard>

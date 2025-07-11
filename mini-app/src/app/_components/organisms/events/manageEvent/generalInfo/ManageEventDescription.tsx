@@ -1,29 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Drawer, DrawerClose, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/utils";
 import { useCreateEventStore } from "@/zustand/createEventStore";
-import { useState } from "react";
 
 const ManageEventDescription = () => {
   const eventData = useCreateEventStore((state) => state.eventData);
   const errors = useCreateEventStore((state) => state.generalStepErrors);
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
-  const [open, setOpen] = useState(false);
-
   const descError = errors?.description?.[0];
   return (
     // a button and a drawer from buttom opens
-    <Drawer
-      onClose={() => {
-        setOpen(false);
-      }}
-      onOpenChange={(state) => {
-        setOpen(state);
-      }}
-      open={open}
-    >
+    <Drawer>
       <DrawerTrigger asChild>
         <div>
           <label
@@ -60,16 +49,14 @@ const ManageEventDescription = () => {
           />
         </ScrollArea>
 
-        <Button
-          type="button"
-          variant="primary"
-          onClick={(e) => {
-            e.preventDefault();
-            setOpen(false);
-          }}
-        >
-          Save
-        </Button>
+        <DrawerClose asChild>
+          <Button
+            type="button"
+            variant="primary"
+          >
+            Save
+          </Button>
+        </DrawerClose>
       </DrawerContent>
     </Drawer>
   );

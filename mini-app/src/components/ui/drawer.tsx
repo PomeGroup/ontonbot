@@ -13,8 +13,17 @@ import Typography from "../Typography";
 
 const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
   const webapp = useWebApp();
+  // Use a ref to track main button visibility
+  const mainButtonRef = React.useRef(false);
 
-  const [mainButton, setMainButton] = React.useState(false);
+  React.useEffect(() => {
+    return () => {
+      // Cleanup: Show main button if it was hidden when component unmounts
+      if (mainButtonRef.current && webapp?.MainButton) {
+        webapp.MainButton.show();
+      }
+    };
+  }, [webapp]);
 
   return (
     <DrawerPrimitive.Root
@@ -22,16 +31,19 @@ const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProp
       shouldScaleBackground={shouldScaleBackground}
       onOpenChange={(state) => {
         props.onOpenChange?.(state);
+
+        if (!webapp?.MainButton) return;
+
         if (state) {
-          if (webapp?.MainButton.isVisible) {
+          // When opening the drawer
+          if (webapp.MainButton.isVisible) {
             webapp.MainButton.hide();
-            setMainButton(true);
-          } else {
-            setMainButton(false);
+            mainButtonRef.current = true;
           }
-        } else if (mainButton) {
-          webapp?.MainButton.show();
-          setMainButton(false);
+        } else if (mainButtonRef.current) {
+          // When closing the drawer and we previously hid the button
+          webapp.MainButton.show();
+          mainButtonRef.current = false;
         }
       }}
     />
@@ -77,13 +89,15 @@ const DrawerContent = React.forwardRef<
       {showCloseButton && (
         <div className="flex items-center justify-between gap-3">
           {props.title && (
-            <Typography
-              variant="title3"
-              weight="normal"
-              className="align-middle line-clamp-1"
-            >
-              {props.title}
-            </Typography>
+            <DrawerTitle>
+              <Typography
+                variant="title3"
+                weight="normal"
+                className="align-middle line-clamp-1"
+              >
+                {props.title}
+              </Typography>
+            </DrawerTitle>
           )}
           <DrawerClose asChild>
             <button className="ms-auto">
