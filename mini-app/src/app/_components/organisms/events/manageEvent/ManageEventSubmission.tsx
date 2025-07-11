@@ -12,7 +12,22 @@ import { toast } from "sonner";
 import { ZodError } from "zod";
 
 const useCreateEvent = () => {
-  const { setEventData, eventData, setRewardStepErrors, clearRewardStepErrors } = useCreateEventStore();
+  const {
+    setEventData,
+    eventData,
+    setAttendanceStepErrors,
+    clearAttendanceStepErrors,
+    clearGeneralStepErrors,
+    setGeneralStepErrors,
+  } = useCreateEventStore((state) => ({
+    setEventData: state.setEventData,
+    eventData: state.eventData,
+    setAttendanceStepErrors: state.setAttendanceStepErrors,
+    setGeneralStepErrors: state.setGeneralStepErrors,
+    clearAttendanceStepErrors: state.clearAttendanceStepErrors,
+    clearGeneralStepErrors: state.clearGeneralStepErrors,
+  }));
+
   const { setSection } = useSectionStore();
   const router = useRouter();
   const sbtOption = eventData.reward.type;
@@ -38,7 +53,7 @@ const useCreateEvent = () => {
         ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
         video_url: !eventData?.video_url ? ["Please upload a video."] : undefined,
       };
-      setRewardStepErrors(errors);
+      setAttendanceStepErrors(errors);
       toast.error(
         <div className="flex items-center">
           <FiAlertCircle className="mr-2" />
@@ -52,7 +67,7 @@ const useCreateEvent = () => {
   };
 
   const prepareEventData = () => {
-    clearRewardStepErrors();
+    clearGeneralStepErrors();
     const dataToSubmit = { ...eventData };
 
     if (eventData.paid_event?.has_payment) {
@@ -72,9 +87,13 @@ const useCreateEvent = () => {
     const parsedEventData = EventDataSchema.safeParse(dataToSubmit);
 
     if (parsedEventData.success) {
+      clearGeneralStepErrors();
+      clearAttendanceStepErrors();
       addEvent.mutate({ eventData: parsedEventData.data });
     } else {
       handleValidationErrors(parsedEventData.error, "Create event");
+      setGeneralStepErrors(parsedEventData.error.flatten().fieldErrors);
+      setAttendanceStepErrors(parsedEventData.error.flatten().fieldErrors);
     }
   };
 
@@ -82,7 +101,21 @@ const useCreateEvent = () => {
 };
 
 const useUpdateEvent = () => {
-  const { setEventData, eventData, edit: editOptions } = useCreateEventStore();
+  const {
+    setEventData,
+    eventData,
+    setAttendanceStepErrors,
+    clearAttendanceStepErrors,
+    clearGeneralStepErrors,
+    setGeneralStepErrors,
+  } = useCreateEventStore((state) => ({
+    setEventData: state.setEventData,
+    eventData: state.eventData,
+    setAttendanceStepErrors: state.setAttendanceStepErrors,
+    setGeneralStepErrors: state.setGeneralStepErrors,
+    clearAttendanceStepErrors: state.clearAttendanceStepErrors,
+    clearGeneralStepErrors: state.clearGeneralStepErrors,
+  }));
   const { setSection } = useSectionStore();
   const { clearSections } = useSectionStore();
   const router = useRouter();
@@ -127,12 +160,16 @@ const useUpdateEvent = () => {
     const updateParsedData = UpdateEventDataSchema.safeParse(dataToSubmit);
 
     if (updateParsedData.success) {
+      clearGeneralStepErrors();
+      clearAttendanceStepErrors();
       updateEvent.mutate({
         event_uuid: eventHash,
         eventData: updateParsedData.data,
       });
     } else {
       handleValidationErrors(updateParsedData.error, "Update event");
+      setGeneralStepErrors(updateParsedData.error.flatten().fieldErrors);
+      setAttendanceStepErrors(updateParsedData.error.flatten().fieldErrors);
     }
   };
 

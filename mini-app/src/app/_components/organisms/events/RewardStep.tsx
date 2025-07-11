@@ -16,7 +16,13 @@ import { RewardForm } from "../../Event/steps/RewardStepFrom";
 import UpdateEventSuccessDialog from "../../Event/steps/UpdateEventSuccessDialog";
 
 export const RewardStep = () => {
-  const { setEventData, eventData, edit: editOptions, setRewardStepErrors, clearRewardStepErrors } = useCreateEventStore();
+  const {
+    setEventData,
+    eventData,
+    edit: editOptions,
+    setRewardStepErrors,
+    clearAttendanceStepErrors: clearRewardStepErrors,
+  } = useCreateEventStore();
   const { setSection } = useSectionStore();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);

@@ -1,4 +1,4 @@
-import { GeneralFormErrors, RewardFormErrors, TimePlaceFormErrors } from "@/app/_components/Event/steps/types";
+import { AttendanceFormErrors, GeneralFormErrors } from "@/app/_components/Event/steps/types";
 import { EventTicketType } from "@/db/schema";
 import { EventDataSchemaAllOptional, PaidEventSchema, PaidEventType } from "@/types";
 import type {} from "@redux-devtools/extension";
@@ -59,18 +59,15 @@ export type CreateEventStoreType = {
 
   // form errors
   generalStepErrors?: GeneralFormErrors;
-  timeplaceStepErrors?: TimePlaceFormErrors;
-  rewardStepErrors?: RewardFormErrors;
+  attendanceStepErrors?: AttendanceFormErrors;
 
   // set errors
   setGeneralStepErrors: (_: GeneralFormErrors) => void;
-  setTimePlaceStepErrors: (_: TimePlaceFormErrors) => void;
-  setRewardStepErrors: (_: RewardFormErrors) => void;
+  setAttendanceStepErrors: (_: AttendanceFormErrors) => void;
 
   // clear errors
   clearGeneralStepErrors: () => void;
-  clearRewardStepErrors: () => void;
-  clearTimePlaceStepErrors: () => void;
+  clearAttendanceStepErrors: () => void;
   clearImageErrors: () => void;
   clearVideoErrors: () => void;
   resetReward: () => void;
@@ -162,22 +159,43 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
         }));
       },
       setGeneralStepErrors: (errors) => {
-        set((state) => ({
-          ...state,
-          generalStepErrors: errors,
-        }));
+        set((state) => {
+          // WE ONLY WANT TO SET THE ERRORS THAT ARE RELATED TO GENERAL STEP
+          // extra keys will be ignored
+          const errorsData: GeneralFormErrors = {
+            title: errors.title,
+            subtitle: errors.subtitle,
+            description: errors.description,
+            image_url: errors.image_url,
+            society_hub: errors.society_hub,
+            has_registration: errors.has_registration,
+            has_approval: errors.has_approval,
+            capacity: errors.capacity,
+            category_id: errors.category_id,
+            start_date: errors.start_date,
+            end_date: errors.end_date,
+            timezone: errors.timezone,
+            duration: errors.duration,
+            location: errors.location,
+            cityId: errors.cityId,
+            countryId: errors.countryId,
+          };
+
+          state.generalStepErrors = errorsData;
+        });
       },
-      setTimePlaceStepErrors(errors) {
-        set((state) => ({
-          ...state,
-          timeplaceStepErrors: errors,
-        }));
-      },
-      setRewardStepErrors: (errors) => {
-        set((state) => ({
-          ...state,
-          rewardStepErrors: errors,
-        }));
+      setAttendanceStepErrors: (errors) => {
+        set((state) => {
+          // WE ONLY WANT TO SET THE ERRORS THAT ARE RELATED TO ATTENDANCE STEP
+          // extra keys will be ignored
+          const errorsData: AttendanceFormErrors = {
+            secret_phrase: errors.secret_phrase,
+            ts_reward_url: errors.ts_reward_url,
+            video_url: errors.video_url,
+          };
+
+          state.attendanceStepErrors = errorsData;
+        });
       },
       clearGeneralStepErrors: () => {
         set((state) => {
@@ -187,18 +205,10 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           };
         });
       },
-      clearTimePlaceStepErrors() {
-        set((state) => {
-          return {
-            ...state,
-            timeplaceStepErrors: {},
-          };
-        });
-      },
-      clearRewardStepErrors: () => {
+      clearAttendanceStepErrors: () => {
         set((state) => ({
           ...state,
-          rewardStepErrors: {},
+          attendanceStepErrors: {},
         }));
       },
       setCurrentStep: (step: number) => set((state) => ({ ...state, currentStep: step })),

@@ -15,7 +15,7 @@ const ManageEventHub = () => {
   const errors = useCreateEventStore((state) => state.generalStepErrors);
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
-  const hubError = errors?.hub?.[0];
+  const hubError = errors?.society_hub?.[0];
 
   return (
     // a button and a drawer from buttom opens
