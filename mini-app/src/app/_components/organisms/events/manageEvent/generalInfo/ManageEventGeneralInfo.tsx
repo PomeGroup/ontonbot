@@ -3,8 +3,10 @@ import { AlertGeneric } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { UploadImageFile } from "@/components/ui/upload-file";
+import { UploadVideoFile } from "@/components/ui/upload-video-file";
 import useWebApp from "@/hooks/useWebApp";
 import { useCreateEventStore } from "@/zustand/createEventStore";
+import { useState } from "react";
 import ManageEventCard from "../ManageEventCard";
 import ManageEventCategory from "./ManageEventCategory";
 import ManageEventDescription from "./ManageEventDescription";
@@ -12,9 +14,15 @@ import ManageEventHub from "./ManageEventHub";
 
 const ManageEventGeneralInfo = () => {
   const webApp = useWebApp();
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
-  const errors = useCreateEventStore((state) => state.generalStepErrors);
+
+  const { eventData, setEventData, errors } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    setEventData: state.setEventData,
+    errors: state.generalStepErrors,
+  }));
+
+  // video or not
+  const [hasIntroVideo, setHasIntroVideo] = useState(false);
 
   return (
     <ManageEventCard title={"General Info"}>
@@ -105,8 +113,33 @@ const ManageEventGeneralInfo = () => {
         >
           Event’s Introduction Video
         </Typography>
-        <Switch />
+        <Switch
+          checked={hasIntroVideo}
+          onCheckedChange={(v) => {
+            setHasIntroVideo(v);
+          }}
+        />
       </div>
+      {hasIntroVideo && (
+        <UploadVideoFile
+          triggerText="Upload Event’s Video"
+          drawerDescriptionText="Upload your event's video from your device"
+          isError={!!errors?.video_url}
+          infoText={
+            <span>
+              <span className="font-semibold">Limitations: </span>
+              Video must be in <span className="font-semibold">1:1 ratio</span>
+              (same height and width) and <span className="font-semibold">less than 5MB.</span>
+            </span>
+          }
+          changeText="Change Video"
+          onVideoChange={(fileUrl) => {
+            setEventData({
+              video_url: fileUrl,
+            });
+          }}
+        />
+      )}
     </ManageEventCard>
   );
 };
