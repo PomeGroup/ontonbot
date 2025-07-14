@@ -13,7 +13,10 @@ const ManageEventReward = () => {
   }));
 
   return (
-    <ManageEventCard title="Has Reward">
+    <ManageEventCard
+      error={errors?.ts_reward_url?.[0] || errors?.video_url?.[0]}
+      title="Has Reward"
+    >
       <Tabs
         defaultValue={rewardType}
         className="w-full"

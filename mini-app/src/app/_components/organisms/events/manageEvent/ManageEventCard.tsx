@@ -13,6 +13,12 @@ export type ManageEventCardProps = {
   switchState?: boolean;
   onSwitch?: () => void;
   hiddenContent?: ReactNode;
+
+  /*
+    Error message to show below the title.
+    If true, "bad error" is shown.
+  */
+  error?: string;
 };
 
 const ManageEventCard = (props: ManageEventCardProps) => {
@@ -20,27 +26,38 @@ const ManageEventCard = (props: ManageEventCardProps) => {
 
   return (
     <div className="bg-white p-3 flex flex-col gap-4 rounded-2lg">
-      {/* Title */}
-      <div className="flex items-center justify-between">
-        <Typography
-          variant="title3"
-          weight="normal"
-          className="flex-1 capitalize me-auto"
-        >
-          {props.title}
-        </Typography>
-        {props.hasSwitch && (
-          <Switch
-            checked={typeof props.switchState === "boolean" ? props.switchState : switchToggled}
-            onClick={(e) => {
-              e.preventDefault();
-              if (typeof props.switchState === "boolean") {
-                props.onSwitch?.();
-              } else {
-                setSwitchToggled(!switchToggled);
-              }
-            }}
-          />
+      <div>
+        {/* Title */}
+        <div className="flex items-center justify-between">
+          <Typography
+            variant="title3"
+            weight="normal"
+            className="flex-1 capitalize me-auto"
+          >
+            {props.title}
+          </Typography>
+          {props.hasSwitch && (
+            <Switch
+              checked={typeof props.switchState === "boolean" ? props.switchState : switchToggled}
+              onClick={(e) => {
+                e.preventDefault();
+                if (typeof props.switchState === "boolean") {
+                  props.onSwitch?.();
+                } else {
+                  setSwitchToggled(!switchToggled);
+                }
+              }}
+            />
+          )}
+        </div>
+        {/* error */}
+        {props.error && (
+          <div
+            className="text-red-500 first-letter:capitalize text-sm"
+            title="Error"
+          >
+            {props.error}
+          </div>
         )}
       </div>
 

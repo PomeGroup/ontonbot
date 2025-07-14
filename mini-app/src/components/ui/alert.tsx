@@ -22,7 +22,6 @@ const alertGenericVariants = cva("relative w-full rounded-2lg p-2 items-center f
     variant: {
       info: "bg-info-light text-black items-start gap-2",
       "info-light": "bg-info-light text-black items-start gap-2",
-      destructive: "bg-destructive-light text-black items-start gap-2",
     },
   },
 });
@@ -64,7 +63,7 @@ AlertDescription.displayName = "AlertDescription";
 const AlertGeneric = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
-    variant?: "info" | "destructive" | "info-light";
+    variant?: "info" | "info-light";
   }
 >(({ className, ...props }, ref) => (
   <Alert

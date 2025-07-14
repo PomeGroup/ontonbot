@@ -2,9 +2,11 @@
 
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import Typography from "@/components/Typography";
+import { Badge } from "@/components/ui/badge";
 import { useUpdateSearchParams } from "@/hooks/useUpdateSearchParams";
 import { RouterOutput } from "@/server";
 import { cn } from "@/utils";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useSearchParams } from "next/navigation";
 import ManageEventAttendance from "./ManageEventAttendance";
 import ManageEventGeneral from "./ManageEventGeneral";
@@ -20,6 +22,11 @@ const validPages: ManageEventPageT[] = ["general", "attendance"];
 const ManageEvent = (props: ManageEventProps) => {
   const searchParams = useSearchParams();
   const updateSearchParams = useUpdateSearchParams();
+
+  const { generalStepErrors, attendanceStepErrors } = useCreateEventStore((state) => ({
+    generalStepErrors: state.generalStepErrors,
+    attendanceStepErrors: state.attendanceStepErrors,
+  }));
 
   const handlePageChange = (p: ManageEventPageT) => {
     updateSearchParams("page", p, {
@@ -51,7 +58,15 @@ const ManageEvent = (props: ManageEventProps) => {
             handlePageChange("general");
           }}
         >
-          1. General
+          {Object.values(generalStepErrors || {}).some((v) => v?.length > 0) && (
+            <Badge
+              className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums me-1"
+              variant="destructive"
+            >
+              {Object.values(generalStepErrors || {}).filter((v) => v?.length > 0).length}
+            </Badge>
+          )}
+          <span>1. General</span>
         </button>
         <button
           type="button"
@@ -64,7 +79,15 @@ const ManageEvent = (props: ManageEventProps) => {
             handlePageChange("attendance");
           }}
         >
-          2. Attendance
+          {Object.values(attendanceStepErrors || {}).some((v) => v?.length > 0) && (
+            <Badge
+              className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums me-1"
+              variant="destructive"
+            >
+              {Object.values(attendanceStepErrors || {}).filter((v) => v?.length > 0).length}
+            </Badge>
+          )}
+          <span>2. Attendance</span>
         </button>
       </div>
 
