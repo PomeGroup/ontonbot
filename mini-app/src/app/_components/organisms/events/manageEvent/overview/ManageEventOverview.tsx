@@ -15,7 +15,7 @@ export const ManageEventOverview = () => {
 
   return (
     <div className="p-4">
-      <ManageEventCard title="Overview">Yo</ManageEventCard>;
+      <ManageEventCard title="Overview">Yo</ManageEventCard>
     </div>
   );
 };
