@@ -15,9 +15,11 @@ import isURL from "validator/lib/isURL";
 import ManageEventCard from "../ManageEventCard";
 
 const ManageEventCountry = () => {
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
+  const { eventData, setEventData, errors } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    setEventData: state.setEventData,
+    errors: state.generalStepErrors,
+  }));
 
   // Fetch countries without search parameter
   const countries = trpc.location.getCountries.useQuery({});
@@ -93,13 +95,14 @@ const ManageEventCountry = () => {
 };
 
 const ManageEventCity = () => {
-  const eventData = useCreateEventStore((state) => state.eventData);
+  const { eventData, setEventData, errors } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    setEventData: state.setEventData,
+    errors: state.generalStepErrors,
+  }));
 
   // Determine if the city combobox should be disabled
   const isCountrySelected = Boolean(eventData?.countryId);
-
-  const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
 
   const cityError = errors?.cityId?.[0];
 
@@ -244,9 +247,11 @@ const ManageEventCity = () => {
 };
 
 const ManageEventLocation = () => {
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
+  const { eventData, errors, setEventData } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    errors: state.generalStepErrors,
+    setEventData: state.setEventData,
+  }));
 
   const isLocationError = errors?.cityId || errors?.countryId || errors?.location;
 

@@ -7,7 +7,7 @@ const ManageEventReward = () => {
   const { rewardType, errors, clearImageErrors, clearVideoErrors, setRewardType } = useCreateEventStore((state) => ({
     clearImageErrors: state.clearImageErrors,
     clearVideoErrors: state.clearVideoErrors,
-    errors: state.rewardStepErrors,
+    errors: state.attendanceStepErrors,
     rewardType: state.eventData.reward.type,
     setRewardType: state.setRewardType,
   }));

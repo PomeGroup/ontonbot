@@ -33,7 +33,7 @@ export const RewardForm = ({
     editOptions: state.edit,
     eventData: state.eventData,
     resetReward: state.resetReward,
-    errors: state.rewardStepErrors,
+    errors: state.attendanceStepErrors,
     setEventData: state.setEventData,
   }));
 

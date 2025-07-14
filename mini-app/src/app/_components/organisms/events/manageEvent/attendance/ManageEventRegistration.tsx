@@ -9,7 +9,7 @@ import ManageEventDivider from "../ManageEventDivider";
 const ManageEventRegistration = () => {
   const { errors, eventData, toggleRegistration, setEventData } = useCreateEventStore((state) => ({
     eventData: state.eventData,
-    errors: state.rewardStepErrors,
+    errors: state.attendanceStepErrors,
     setEventData: state.setEventData,
     toggleRegistration: state.toggleHasRegistration,
   }));

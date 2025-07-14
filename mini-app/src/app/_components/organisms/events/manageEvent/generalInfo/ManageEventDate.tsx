@@ -10,9 +10,11 @@ import { useEffect, useMemo, useState } from "react";
 import ManageEventCard from "../ManageEventCard";
 
 const ManageEventDate = () => {
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
-  const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
+  const { eventData, setEventData, errors } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    setEventData: state.setEventData,
+    errors: state.generalStepErrors,
+  }));
 
   // event duration in hours and minutes
   const eventDuration = useMemo(() => {
