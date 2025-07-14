@@ -10,14 +10,15 @@ import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useSearchParams } from "next/navigation";
 import ManageEventAttendance from "./ManageEventAttendance";
 import ManageEventGeneral from "./ManageEventGeneral";
-
-export type ManageEventPageT = "general" | "attendance";
+import { ManageEventOverview } from "./overview/ManageEventOverview";
 
 type ManageEventProps = {
   event?: RouterOutput["events"]["getEvent"];
 };
 
-const validPages: ManageEventPageT[] = ["general", "attendance"];
+const validPages = ["general", "attendance", "overview"] as const;
+
+export type ManageEventPageT = (typeof validPages)[number];
 
 const ManageEvent = (props: ManageEventProps) => {
   const searchParams = useSearchParams();
@@ -39,6 +40,8 @@ const ManageEvent = (props: ManageEventProps) => {
   const page: ManageEventPageT = validPages.includes(pageQuery as ManageEventPageT)
     ? (pageQuery as ManageEventPageT)
     : "general";
+
+  if (page === "overview") return <ManageEventOverview />;
 
   return (
     <div className="p-4 flex flex-col gap-4 bg-brand-bg">
@@ -92,7 +95,7 @@ const ManageEvent = (props: ManageEventProps) => {
       </div>
 
       {/* Content */}
-      {page === "general" ? (
+      {page === "general" && (
         <>
           <ManageEventGeneral />
           <MainButton
@@ -105,7 +108,8 @@ const ManageEvent = (props: ManageEventProps) => {
             }}
           />
         </>
-      ) : (
+      )}
+      {page === "attendance" && (
         <>
           <ManageEventAttendance />
           <MainButton
