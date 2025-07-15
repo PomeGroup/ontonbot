@@ -330,33 +330,36 @@ export const raffleRouter = router({
     }),
 
   /* ───────────────── TON GIVE-AWAY  (unchanged logic) ───────────────── */
+  /* ───────── spinTon mutation ───────── */
   spinTon: initDataProtectedProcedure
     .input(
       z.object({
         raffle_uuid: z.string().uuid(), // TON-raffle UUID
-        wallet_address: z.string().min(36).max(48), // user wallet
+        wallet_address: z.string().min(36).max(48), // user wallet (bounce/-f)
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { user } = ctx;
 
-      /* 1. load the TON raffle row */
+      /* 1. load raffle */
       const raffle = await eventRafflesDB.fetchRaffleByUuid(input.raffle_uuid);
-      if (!raffle || ["distributing", "completed"].includes(raffle.status)) throw new TRPCError({ code: "BAD_REQUEST" });
+      if (!raffle || ["distributing", "completed"].includes(raffle.status)) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
 
-      /* 2. already spun? */
-      if (await eventRaffleResultsDB.fetchUserScore(raffle.raffle_id, user.user_id))
-        return { alreadyPlayed: true, score: undefined };
+      /* 2. already spun? – return the saved score */
+      const existed = await eventRaffleResultsDB.fetchUserScore(raffle.raffle_id, user.user_id);
+      if (existed) {
+        return { alreadyPlayed: true, score: existed.score };
+      }
 
-      /* 3. event still open? */
+      /* 3. date window check */
       await ensureDateWindowOK(raffle.event_id);
 
-      /* 4. generate + persist score */
+      /* 4. create & store score */
       const score = randomInt(1, 1_000_000);
-      const addrRaw = (() => {
-        const p = Address.parse(input.wallet_address);
-        return `${p.workChain}:${p.hash.toString("hex")}`;
-      })();
+      const parsed = Address.parse(input.wallet_address);
+      const addrRaw = `${parsed.workChain}:${parsed.hash.toString("hex")}`;
 
       await eventRaffleResultsDB.addUserScore({
         raffle_id: raffle.raffle_id,
@@ -365,15 +368,14 @@ export const raffleRouter = router({
         wallet_address: addrRaw,
       });
 
-      /* 5. copy score into *all* merch-prizes of the same event, if any */
-      const merchRaffle = await eventMerchRafflesDB.fetchByEvent(raffle.event_id);
-      if (merchRaffle) {
-        const prizes = await eventMerchPrizesDB.listPrizesForRaffle(merchRaffle.merchRaffleId);
-
+      /* 5. copy score into all merch-prizes of the same event (if any) */
+      const merch = await eventMerchRafflesDB.fetchByEvent(raffle.event_id);
+      if (merch) {
+        const prizes = await eventMerchPrizesDB.listPrizesForRaffle(merch.merchRaffleId);
         await Promise.all(
           prizes.map((p) =>
             eventMerchPrizeResultsDB.addUserScore({
-              merch_raffle_id: merchRaffle.merchRaffleId,
+              merch_raffle_id: merch.merchRaffleId,
               user_id: user.user_id,
               score,
             })
@@ -381,7 +383,7 @@ export const raffleRouter = router({
         );
       }
 
-      /* 6. recompute TON top-N (merch handled independently) */
+      /* 6. recompute TON top-N */
       await eventRaffleResultsDB.computeTopN(raffle.raffle_id, raffle.top_n);
 
       return { alreadyPlayed: false, score };

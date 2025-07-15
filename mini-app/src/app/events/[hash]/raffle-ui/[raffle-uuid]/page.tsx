@@ -94,7 +94,7 @@ export default function RaffleUiPage() {
   /* queries */
   const eventQ = trpc.events.getEvent.useQuery({ event_uuid: eventUuid });
   const viewQ = trpc.raffle.view.useQuery({ raffle_uuid: raffleUuid }, { refetchOnWindowFocus: false });
-  const spinMut = trpc.raffle.spin.useMutation();
+  const spinMut = trpc.raffle.spinTon.useMutation();
 
   /* wallet */
   const wallet = useTonAddress();
