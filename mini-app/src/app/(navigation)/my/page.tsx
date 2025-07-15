@@ -86,6 +86,16 @@ export default function ProfilePage() {
         footerTexts={[{ items: "Points", count: Number(totalPoints) || 0 }]}
       />
 
+      <ActionCard
+        onClick={(e) => {
+          router.push("/my/partner/onion-affiliate");
+        }}
+        iconSrc={solarCupOutline}
+        title="Onion Partnership Dashboard"
+        subtitle=""
+        footerTexts={[]}
+      />
+
       <ConnectWalletCard />
       <PaymentCard visible={!hasEventOrganizer && hasWallet} />
 
