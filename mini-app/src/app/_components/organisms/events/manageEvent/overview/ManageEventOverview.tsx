@@ -1,21 +1,14 @@
-import { useMemo } from "react";
-import { useEventValidation } from "../hooks/useEventValidation";
+"use client";
+
+import { useEventOverview } from "@/app/events/[hash]/overview/overview.context";
 import ManageEventCard from "../ManageEventCard";
 
 export const ManageEventOverview = () => {
-  const { ensureValidOrRedirect } = useEventValidation();
-
-  const res = useMemo(() => {
-    return ensureValidOrRedirect({ redirectPath: "/my" });
-  }, []);
-
-  if (!res.success) {
-    return null;
-  }
+  const { eventData } = useEventOverview();
 
   return (
     <div className="p-4">
-      <ManageEventCard title="Overview">Yo</ManageEventCard>
+      <ManageEventCard title="Overview">{eventData?.title}</ManageEventCard>
     </div>
   );
 };
