@@ -101,6 +101,21 @@ export async function sumTotalsByLinkId(affiliateLinkId: number): Promise<{
   return row;
 }
 
+export async function getGlobalTotals() {
+  const [row] = await db
+    .select({
+      onionTotal: sql<string>`COALESCE(SUM(${partnershipAffiliatePurchases.onionAmount}), 0)`,
+      usdtTotal: sql<string>`COALESCE(SUM(${partnershipAffiliatePurchases.usdtAmount}), 0)`,
+    })
+    .from(partnershipAffiliatePurchases)
+    .execute();
+
+  return {
+    onion: Number(row.onionTotal),
+    usdt: Number(row.usdtTotal),
+  };
+}
+
 /* ------------------------------------------------------------------ *
  *   EXPORT FACADE                                                    *
  * ------------------------------------------------------------------ */
@@ -111,4 +126,5 @@ export const partnershipAffiliatePurchasesDB = {
 
   getPurchasesByTelegramUserId,
   sumTotalsByLinkId,
+  getGlobalTotals,
 };

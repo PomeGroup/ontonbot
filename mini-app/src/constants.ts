@@ -755,3 +755,5 @@ export const WalletNetCHAIN_MAP: Record<number | string, "-239" | "-3"> = {
 
 export const PARTNER_HASH_SEARCH_PARAM_KEY = "affp"; // ?affp=<hash>
 export const PARTNER_HASH_LOCAL_KEY = "fairlaunch_partner_aff"; // localStorage key
+/* fixed cap for the partner launch */
+export const PARTNER_ONION_CAP = 3000000;

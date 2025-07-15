@@ -3,39 +3,29 @@ import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { partnershipAffiliatePurchasesDB } from "@/db/modules/partnershipAffiliatePurchases.db";
 import { initDataProtectedProcedure, router } from "../trpc";
 import { TRPCError } from "@trpc/server";
+import { PARTNER_ONION_CAP } from "@/constants";
 
 export const affiliateRouter = router({
-  /* ──────────────────────────────────────────────────────────────
-     Get – or create – the caller’s Fairlaunch partnership link
-     plus a detailed list of all purchases attributed to it.
-     ────────────────────────────────────────────────────────────── */
   getFairlaunchAffiliate: initDataProtectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user?.user_id;
-    if (!userId) {
-      throw new TRPCError({ code: "UNAUTHORIZED" });
-    }
+    if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-    /* 1️⃣  fetch or create link */
-    let link = await affiliateLinksDB.getAffiliateLinkForType(userId, "fairlaunch-partnership" as const);
-
+    /* 1) fetch or create this user’s link */
+    let link = await affiliateLinksDB.getAffiliateLinkForType(userId, "fairlaunch-partnership");
     if (!link) {
-      const linkHash = generateRandomHash(8);
       link = await affiliateLinksDB.createAffiliateLinkByType(
         `fairlaunch-partnership-${userId}`,
         "fairlaunch-partnership",
         userId,
-        linkHash,
+        generateRandomHash(8),
         "fairlaunch-partnership"
       );
     }
 
-    /* 2️⃣  fetch purchases tied to this link */
-    const purchasesRaw = await partnershipAffiliatePurchasesDB.getPurchasesByLinkId(
-      link.id,
-      { limit: 500 } // arbitrary high; paginate if needed
-    );
+    /* 2) all purchases credited to THIS link */
+    const purchasesRaw = await partnershipAffiliatePurchasesDB.getPurchasesByLinkId(link.id, { limit: 500 });
 
-    /* 3️⃣  enrich rows for the UI */
+    /* 3) enrich rows (UI convenience) */
     const purchases = purchasesRaw.map((p) => ({
       id: p.id,
       walletAddress: p.walletAddress,
@@ -46,17 +36,39 @@ export const affiliateRouter = router({
       usdtAmount: p.usdtAmount,
       onionAmount: p.onionAmount,
       timeOfBought: p.timeOfBought,
-      userEntry: p.userEntry, // "telegram" | "web"
+      userEntry: p.userEntry,
     }));
 
-    /* 4️⃣  build shareable URL */
+    /* 4) per‑user totals */
+    const currentTotals = purchasesRaw.reduce(
+      (acc, p) => {
+        acc.usdt += Number(p.usdtAmount);
+        acc.onion += Number(p.onionAmount);
+        return acc;
+      },
+      { usdt: 0, onion: 0 }
+    );
+
+    /* 5) GLOBAL totals (for progress bar) */
+    const globalTotals = await partnershipAffiliatePurchasesDB.getGlobalTotals();
+    const onionSoldGlobal = globalTotals.onion;
+    const progressPct = Math.min((onionSoldGlobal / PARTNER_ONION_CAP) * 100, 100);
+
+    /* 6) shareable deep link */
     const botUser = process.env.NEXT_PUBLIC_BOT_USERNAME || "theontonbot";
     const url = `https://t.me/${botUser}/event?startapp=fairlaunch-aff-${link.linkHash}`;
 
     return {
       ...link,
       url,
-      purchases, // ← NEW  detailed list
+      purchases,
+      currentTotals, // ← user‑specific totals
+      globalTotals, // ← community totals
+      capInfo: {
+        totalCap: PARTNER_ONION_CAP,
+        onionSold: onionSoldGlobal,
+        progressPct,
+      },
     };
   }),
 });
