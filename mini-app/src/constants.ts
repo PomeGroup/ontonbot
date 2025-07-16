@@ -757,3 +757,5 @@ export const PARTNER_HASH_SEARCH_PARAM_KEY = "affp"; // ?affp=<hash>
 export const PARTNER_HASH_LOCAL_KEY = "fairlaunch_partner_aff"; // localStorage key
 /* fixed cap for the partner launch */
 export const PARTNER_ONION_CAP = 3000000;
+export const TBOOK_FAIRLAUNCH_MINIAPP_URL =
+  "https://t.me/tbook_incentive_bot/tbook?startapp=WyIxIiwidG9uc29jaWV0eSIsIjU2MTIwODI3Nzc5MTU5Il0";

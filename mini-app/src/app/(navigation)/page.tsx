@@ -17,6 +17,7 @@ import CustomSwiper from "../_components/CustomSwiper";
 import EventsTimeline from "../_components/Event/EventsTImeline";
 import EventCardSkeleton from "../_components/EventCard/EventCardSkeleton";
 import FeaturedBanners from "../_components/FeaturedBanners";
+import { Banner } from "@/app/(landing-pages)/genesis-onions/_components/Banner";
 
 export default function Home() {
   return (
@@ -25,7 +26,7 @@ export default function Home() {
         <div className="w-full pb-3">
           <SearchBar />
         </div>
-
+        <Banner />
         <FeaturedBanners className="mb-4" />
 
         <div className=" flex-grow">
