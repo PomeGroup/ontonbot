@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { eventManagementProtectedProcedure, router } from "../trpc";
+import { eventManagementProtectedProcedure, initDataProtectedProcedure, router } from "../trpc";
 import { couponDefinitionsDB } from "@/db/modules/couponDefinitions.db";
 import { couponItemsDB } from "@/db/modules/couponItems.db";
 import couponSchema from "@/zodSchema/couponSchema";
@@ -11,11 +11,20 @@ import { coupon_items } from "@/db/schema/coupon_items";
 import { generateRandomCode } from "@/server/utils/utils";
 import { users } from "@/db/schema";
 import { inArray } from "drizzle-orm";
+import { z } from "zod";
+import { checkRateLimit } from "@/lib/checkRateLimit";
+import { applyCouponDiscount } from "@/lib/applyCouponDiscount";
 const normaliseUsername = (u: string) =>
   u
     .replace(/^https?:\/\/t\.me\//i, "")
     .replace(/^@/, "")
     .trim();
+
+export const checkCouponSchema = z.object({
+  event_uuid: z.string().uuid("Invalid event id"),
+  coupon_code: z.string().min(1, "Coupon code is required"),
+});
+
 export const couponRouter = router({
   /**
    * 1) Add Coupons (Definition + Items)
@@ -385,7 +394,65 @@ export const couponRouter = router({
       }
     }),
 
-  /**
-   * Get List of Items (by coupon_definition_id)
-   */
+  /* ─────────────────────────  Check / apply coupon  ───────────────────────── */
+  checkCoupon: initDataProtectedProcedure.input(checkCouponSchema).query(async ({ input, ctx }) => {
+    const userId = ctx.user.user_id; // you already have auth in initDataProtectedProcedure
+    /* ---- optional: rate-limit  ------------------------------------------------ */
+    const { allowed } = await checkRateLimit(userId?.toString(), "checkCoupon", 3, 60);
+    if (!allowed) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: "Rate limit exceeded. Please wait a minute.",
+      });
+    }
+
+    const { event_uuid, coupon_code } = input;
+
+    /* ---- Event ---------------------------------------------------------------- */
+    const eventData = await eventDB.selectEventByUuid(event_uuid);
+    if (!eventData) throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+
+    /* ---- Coupon item / definition --------------------------------------------- */
+    const coupon = await couponItemsDB.getByCodeAndEventUuid(coupon_code, event_uuid);
+    if (!coupon) throw new TRPCError({ code: "NOT_FOUND", message: "Coupon not found" });
+
+    if (coupon.coupon_status === "used") throw new TRPCError({ code: "BAD_REQUEST", message: "Coupon is inactive" });
+
+    const definition = await couponDefinitionsDB.getCouponDefinitionById(coupon.coupon_definition_id);
+    if (!definition) throw new TRPCError({ code: "NOT_FOUND", message: "Coupon definition not found" });
+
+    if (definition.cpd_status !== "active")
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Coupon definition is not active" });
+
+    /* ---- Event payment info ---------------------------------------------------- */
+    const paymentInfo = await db.query.eventPayment.findFirst({
+      where: (f, { eq }) => eq(f.event_uuid, event_uuid),
+    });
+    if (!paymentInfo) throw new TRPCError({ code: "NOT_FOUND", message: "Event payment info does not exist" });
+
+    /* ---- Calculate discount ---------------------------------------------------- */
+    const { discountedPrice, couponId, errorResponse } = await applyCouponDiscount(coupon_code, event_uuid, paymentInfo);
+    if (errorResponse) {
+      // - applyCouponDiscount already built a TRPC-like response?
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Coupon cannot be applied",
+      });
+    }
+
+    /* ---- Success payload ------------------------------------------------------- */
+    return {
+      success: true,
+      item: coupon,
+      definition: {
+        cpd_type: definition.cpd_type,
+        cpd_status: definition.cpd_status,
+        value: definition.value,
+        start_date: definition.start_date,
+        end_date: definition.end_date,
+        discounted_price: discountedPrice,
+        coupon_id: couponId,
+      },
+    };
+  }),
 });

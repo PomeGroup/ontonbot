@@ -16,6 +16,7 @@ interface CustomButtonProps {
   onClick?: (_e: React.MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   buttonClassName?: string;
+  disabled?: boolean;
 }
 
 const customButtonVariants = cva("p-4 w-full min-w-20 disabled:opacity-70", {
@@ -38,13 +39,14 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   variant = "primary",
   size,
   isLoading = false,
+  disabled = false,
   className,
   onClick,
   buttonClassName,
 }) => (
   <Button
     itemType="button"
-    disabled={isLoading}
+    disabled={isLoading || disabled}
     onClick={(e) => {
       onClick?.(e);
     }}

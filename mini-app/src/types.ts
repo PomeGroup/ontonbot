@@ -523,3 +523,35 @@ export type MergeWithOptional<A, B> = OptionalKeys<Omit<A, keyof B>> &
   Pick<A, keyof A & keyof B>;
 
 export type TonProofSavedSession = { token: string; proof: string };
+
+/* ---   TON Wallet Address Schema ---------------------------------- */
+const TonWallet = z
+  .string()
+  .trim()
+  .refine(
+    (str) => {
+      try {
+        Address.parse(str); // throws on invalid TON address
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: "Invalid TON wallet address" }
+  );
+
+/* --- schema ----------------------------------------------------- */
+export const GuestTicketSchema = z.object({
+  event_uuid: z.string().uuid(),
+  ticket_id: z.number().int().positive(),
+
+  full_name: z.string().trim().min(2, "Full name is required"),
+
+  wallet: TonWallet,
+
+  company: z.string().trim().optional(),
+  position: z.string().trim().optional(),
+});
+
+/* Handy type if you’d like it elsewhere */
+export type GuestTicket = z.infer<typeof GuestTicketSchema>;

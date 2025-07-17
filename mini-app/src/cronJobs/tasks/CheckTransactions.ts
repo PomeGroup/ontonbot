@@ -58,60 +58,84 @@ export const CheckTransactions = async () => {
         );
     }
   }
-  const campaign_wallet_checks_details = await db
-    .select({ checked_lt: walletChecks.checked_lt })
-    .from(walletChecks)
-    .where(eq(walletChecks.wallet_address, campaign_wallet_address || ""))
-    .execute();
-  let campaign_start_lt = null;
-  if (campaign_wallet_checks_details && campaign_wallet_checks_details.length) {
-    if (campaign_wallet_checks_details[0]?.checked_lt) {
-      campaign_start_lt = campaign_wallet_checks_details[0].checked_lt + BigInt(1);
+  const parsed_orders_new_paid_event = await tonCenter.parseTransactions(transactions, "OntonOrder=");
+  for (const o of parsed_orders_new_paid_event) {
+    logger.log("cron_tssssssssrx_", o.order_uuid);
+    if (o.order_uuid.length !== 36) {
+      logger.error("cron_trx_ Invalid Order UUID", o.order_uuid);
+      continue;
     }
-  }
-
-  const campaign_start_utime = campaign_start_lt ? null : hour_ago;
-
-  const campaign_transactions = await tonCenter.fetchAllTransactions(
-    campaign_wallet_address,
-    campaign_start_utime,
-    campaign_start_lt
-  );
-
-  const parsed_campaign_orders = await tonCenter.parseTransactions(campaign_transactions, "OnionCampaign=");
-
-  for (const co of parsed_campaign_orders) {
-    logger.log("cron_trx_campaign_heartBeat", co.order_uuid, co.order_type, co.value);
-    if (co.verfied) {
-      if (co.order_uuid.length !== 36) {
-        logger.error("cron_trx_campaign_ Invalid Order UUID", co.order_uuid);
-        continue;
-      }
-      logger.log("cron_trx_campaign_", co.order_uuid, co.order_type, co.value);
-      // Update your 'token_campaign_orders' table:
+    logger.log("cron_trx_", o.order_uuid);
+    if (o.verfied) {
+      logger.log("cron_trx_", o.order_uuid, o.order_type, o.value);
       await db
-        .update(tokenCampaignOrders)
-        .set({
-          status: "processing" as TokenCampaignOrdersStatus, // or "completed", etc.
-          trxHash: co.trx_hash,
-          // If you store an owner_address or something similar:
-          wallet_address: co.owner.toString(),
-        })
+        .update(orders)
+        .set({ state: "processing", owner_address: o.owner.toString(), trx_hash: o.trx_hash, created_at: new Date() })
         .where(
           and(
-            eq(tokenCampaignOrders.uuid, co.order_uuid),
-            or(
-              eq(tokenCampaignOrders.status, "new"),
-              eq(tokenCampaignOrders.status, "confirming"),
-              eq(tokenCampaignOrders.status, "cancelled")
-            ),
-            // If you want to verify the price matches `co.value`:
-            eq(tokenCampaignOrders.finalPrice, co.value.toString())
+            eq(orders.uuid, o.order_uuid),
+            or(eq(orders.state, "new"), eq(orders.state, "confirming")),
+            eq(orders.total_price, o.value),
+            eq(orders.payment_type, o.order_type)
           )
-        )
-        .execute();
+        );
     }
   }
+
+  // const campaign_wallet_checks_details = await db
+  //   .select({ checked_lt: walletChecks.checked_lt })
+  //   .from(walletChecks)
+  //   .where(eq(walletChecks.wallet_address, campaign_wallet_address || ""))
+  //   .execute();
+  // let campaign_start_lt = null;
+  // if (campaign_wallet_checks_details && campaign_wallet_checks_details.length) {
+  //   if (campaign_wallet_checks_details[0]?.checked_lt) {
+  //     campaign_start_lt = campaign_wallet_checks_details[0].checked_lt + BigInt(1);
+  //   }
+  // }
+  //
+  // const campaign_start_utime = campaign_start_lt ? null : hour_ago;
+  //
+  // const campaign_transactions = await tonCenter.fetchAllTransactions(
+  //   campaign_wallet_address,
+  //   campaign_start_utime,
+  //   campaign_start_lt
+  // );
+
+  // const parsed_campaign_orders = await tonCenter.parseTransactions(campaign_transactions, "OnionCampaign=");
+
+  // for (const co of parsed_campaign_orders) {
+  //   logger.log("cron_trx_campaign_heartBeat", co.order_uuid, co.order_type, co.value);
+  //   if (co.verfied) {
+  //     if (co.order_uuid.length !== 36) {
+  //       logger.error("cron_trx_campaign_ Invalid Order UUID", co.order_uuid);
+  //       continue;
+  //     }
+  //     logger.log("cron_trx_campaign_", co.order_uuid, co.order_type, co.value);
+  //     // Update your 'token_campaign_orders' table:
+  //     await db
+  //       .update(tokenCampaignOrders)
+  //       .set({
+  //         status: "processing" as TokenCampaignOrdersStatus, // or "completed", etc.
+  //         trxHash: co.trx_hash,
+  //         // If you store an owner_address or something similar:
+  //         wallet_address: co.owner.toString(),
+  //       })
+  //       .where(
+  //         and(
+  //           eq(tokenCampaignOrders.uuid, co.order_uuid),
+  //           or(
+  //             eq(tokenCampaignOrders.status, "new"),
+  //             eq(tokenCampaignOrders.status, "confirming"),
+  //             eq(tokenCampaignOrders.status, "cancelled")
+  //           ),
+  //           // If you want to verify the price matches `co.value`:
+  //           eq(tokenCampaignOrders.finalPrice, co.value.toString())
+  //         )
+  //       )
+  //       .execute();
+  //   }
+  // }
   //-- Finished Checking
   if (transactions && transactions.length) {
     const last_lt = BigInt(transactions[transactions.length - 1].lt);
@@ -125,16 +149,16 @@ export const CheckTransactions = async () => {
       await db.insert(walletChecks).values({ wallet_address: wallet_address, checked_lt: last_lt }).execute();
     }
   }
-  if (campaign_transactions && campaign_transactions.length) {
-    const last_lt = BigInt(campaign_transactions[campaign_transactions.length - 1].lt);
-    if (campaign_start_lt) {
-      await db
-        .update(walletChecks)
-        .set({ checked_lt: last_lt })
-        .where(eq(walletChecks.wallet_address, campaign_wallet_address))
-        .execute();
-    } else {
-      await db.insert(walletChecks).values({ wallet_address: campaign_wallet_address, checked_lt: last_lt }).execute();
-    }
-  }
+  // if (campaign_transactions && campaign_transactions.length) {
+  //   const last_lt = BigInt(campaign_transactions[campaign_transactions.length - 1].lt);
+  //   if (campaign_start_lt) {
+  //     await db
+  //       .update(walletChecks)
+  //       .set({ checked_lt: last_lt })
+  //       .where(eq(walletChecks.wallet_address, campaign_wallet_address))
+  //       .execute();
+  //   } else {
+  //     await db.insert(walletChecks).values({ wallet_address: campaign_wallet_address, checked_lt: last_lt }).execute();
+  //   }
+  // }
 };

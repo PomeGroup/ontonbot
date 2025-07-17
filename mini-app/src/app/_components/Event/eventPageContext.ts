@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import { RouterOutput } from "@/server";
 import { UseTRPCQueryResult } from "@trpc/react-query/shared";
+import { EventPaymentDTO, EventPaymentSelectType } from "@/db/schema/eventPayment";
 
 // Create a context for event data
 export const EventDataContext = createContext<{
@@ -41,6 +42,7 @@ export const EventDataContext = createContext<{
     | undefined;
   accessRoles: Array<{ user_id: number; role: string }> | undefined;
   registrationFromSchema: { isCustom?: boolean } | undefined;
+  hasPayment: boolean;
 } | null>(null);
 
 /**
@@ -52,4 +54,10 @@ export const useEventData = () => {
     throw new Error("useEventData must be used within an EventDataProvider");
   }
   return context;
+};
+export const useTickets = (paymentDetails?: EventPaymentDTO[] | undefined) => {
+  if (!paymentDetails) return [];
+  return Array.isArray(paymentDetails)
+    ? (paymentDetails as EventPaymentSelectType[])
+    : (Object.values(paymentDetails) as EventPaymentSelectType[]);
 };
