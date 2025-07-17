@@ -155,12 +155,12 @@ export const PaidEventSchema = z
     has_payment: z.boolean({ required_error: "payment status is required" }).optional().default(false),
     payment_recipient_address: z.string({ required_error: "recipient address is required" }).optional().default(""),
     payment_type: z.enum(["USDT", "TON", "STAR"], { required_error: "payment type is required" }).optional(),
-    payment_amount: z.number({ required_error: "payment amount is required" }).optional(),
-    has_nft: z.boolean({ required_error: "NFT status is required" }).optional().default(false),
-    nft_title: z.string({ required_error: "NFT title is required" }).optional().default(""),
-    nft_description: z.string({ required_error: "NFT description is required" }).optional().default(""),
-    nft_image_url: z.string({ required_error: "NFT image URL is required" }).optional(),
-    nft_video_url: z.string({ required_error: "NFT video URL is required" }).optional(),
+    // payment_amount: z.number({ required_error: "payment amount is required" }).optional(),
+    // has_nft: z.boolean({ required_error: "NFT status is required" }).optional().default(false),
+    // nft_title: z.string({ required_error: "NFT title is required" }).optional().default(""),
+    // nft_description: z.string({ required_error: "NFT description is required" }).optional().default(""),
+    // nft_image_url: z.string({ required_error: "NFT image URL is required" }).optional(),
+    // nft_video_url: z.string({ required_error: "NFT video URL is required" }).optional(),
     ticket_type: z.enum(ticketTypes, { required_error: "Ticket type is required" }).optional(),
   })
   .superRefine((data, ctx) => {
@@ -192,24 +192,24 @@ export const PaidEventSchema = z
         });
 
       // Validate that `payment_amount` is present and greater than 0
-      if (data.payment_amount === undefined || data.payment_amount <= 0)
-        ctx.addIssue({ code: "custom", path: ["payment_amount"], message: "Payment amount must be greater than 0" });
+      // if (data.payment_amount === undefined || data.payment_amount <= 0)
+      //   ctx.addIssue({ code: "custom", path: ["payment_amount"], message: "Payment amount must be greater than 0" });
 
       // Validate that `nft` is present
-      if (data.has_nft) {
-        if (!data.ticket_type) ctx.addIssue({ code: "custom", path: ["ticket_type"], message: "Ticket type is required" });
-
-        if (!data.nft_image_url)
-          ctx.addIssue({ code: "custom", path: ["nft_image_url"], message: "Nft image url is required" });
-
-        if (data.ticket_type === "TSCSBT" && !data.nft_video_url)
-          ctx.addIssue({ code: "custom", path: ["nft_video_url"], message: "Nft video url is required" });
-
-        if (!data.nft_title) ctx.addIssue({ code: "custom", path: ["nft_title"], message: "Nft title is required" });
-
-        if (!data.nft_description)
-          ctx.addIssue({ code: "custom", path: ["nft_description"], message: "Nft description is required" });
-      }
+      // if (data.has_nft) {
+      //   if (!data.ticket_type) ctx.addIssue({ code: "custom", path: ["ticket_type"], message: "Ticket type is required" });
+      //
+      //   if (!data.nft_image_url)
+      //     ctx.addIssue({ code: "custom", path: ["nft_image_url"], message: "Nft image url is required" });
+      //
+      //   if (data.ticket_type === "TSCSBT" && !data.nft_video_url)
+      //     ctx.addIssue({ code: "custom", path: ["nft_video_url"], message: "Nft video url is required" });
+      //
+      //   if (!data.nft_title) ctx.addIssue({ code: "custom", path: ["nft_title"], message: "Nft title is required" });
+      //
+      //   if (!data.nft_description)
+      //     ctx.addIssue({ code: "custom", path: ["nft_description"], message: "Nft description is required" });
+      // }
     }
   });
 

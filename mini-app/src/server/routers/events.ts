@@ -335,21 +335,21 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         event_ticket_price = Math.round(event_ticket_price * 1000) / 1000; // Round to 3 Decimals
         event_ticket_price = event_ticket_price || 0.001;
 
-        await trx.insert(eventPayment).values({
-          event_uuid: newEvent[0].event_uuid,
-          /* -------------------------------------------------------------------------- */
-          payment_type: input_event_data.paid_event.payment_type,
-          price: event_ticket_price,
-          recipient_address: input_event_data.paid_event.payment_recipient_address,
-          bought_capacity: 0,
-          /* -------------------------------------------------------------------------- */
-          ticket_type: ticketType,
-          ticketImage: input_event_data.paid_event.nft_image_url,
-          ticketVideo: input_event_data.paid_event.nft_video_url,
-          title: input_event_data.paid_event.nft_title,
-          description: input_event_data.paid_event.nft_description,
-          collectionAddress: null,
-        });
+        // await trx.insert(eventPayment).values({
+        //   event_uuid: newEvent[0].event_uuid,
+        //   /* -------------------------------------------------------------------------- */
+        //   payment_type: input_event_data.paid_event.payment_type,
+        //   price: event_ticket_price,
+        //   recipient_address: input_event_data.paid_event.payment_recipient_address,
+        //   bought_capacity: 0,
+        //   /* -------------------------------------------------------------------------- */
+        //   ticket_type: ticketType,
+        //   ticketImage: input_event_data.paid_event.nft_image_url,
+        //   ticketVideo: input_event_data.paid_event.nft_video_url,
+        //   title: input_event_data.paid_event.nft_title,
+        //   description: input_event_data.paid_event.nft_description,
+        //   collectionAddress: null,
+        // });
       }
 
       // Insert dynamic fields
