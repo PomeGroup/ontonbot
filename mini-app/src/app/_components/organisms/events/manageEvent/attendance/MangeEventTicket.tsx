@@ -154,21 +154,6 @@ const MangeEventTicket = () => {
         </RadioGroup>
       </div>
       <Input
-        label="Ticket Price"
-        placeholder="100"
-        name="payment_amount"
-        type="number"
-        typeof="number"
-        inputMode="decimal"
-        min={0.1}
-        defaultValue={paidData.payment_amount}
-        onBlur={(e) => {
-          e.preventDefault();
-          changePaymentAmount(Number(e.target.value));
-        }}
-        errors={errors.payment_recipient_address}
-      />
-      <Input
         label="Refund wallet"
         placeholder="Wallet address for ticket pool refund"
         name="refund_wallet"
