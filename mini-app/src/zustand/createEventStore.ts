@@ -32,19 +32,6 @@ export type SBTRewardType = "default" | "custom";
 
 export type PaymentType = "USDT" | "TON" | "STAR";
 
-type PaidInfoErrors = {
-  has_payment?: string[] | undefined;
-  payment_recipient_address?: string[] | undefined;
-  payment_type?: string[] | undefined;
-  payment_amount?: string[] | undefined;
-  has_nft?: string[] | undefined;
-  nft_title?: string[] | undefined;
-  nft_description?: string[] | undefined;
-  nft_image_url?: string[] | undefined;
-  nft_video_url?: string[] | undefined;
-  capacity?: string[] | undefined;
-};
-
 export type CreateEventStoreType = {
   currentStep: number;
   setCurrentStep: (_step: number) => void;
@@ -81,20 +68,9 @@ export type CreateEventStoreType = {
   togglePaidEvent: () => void;
   changePaymentType: (paymentType: PaymentType) => void;
   changeTicketType: (ticketType: EventTicketType) => void;
-  changePaymentAmount: (amount: number) => void;
-
-  // --- // nft info
-  changeNFTImage: (url: string) => void;
-  changeNFTVideo: (url: string) => void;
-  changeNFTTitle: (title: string) => void;
-  changeNFTDescription: (desc: string) => void;
 
   /**** REGISTRATION STEP MAIN BUTTON CLICK ****/
   registrationStepMainButtonClick: (_recipient: string | null) => void;
-
-  /**** ⭕ PAID EVENT INPUT ERRORS ⭕ ****/
-  paid_info_errors: PaidInfoErrors;
-  setPaidInfoErrors: (_key: keyof PaidInfoErrors, _value: any) => void;
 
   /* Reward Type */
   setRewardType: (rewardType: SBTRewardType) => void;
@@ -279,32 +255,45 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
             payment_type: "TON",
             ticket_type: "NFT",
             payment_amount: 1,
+            payment_recipient_address: "",
           } as Partial<PaidEventType>;
 
           /*
            * Handle Confirmation and Notifying user that they need to pay to create a paid event
            */
-          if (!state.eventData.paid_event.has_payment) {
+          if (!state.eventData.paid_event?.has_payment) {
             try {
               window.Telegram.WebApp.showConfirm(
                 "You will need to pay 10 TON to create a paid event if the ticket type is NFT it will include 0.06 TON for each person buying the ticket (minting fees) this does not include cSBT ticket type",
                 (confirmed) => {
                   if (confirmed) {
                     set((state) => {
-                      state.eventData.paid_event = paidEventInfo;
+                      state.eventData.paid_event = {
+                        ...paidEventInfo,
+                        has_payment: Boolean(paidEventInfo.has_payment),
+                        payment_recipient_address: paidEventInfo.payment_recipient_address || "",
+                      };
                       state.eventData.has_registration = true;
                     });
                   }
                 }
               );
             } catch {
-              state.eventData.paid_event = paidEventInfo;
+              state.eventData.paid_event = {
+                ...paidEventInfo,
+                has_payment: Boolean(paidEventInfo.has_payment),
+                payment_recipient_address: paidEventInfo.payment_recipient_address || "",
+              };
               state.eventData.has_registration = true;
             }
 
             state.eventData.capacity = 5;
           } else {
-            state.eventData.paid_event = paidEventInfo;
+            state.eventData.paid_event = {
+              ...paidEventInfo,
+              has_payment: Boolean(paidEventInfo.has_payment),
+              payment_recipient_address: paidEventInfo.payment_recipient_address || "",
+            };
             state.eventData.capacity = null;
           }
         });
@@ -312,44 +301,11 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
       changePaymentType(payment_type) {
         set((state) => {
           state.eventData.paid_event.payment_type = payment_type;
-          state.eventData.paid_event.payment_amount = payment_type === "USDT" ? 5 : 1;
-        });
-      },
-      changePaymentAmount(amount: number) {
-        const handledValue = isNaN(amount) ? undefined : amount < 0 ? Math.abs(amount) : amount;
-
-        set((state) => {
-          state.eventData.paid_event.payment_amount = handledValue;
         });
       },
       changeTicketType(ticketType) {
         set((state) => {
           state.eventData.paid_event.ticket_type = ticketType;
-        });
-      },
-      changeNFTImage(image) {
-        set((state) => {
-          state.eventData.paid_event.nft_image_url = image;
-        });
-      },
-      changeNFTVideo(video) {
-        set((state) => {
-          state.eventData.paid_event.nft_video_url = video;
-        });
-      },
-      changeNFTTitle: (title) => {
-        set((state) => {
-          state.eventData.paid_event.nft_title = title;
-        });
-      },
-      changeNFTDescription: (desc) => {
-        set((state) => {
-          state.eventData.paid_event.nft_description = desc;
-        });
-      },
-      setPaidInfoErrors: (key, value) => {
-        set((state) => {
-          state.paid_info_errors[key] = value;
         });
       },
       registrationStepMainButtonClick: () => {
@@ -360,21 +316,28 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
 
         if (hasPayment) {
           // Validate Paid Event Data
-          const paymentParsed = PaidEventSchema.safeParse({
-            ...paid_event,
-            payment_amount: Number(paid_event.payment_amount!),
-          });
+          const paymentParsed = PaidEventSchema.safeParse(paid_event);
 
           if (paymentParsed.error) {
             const fieldErrors = paymentParsed.error.flatten().fieldErrors;
             console.log("Validation Errors:", fieldErrors);
             set((state) => {
-              state.paid_info_errors = fieldErrors;
+              if (state.attendanceStepErrors) {
+                state.attendanceStepErrors.has_payment = fieldErrors.has_payment;
+                state.attendanceStepErrors.payment_recipient_address = fieldErrors.payment_recipient_address;
+                state.attendanceStepErrors.payment_type = fieldErrors.payment_type;
+                state.attendanceStepErrors.ticket_type = fieldErrors.ticket_type;
+              }
             });
           } else {
             // Validation successful, proceed to the next step
             set((state) => {
-              state.paid_info_errors = {};
+              if (state.attendanceStepErrors) {
+                state.attendanceStepErrors.has_payment = undefined;
+                state.attendanceStepErrors.payment_recipient_address = undefined;
+                state.attendanceStepErrors.payment_type = undefined;
+                state.attendanceStepErrors.ticket_type = undefined;
+              }
             });
             console.log("Recipient Address:", paid_event.payment_recipient_address);
             console.log("Capacity:", capacity);
@@ -383,7 +346,12 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
         } else {
           // Handle Registration Only (No Payment)
           set((state) => {
-            state.paid_info_errors = {};
+            if (state.attendanceStepErrors) {
+              state.attendanceStepErrors.has_payment = undefined;
+              state.attendanceStepErrors.payment_recipient_address = undefined;
+              state.attendanceStepErrors.payment_type = undefined;
+              state.attendanceStepErrors.ticket_type = undefined;
+            }
           });
           setCurrentStep(4);
         }

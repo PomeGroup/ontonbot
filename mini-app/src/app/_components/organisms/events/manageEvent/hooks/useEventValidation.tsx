@@ -76,13 +76,8 @@ export const useEventValidation = () => {
    */
   const normalisePaidEvent = (data: typeof eventData) => {
     if (data.paid_event?.has_payment) {
-      return {
-        ...data,
-        paid_event: {
-          ...data.paid_event,
-          payment_amount: Number(data.paid_event.payment_amount),
-        },
-      };
+      // NOTE: there used to be a middleware for paid event data
+      return data;
     }
     return data;
   };

@@ -3,7 +3,7 @@ import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useSectionStore } from "@/zustand/useSectionStore";
 import { useTonWallet } from "@tonconnect/ui-react";
 import React, { useLayoutEffect } from "react";
-import PaidEventCreationInputs from "./PaidEventCreationInputs";
+// import PaidEventCreationInputs from "./PaidEventCreationInputs";
 import { UserRegistrationForm } from "./UserRegistrationForm";
 
 const RegistrationStep = () => {
@@ -40,7 +40,7 @@ const RegistrationStep = () => {
       }}
     >
       <UserRegistrationForm />
-      <PaidEventCreationInputs />
+      {/* <PaidEventCreationInputs /> */}
     </form>
   );
 };
