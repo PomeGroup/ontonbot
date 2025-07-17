@@ -65,17 +65,6 @@ export default function CreateEventAdminPage() {
           has_approval: Boolean(eventData.has_approval),
           capacity: eventData.capacity || null,
           has_waiting_list: Boolean(eventData.has_waiting_list),
-          // Payment
-          paid_event: {
-            payment_type: eventData.payment_details?.payment_type,
-            payment_recipient_address: eventData.payment_details?.recipient_address,
-            nft_description: eventData.payment_details?.description || undefined,
-            nft_title: eventData.payment_details?.title || undefined,
-            has_payment: Boolean(eventData.payment_details?.payment_type),
-            payment_amount: eventData.payment_details?.price,
-            nft_image_url: eventData.payment_details?.ticketImage || undefined,
-            bought_capacity: eventData.payment_details?.bought_capacity,
-          },
         });
       }
     }

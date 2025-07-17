@@ -13,7 +13,7 @@ import ManageEventCard from "../ManageEventCard";
 const MangeEventCurrency = () => {
   const { changePaymentType, errors, paidData } = useCreateEventStore((state) => {
     return {
-      errors: state.paid_info_errors,
+      errors: state.attendanceStepErrors,
       paidData: state.eventData.paid_event,
       changePaymentType: state.changePaymentType,
     };
@@ -91,18 +91,16 @@ const MangeEventCurrency = () => {
 };
 
 const MangeEventTicket = () => {
-  const { changeTicketType, errors, isPaidEvent, paidData, changePaymentAmount, setPaidData, togglePaidEvent } =
-    useCreateEventStore((state) => {
-      return {
-        togglePaidEvent: state.togglePaidEvent,
-        isPaidEvent: state.eventData.paid_event.has_payment,
-        changeTicketType: state.changeTicketType,
-        paidData: state.eventData.paid_event,
-        setPaidData: state.setEventData,
-        errors: state.paid_info_errors,
-        changePaymentAmount: state.changePaymentAmount,
-      };
-    });
+  const { changeTicketType, errors, isPaidEvent, paidData, setPaidData, togglePaidEvent } = useCreateEventStore((state) => {
+    return {
+      togglePaidEvent: state.togglePaidEvent,
+      isPaidEvent: state.eventData.paid_event.has_payment,
+      changeTicketType: state.changeTicketType,
+      paidData: state.eventData.paid_event,
+      setPaidData: state.setEventData,
+      errors: state.attendanceStepErrors,
+    };
+  });
 
   return (
     <ManageEventCard
@@ -154,21 +152,6 @@ const MangeEventTicket = () => {
         </RadioGroup>
       </div>
       <Input
-        label="Ticket Price"
-        placeholder="100"
-        name="payment_amount"
-        type="number"
-        typeof="number"
-        inputMode="decimal"
-        min={0.1}
-        defaultValue={paidData.payment_amount}
-        onBlur={(e) => {
-          e.preventDefault();
-          changePaymentAmount(Number(e.target.value));
-        }}
-        errors={errors.payment_recipient_address}
-      />
-      <Input
         label="Refund wallet"
         placeholder="Wallet address for ticket pool refund"
         name="refund_wallet"
@@ -182,7 +165,7 @@ const MangeEventTicket = () => {
             },
           });
         }}
-        errors={errors.payment_recipient_address}
+        errors={errors?.payment_recipient_address}
       />
     </ManageEventCard>
   );

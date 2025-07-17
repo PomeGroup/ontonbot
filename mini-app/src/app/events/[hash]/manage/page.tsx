@@ -77,8 +77,9 @@ export default function ManageIndexPage() {
             hasApproval: eventData.has_approval,
             hasPayment: eventData.has_payment,
             hasRegistration: eventData.has_registration,
-            paymentType: eventData.payment_details.payment_type,
-            ticketPrice: eventData.payment_details.price,
+            paymentType: eventData.payment_type ?? "",
+            // sort to cheapest and return the price
+            ticketPrice: [...eventData.payment_details].sort((a, b) => a.price - b.price)[0].price,
           }}
           afterTitle={
             <DropdownMenu>
