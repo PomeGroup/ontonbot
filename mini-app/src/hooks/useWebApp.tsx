@@ -1,5 +1,5 @@
 import { isEmptyObject } from "@/utils";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const useWebApp = () => {
   const [webApp, setWebApp] = useState<WebApp>({} as WebApp);

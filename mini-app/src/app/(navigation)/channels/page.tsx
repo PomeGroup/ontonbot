@@ -13,7 +13,7 @@ import usePaginatedChannels from "./usePaginatedChannels";
 export default function ChannelsPage() {
   const { data, isFetchingNextPage, fetchNextPage, hasNextPage, status } = usePaginatedChannels();
 
-  const observer = useRef<IntersectionObserver>();
+  const observer = useRef<IntersectionObserver>(null);
   const lastItemRef = useCallback(
     (node: HTMLDivElement) => {
       if (isFetchingNextPage) return;

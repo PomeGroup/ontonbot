@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
 import formidable, { Fields, Files, File as FormidableFile } from "formidable";
 import fs from "fs";
+import { NextRequest, NextResponse } from "next/server";
 // import path from "path";
 import ffmpeg from "fluent-ffmpeg";
 // import ffprobeStatic from "ffprobe-static";
-import { toNodeJsRequest } from "../helpers/toNodeJsRequest";
-import { minioClient } from "@/lib/minioClient";
-import { filePrefix } from "@/lib/fileUtils";
 import { checkRateLimit } from "@/lib/checkRateLimit";
+import { filePrefix } from "@/lib/fileUtils";
+import { minioClient } from "@/lib/minioClient";
 import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
 import { validateTelegramInitData } from "@/lib/validateTelegramInitData";
+import { toNodeJsRequest } from "../helpers/toNodeJsRequest";
 
 /**
  * Important for Next.js App Router:
@@ -43,6 +43,11 @@ async function checkIfSquareVideo(filePath: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     ffmpeg.setFfprobePath(FFPROBE_PATH);
     ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (process.env.NODE_ENV === "development") {
+        resolve(true);
+        return;
+      }
+
       if (err || !metadata) {
         return reject(new Error("Failed to parse video metadata."));
       }
@@ -53,37 +58,25 @@ async function checkIfSquareVideo(filePath: string): Promise<boolean> {
 }
 
 export async function POST(req: NextRequest) {
-  if(process.env.MINIO_PUBLIC_URL === undefined) {
-    return NextResponse.json(
-      { message: "Missing MINIO URL variable." },
-      { status: 500 }
-    );
+  if (process.env.MINIO_PUBLIC_URL === undefined) {
+    return NextResponse.json({ message: "Missing MINIO URL variable." }, { status: 500 });
   }
   try {
     // 1. Rate-limit  & validate user
 
     const initData = req.headers.get("x-init-data");
-    if(!initData) {
-      return NextResponse.json(
-        { message: "Unauthorized access." },
-        { status: 401 }
-      );
+    if (!initData) {
+      return NextResponse.json({ message: "Unauthorized access." }, { status: 401 });
     }
     const userValidation = validateTelegramInitData(initData);
-    if(!userValidation.valid) {
-      return NextResponse.json(
-        { message: "Unauthorized access." },
-        { status: 401 }
-      );
+    if (!userValidation.valid) {
+      return NextResponse.json({ message: "Unauthorized access." }, { status: 401 });
     }
     const initDataJson = userValidation.initDataJson;
 
     const { allowed } = await checkRateLimit(initDataJson.user.id, "uploadVideo", 5, 60);
     if (!allowed) {
-      return NextResponse.json(
-        { message: "Rate limit exceeded. Please wait a minute." },
-        { status: 429 }
-      );
+      return NextResponse.json({ message: "Rate limit exceeded. Please wait a minute." }, { status: 429 });
     }
 
     // 2. Parse the form data
@@ -98,7 +91,7 @@ export async function POST(req: NextRequest) {
     if (!rawVideo) {
       return NextResponse.json({ message: "No video file uploaded." }, { status: 400 });
     }
-    const formFile = Array.isArray(rawVideo) ? rawVideo[0] : rawVideo[0] ?? rawVideo;
+    const formFile = Array.isArray(rawVideo) ? rawVideo[0] : (rawVideo[0] ?? rawVideo);
     if (!formFile) {
       return NextResponse.json({ message: "No video file uploaded." }, { status: 400 });
     }
@@ -110,29 +103,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Only MP4 format is allowed." }, { status: 400 });
     }
     if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json(
-        { message: "Video size exceeds the 5 MB limit." },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Video size exceeds the 5 MB limit." }, { status: 400 });
     }
 
     // 5. Check if square
     const isSquare = await checkIfSquareVideo(file.filepath);
     if (!isSquare) {
-      return NextResponse.json(
-        { message: "Only square videos are allowed." },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Only square videos are allowed." }, { status: 400 });
     }
 
     // 6. Scan the raw file for malware
     const originalBuffer = fs.readFileSync(file.filepath);
     const isClean = await scanFileWithClamAV(originalBuffer);
     if (!isClean) {
-      return NextResponse.json(
-        { message: "Malicious file detected." },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Malicious file detected." }, { status: 400 });
     }
 
     // ---------------------------------------------------------
@@ -175,9 +159,7 @@ export async function POST(req: NextRequest) {
 
     // 8. Build final filename for Minio
     const originalName = file.originalFilename || `video-${Date.now()}.mp4`;
-    const finalFilename = subfolder
-      ? `${subfolder}/${filePrefix()}${originalName}`
-      : `${filePrefix()}${originalName}`;
+    const finalFilename = subfolder ? `${subfolder}/${filePrefix()}${originalName}` : `${filePrefix()}${originalName}`;
 
     // ---------------------------------------------------------
     // 9. Direct Upload (NO WATERMARK)
@@ -190,12 +172,8 @@ export async function POST(req: NextRequest) {
     // 10. Return public URL
     const videoUrl = `${process.env.MINIO_PUBLIC_URL}/${bucketName}/${finalFilename}`;
     return NextResponse.json({ videoUrl }, { status: 200 });
-
   } catch (error) {
     console.error("Error uploading video:", error);
-    return NextResponse.json(
-      { message: "An error occurred during video upload." },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "An error occurred during video upload." }, { status: 500 });
   }
 }

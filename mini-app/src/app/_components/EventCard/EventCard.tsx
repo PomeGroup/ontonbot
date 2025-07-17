@@ -45,13 +45,14 @@ export interface EventCardProps {
   };
   timeOnly?: boolean;
   noClick?: boolean;
+  ref?: ForwardedRef<HTMLDivElement>;
   afterTitle?: React.ReactNode;
 }
 
 /**
  * Event card component that displays event information in a clean, modern layout
  */
-function EventCard({ event, afterTitle, timeOnly, noClick }: EventCardProps, ref: ForwardedRef<HTMLDivElement> | null) {
+function EventCard({ event, afterTitle, timeOnly, noClick, ref }: EventCardProps) {
   // ------------------------- //
   //          HOOKS            //
   // ------------------------- //

@@ -2,10 +2,10 @@
 
 import { trpc } from "@/app/_trpc/client";
 import InfiniteEventList from "@/components/InfiniteEventList";
+import { useParams } from "next/navigation";
 
-type Props = { params: { id: string } };
-
-export default function OrganizerEventsPage({ params }: Props) {
+export default function OrganizerEventsPage() {
+  const params = useParams<{ id: string }>();
   const infiniteApi = trpc.organizers.searchOrganizerHostedEvent.useInfiniteQuery(
     { organizerId: parseInt(params.id) },
     {

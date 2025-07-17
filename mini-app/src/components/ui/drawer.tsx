@@ -3,18 +3,52 @@
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
+import useWebApp from "@/hooks/useWebApp";
 import { cn } from "@/lib/utils";
 import { useSheetStackStore } from "@/zustand/sheet-stack.store";
 import { Button, Sheet } from "konsta/react";
-import { X } from "lucide-react";
 import { createPortal } from "react-dom";
+import { IoCloseCircleOutline } from "react-icons/io5";
+import Typography from "../Typography";
 
-const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root
-    shouldScaleBackground={shouldScaleBackground}
-    {...props}
-  />
-);
+const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
+  const webapp = useWebApp();
+  // Use a ref to track main button visibility
+  const mainButtonRef = React.useRef(false);
+
+  React.useEffect(() => {
+    return () => {
+      // Cleanup: Show main button if it was hidden when component unmounts
+      if (mainButtonRef.current && webapp?.MainButton) {
+        webapp.MainButton.show();
+      }
+    };
+  }, [webapp]);
+
+  return (
+    <DrawerPrimitive.Root
+      {...props}
+      shouldScaleBackground={shouldScaleBackground}
+      onOpenChange={(state) => {
+        props.onOpenChange?.(state);
+
+        if (!webapp?.MainButton) return;
+
+        if (state) {
+          // When opening the drawer
+          if (webapp.MainButton.isVisible) {
+            webapp.MainButton.hide();
+            mainButtonRef.current = true;
+          }
+        } else if (mainButtonRef.current) {
+          // When closing the drawer and we previously hid the button
+          webapp.MainButton.show();
+          mainButtonRef.current = false;
+        }
+      }}
+    />
+  );
+};
 Drawer.displayName = "Drawer";
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
@@ -46,18 +80,31 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-cn-background p-4",
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-white p-4 gap-5 max-h-[97%]",
         className
       )}
       {...props}
     >
       {/* Conditionally render the DrawerClose button */}
       {showCloseButton && (
-        <DrawerClose asChild>
-          <button className="ms-auto mr-2 flex items-center justify-center h-6 w-6 rounded-full bg-cn-muted">
-            <X className="h-4 w-4" />
-          </button>
-        </DrawerClose>
+        <div className="flex items-center justify-between gap-3">
+          {props.title && (
+            <DrawerTitle>
+              <Typography
+                variant="title3"
+                weight="normal"
+                className="align-middle line-clamp-1"
+              >
+                {props.title}
+              </Typography>
+            </DrawerTitle>
+          )}
+          <DrawerClose asChild>
+            <button className="ms-auto">
+              <IoCloseCircleOutline className="w-7 h-7" />
+            </button>
+          </DrawerClose>
+        </div>
       )}
       {children}
     </DrawerPrimitive.Content>

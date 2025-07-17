@@ -1,13 +1,15 @@
 import { useCreateEventStore } from "@/zustand/createEventStore";
-import React, { useState, useEffect } from "react";
 import { Chip, ListItem } from "konsta/react";
+import { useEffect, useState } from "react";
 import ListLayout from "../../atoms/cards/ListLayout";
 import EventDateInput from "./EventDateInput";
 
 export const EventDateManager = () => {
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const editOptions = useCreateEventStore((state) => state.edit);
-  const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
+  const { eventData, editOptions, errors } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    editOptions: state.edit,
+    errors: state.generalStepErrors,
+  }));
 
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");

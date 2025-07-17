@@ -3,11 +3,10 @@ import ActionCard from "@/ActionCard";
 import ChannelInfoCard from "@/app/_components/channels/ChannelInfoCard";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
 import { trpc } from "@/app/_trpc/client";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-type Props = { params: { id: string } };
-
-export default function ChannelPage({ params }: Props) {
+export default function ChannelPage() {
+  const params = useParams<{ id: string }>();
   const { data, isLoading, isError } = trpc.organizers.getOrganizer.useQuery({ user_id: Number(params.id) });
 
   const router = useRouter();

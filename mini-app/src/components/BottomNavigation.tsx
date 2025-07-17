@@ -1,7 +1,7 @@
 import { cn } from "@/utils";
 import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, type JSX } from "react";
 import CalendarIcon from "./icons/navigation/calendar-icon";
 import PeopleIcon from "./icons/navigation/people-icon";
 import PlayIcon from "./icons/navigation/play-icon";

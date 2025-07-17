@@ -1,23 +1,23 @@
 import { db } from "@/db/db";
-import { EventCategoryRow, nftItems, orders } from "@/db/schema";
-import { OrderRow } from "@/db/schema/orders";
-import "@/lib/gracefullyShutdown";
-import { removeKey } from "@/lib/utils";
-import { getAuthenticatedUser } from "@/server/auth";
 import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { couponItemsDB } from "@/db/modules/couponItems.db";
+import eventCategoriesDB from "@/db/modules/eventCategories.db";
 import { getByEventUuidAndUserId } from "@/db/modules/eventRegistrants.db";
 import eventDB from "@/db/modules/events.db";
 import ordersDB from "@/db/modules/orders.db";
 import { userRolesDB } from "@/db/modules/userRoles.db";
 import { usersDB } from "@/db/modules/users.db";
-import tonCenter, { NFTItem } from "@/services/tonCenter";
+import { EventCategoryRow, nftItems, orders } from "@/db/schema";
+import { OrderRow } from "@/db/schema/orders";
+import "@/lib/gracefullyShutdown";
+import { removeKey } from "@/lib/utils";
+import { getAuthenticatedUser } from "@/server/auth";
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { logger } from "@/server/utils/logger";
+import tonCenter, { NFTItem } from "@/services/tonCenter";
 import { and, eq } from "drizzle-orm";
 import { type NextRequest } from "next/server";
-import eventCategoriesDB from "@/db/modules/eventCategories.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -108,7 +108,8 @@ async function getValidNfts(
   return { valid_nfts_no_info, valid_nfts_with_info };
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const finderParam = params.id;
 
@@ -260,7 +261,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         }
       );
     }
-    const [userId, unauthorized] = getAuthenticatedUser();
+    const [userId, unauthorized] = await getAuthenticatedUser();
     logger.log(`User ${userId} is trying to access event ${eventData.event_uuid} `);
     if (unauthorized) {
       logger.warn(`Unauthorized access attempt for finderParam: `, finderParam);

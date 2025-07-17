@@ -1,6 +1,7 @@
 import { getRedisClient } from "./redisClient"; // Use getRedisClient to ensure a valid Redis client
 
 const CACHE_ENABLED = process.env.CACHE_ENABLED ? process.env.CACHE_ENABLED.toLowerCase() === "true" : true;
+
 /**
  * Generates an MD5 hash for a given key.
  *

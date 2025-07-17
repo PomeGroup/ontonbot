@@ -1,14 +1,85 @@
 "use client";
 
-import ManageEvent from "@/app/_components/organisms/events/ManageEvent";
+import ManageEvent from "@/app/_components/organisms/events/manageEvent/ManageEvent";
 import { useGetEvent } from "@/hooks/events.hooks";
+import { useCreateEventStore } from "@/zustand/createEventStore";
+import { useParams } from "next/navigation";
+import { useEffect, useLayoutEffect, useState } from "react";
 
-interface CreateEventAdminPageProps {
-  params: { hash: string };
-}
+export default function CreateEventAdminPage() {
+  const [isReset, setIsReset] = useState(false);
 
-export default function CreateEventAdminPage({ params }: CreateEventAdminPageProps) {
+  const params = useParams<{ hash: string }>();
   const event = useGetEvent(params.hash);
+
+  const { setEventData, clearGeneralStepErrors, clearAttendanceStepErrors, resetState, setEdit } = useCreateEventStore(
+    (s) => ({
+      setEventData: s.setEventData,
+      setEdit: s.setEdit,
+      clearGeneralStepErrors: s.clearGeneralStepErrors,
+      clearAttendanceStepErrors: s.clearAttendanceStepErrors,
+      resetState: s.resetState,
+    })
+  );
+
+  const eventData = event.data;
+
+  // 1) Clear errors on mount
+  useEffect(() => {
+    clearGeneralStepErrors();
+    clearAttendanceStepErrors();
+  }, [clearGeneralStepErrors]);
+
+  // TODO: This is cancer in the code!
+  useLayoutEffect(() => {
+    resetState();
+    setIsReset(true);
+
+    if (params.hash && isReset) {
+      setEdit({ eventHash: params.hash });
+
+      if (eventData) {
+        setEventData({
+          title: eventData.title || undefined,
+          description: eventData.description || undefined,
+          image_url: eventData.image_url || undefined,
+          subtitle: eventData.subtitle || undefined,
+          start_date: eventData.start_date || undefined,
+          end_date: eventData.end_date || undefined,
+          location: eventData.location || undefined,
+          category_id: eventData.category_id || undefined,
+          // @ts-ignore
+          society_hub: eventData.society_hub
+            ? {
+                id: eventData.society_hub.id,
+                name: eventData.society_hub.name,
+              }
+            : undefined,
+          eventLocationType: eventData.participationType,
+          countryId: eventData.countryId || undefined,
+          cityId: eventData.cityId || undefined,
+          ts_reward_url: eventData.tsRewardImage || undefined,
+
+          // Registration
+          has_registration: Boolean(eventData.has_registration),
+          has_approval: Boolean(eventData.has_approval),
+          capacity: eventData.capacity || null,
+          has_waiting_list: Boolean(eventData.has_waiting_list),
+          // Payment
+          paid_event: {
+            payment_type: eventData.payment_details?.payment_type,
+            payment_recipient_address: eventData.payment_details?.recipient_address,
+            nft_description: eventData.payment_details?.description || undefined,
+            nft_title: eventData.payment_details?.title || undefined,
+            has_payment: Boolean(eventData.payment_details?.payment_type),
+            payment_amount: eventData.payment_details?.price,
+            nft_image_url: eventData.payment_details?.ticketImage || undefined,
+            bought_capacity: eventData.payment_details?.bought_capacity,
+          },
+        });
+      }
+    }
+  }, [eventData]);
 
   if (event.error) {
     return <div>Error: {event.error.message}</div>;
@@ -16,8 +87,6 @@ export default function CreateEventAdminPage({ params }: CreateEventAdminPagePro
   if (!event.data) {
     return <div>Loading event data...</div>;
   }
-
-  const eventData = event.data;
 
   return (
     <div>

@@ -7,7 +7,11 @@ import { logger } from "@/server/utils/logger";
 import axios from "axios";
 import { rawToFriendlyAddress } from "@/server/utils/rawToFriendlyAddress";
 
-export async function GET(request: Request, { params }: { params: { collectionAddress: string } }) {
+export async function GET(
+  request: Request,
+  props: { params: Promise<{ collectionAddress: string }> }
+) {
+  const params = await props.params;
   // 1) Auth
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
   if (authError) return authError;

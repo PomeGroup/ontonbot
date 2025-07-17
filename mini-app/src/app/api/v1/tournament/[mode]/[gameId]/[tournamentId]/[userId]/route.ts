@@ -1,20 +1,20 @@
-import { NextRequest } from "next/server";
-import { apiKeyAuthentication, getAuthenticatedUser } from "@/server/auth";
-import { getTournamentDetails } from "@/lib/elympicsApi";
 import { db } from "@/db/db"; // Drizzle main instance for transactions
 import { gamesDB } from "@/db/modules/games.db";
 import { tournamentsDB } from "@/db/modules/tournaments.db";
-import { logger } from "@/server/utils/logger";
-import sizeOf from "image-size";
+import { getTournamentDetails } from "@/lib/elympicsApi";
+import { parseMultipartForm } from "@/lib/parseMultipartForm";
 import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
+import { apiKeyAuthentication, getAuthenticatedUser } from "@/server/auth";
+import { logger } from "@/server/utils/logger";
+import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import axios from "axios";
 import FormData from "form-data";
 import { File as FormidableFile } from "formidable";
-import jwt from "jsonwebtoken";
 import fs from "fs";
-import { parseMultipartForm } from "@/lib/parseMultipartForm";
+import sizeOf from "image-size";
+import jwt from "jsonwebtoken";
+import { NextRequest } from "next/server";
 import { z } from "zod";
-import { TonSocietyRegisterActivityT } from "@/types/event.types";
 
 import { PLACEHOLDER_IMAGE, PLACEHOLDER_VIDEO } from "@/constants";
 import { fetchSBTRewardCollectionById, SBTRewardCollectionDB } from "@/db/modules/SBTRewardCollection.db";
@@ -39,10 +39,11 @@ const linkSchema = z.string().url("invalid_tournament_link").optional();
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { mode: string; gameId: string; tournamentId: string; userId: string } }
+  props: { params: Promise<{ mode: string; gameId: string; tournamentId: string; userId: string }> }
 ) {
+  const params = await props.params;
   // 1) Auth checks
-  const [, userError] = getAuthenticatedUser();
+  const [, userError] = await getAuthenticatedUser();
   const apiKeyError = apiKeyAuthentication(req);
   if (userError && apiKeyError) {
     return new Response(JSON.stringify({ message: "unauthorized" }), { status: 401 });

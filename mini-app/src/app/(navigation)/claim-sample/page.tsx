@@ -30,7 +30,7 @@ export default function ClaimSample() {
   /* local state */
   const [proof, setProof] = useState<string>();
   const [jwtOk, setJwtOk] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   /* ----------------------------------------------------------------
      STEP -1 – purge stale session on reload or disconnect

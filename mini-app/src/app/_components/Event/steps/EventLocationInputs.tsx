@@ -1,15 +1,16 @@
+import { cn } from "@/utils";
 import { useCreateEventStore } from "@/zustand/createEventStore";
-import { Radio, ListInput, ListItem, Block, BlockTitle } from "konsta/react";
-import React from "react";
+import { Block, BlockTitle, ListInput, ListItem, Radio } from "konsta/react";
 import ListLayout from "../../atoms/cards/ListLayout";
 import { SelectLocation } from "./SelectLocation";
-import { cn } from "@/utils";
 
 const EventLocationManager = () => {
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
-  const editOptions = useCreateEventStore((state) => state.edit);
-  const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
+  const { eventData, setEventData, editOptions, errors } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    setEventData: state.setEventData,
+    editOptions: state.edit,
+    errors: state.generalStepErrors,
+  }));
 
   const eventEnded = Boolean(editOptions?.eventHash && eventData?.hasEnded);
 

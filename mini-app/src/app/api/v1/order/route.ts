@@ -1,15 +1,15 @@
 import { db } from "@/db/db";
+import eventDB from "@/db/modules/events.db";
+import ordersDB from "@/db/modules/orders.db";
 import { eventRegistrants, orders } from "@/db/schema";
+import { applyCouponDiscount } from "@/lib/applyCouponDiscount";
 import "@/lib/gracefullyShutdown";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
-import eventDB from "@/db/modules/events.db";
-import ordersDB from "@/db/modules/orders.db";
+import { logger } from "@/server/utils/logger";
 import { Address } from "@ton/core";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { logger } from "@/server/utils/logger";
-import { applyCouponDiscount } from "@/lib/applyCouponDiscount";
 
 const addOrderSchema = z.object({
   event_uuid: z.string().uuid(),
@@ -26,7 +26,7 @@ const addOrderSchema = z.object({
 //reactivate order with current price
 
 export async function POST(request: Request) {
-  const [userId, error] = getAuthenticatedUser();
+  const [userId, error] = await getAuthenticatedUser();
   if (error) {
     return error;
   }
