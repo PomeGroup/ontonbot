@@ -4,7 +4,8 @@ import { getAuthenticatedNftApi } from "@/server/utils/getAuthenticatedNftApi";
 import { logger } from "@/server/utils/logger";
 import { nftApiMinterWalletsDB } from "@/db/modules/nftApiMinterWallets.db";
 
-export async function GET(request: Request, { params }: { params: { collectionId: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ collectionId: string }> }) {
+  const params = await props.params;
   // 1) Authenticate
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
   if (authError) return authError;

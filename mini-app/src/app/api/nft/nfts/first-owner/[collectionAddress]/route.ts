@@ -6,7 +6,11 @@ import { nftApiMinterWalletsDB } from "@/db/modules/nftApiMinterWallets.db";
 import { logger } from "@/server/utils/logger";
 import { rawToFriendlyAddress } from "@/server/utils/rawToFriendlyAddress";
 
-export async function GET(request: Request, { params }: { params: { collectionAddress: string } }) {
+export async function GET(
+  request: Request,
+  props: { params: Promise<{ collectionAddress: string }> }
+) {
+  const params = await props.params;
   // 1) Authenticate
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
   if (authError) return authError;

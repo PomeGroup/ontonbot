@@ -13,7 +13,8 @@ import { rawToFriendlyAddress } from "@/server/utils/rawToFriendlyAddress";
  * This returns an array of collections with the NFT items (the user currently owns),
  * filtered optionally by "collectionAddress" query params.
  */
-export async function GET(request: Request, { params }: { params: { walletAddress: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ walletAddress: string }> }) {
+  const params = await props.params;
   // 1) Authentication
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
   if (authError) return authError;

@@ -1,10 +1,10 @@
+import "@/lib/gracefullyShutdown";
 import { getAuthenticatedUser } from "@/server/auth";
 import axios from "axios";
 import { NextRequest } from "next/server";
-import "@/lib/gracefullyShutdown";
 
 export async function GET(req: NextRequest): Promise<Response> {
-  const [, err] = getAuthenticatedUser();
+  const [, err] = await getAuthenticatedUser();
   if (err && process.env.NODE_ENV === "production") {
     return err;
   }

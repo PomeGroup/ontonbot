@@ -5,8 +5,9 @@ import { cn, fileToBase64 } from "@/lib/utils";
 import { Block, BlockTitle, Sheet } from "konsta/react";
 import { CircleArrowUp } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type JSX } from "react";
 import { createPortal } from "react-dom";
+import { BsArrowUpCircleFill } from "react-icons/bs";
 import { Button, KButton } from "./button";
 
 /**
@@ -128,15 +129,21 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
               width={80}
               height={80}
             />
-            <p className="font-semibold flex items-center gap-2 text-lg">
-              <CircleArrowUp className="w-5" />
+            <p className="font-semibold flex items-center gap-2 text-[17px]">
+              <BsArrowUpCircleFill
+                fill="#007AFF"
+                className="w-5"
+              />
               {props.changeText}
             </p>
           </div>
         ) : (
           <>
-            <p className="font-semibold flex items-center gap-2 text-lg">
-              <CircleArrowUp className="w-5" />
+            <p className="font-semibold flex items-center gap-2 text-[17px]">
+              <BsArrowUpCircleFill
+                fill="#007AFF"
+                className="w-5"
+              />
               {props.triggerText}
             </p>
             {props.infoText && <p className="text-cn-muted-foreground text-sm w-full text-balance">{props.infoText}</p>}

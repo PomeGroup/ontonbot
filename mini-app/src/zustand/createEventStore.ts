@@ -1,4 +1,4 @@
-import { GeneralFormErrors, RewardFormErrors, TimePlaceFormErorrs } from "@/app/_components/Event/steps/types";
+import { AttendanceFormErrors, GeneralFormErrors } from "@/app/_components/Event/steps/types";
 import { EventTicketType } from "@/db/schema";
 import { EventDataSchemaAllOptional, PaidEventSchema, PaidEventType } from "@/types";
 import type {} from "@redux-devtools/extension";
@@ -19,9 +19,18 @@ export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
   paid_event: Partial<PaidEventType> & {
     bought_capacity?: number;
   };
+
+  /*
+   * SBT type
+   */
+  reward: {
+    type: SBTRewardType;
+  };
 };
 
-type PaymentType = "USDT" | "TON" | "STAR";
+export type SBTRewardType = "default" | "custom";
+
+export type PaymentType = "USDT" | "TON" | "STAR";
 
 type PaidInfoErrors = {
   has_payment?: string[] | undefined;
@@ -43,24 +52,22 @@ export type CreateEventStoreType = {
   edit?: {
     eventHash?: string;
   };
+
   setEventData: (_data: Partial<StoreEventData>) => void;
   setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
 
   // form errors
   generalStepErrors?: GeneralFormErrors;
-  timeplaceStepErrors?: TimePlaceFormErorrs;
-  rewardStepErrors?: RewardFormErrors;
+  attendanceStepErrors?: AttendanceFormErrors;
 
   // set errors
   setGeneralStepErrors: (_: GeneralFormErrors) => void;
-  setTimePlaceStepErrors: (_: TimePlaceFormErorrs) => void;
-  setRewardStepErrors: (_: RewardFormErrors) => void;
+  setAttendanceStepErrors: (_: AttendanceFormErrors) => void;
 
   // clear errors
   clearGeneralStepErrors: () => void;
-  clearRewardStepErrors: () => void;
-  clearTimePlaceStepErrors: () => void;
+  clearAttendanceStepErrors: () => void;
   clearImageErrors: () => void;
   clearVideoErrors: () => void;
   resetReward: () => void;
@@ -75,6 +82,7 @@ export type CreateEventStoreType = {
   changePaymentType: (paymentType: PaymentType) => void;
   changeTicketType: (ticketType: EventTicketType) => void;
   changePaymentAmount: (amount: number) => void;
+
   // --- // nft info
   changeNFTImage: (url: string) => void;
   changeNFTVideo: (url: string) => void;
@@ -87,6 +95,9 @@ export type CreateEventStoreType = {
   /**** ⭕ PAID EVENT INPUT ERRORS ⭕ ****/
   paid_info_errors: PaidInfoErrors;
   setPaidInfoErrors: (_key: keyof PaidInfoErrors, _value: any) => void;
+
+  /* Reward Type */
+  setRewardType: (rewardType: SBTRewardType) => void;
 };
 
 const defaultState = {
@@ -106,9 +117,14 @@ const defaultState = {
     has_registration: false,
     has_approval: false,
     has_waiting_list: false,
-    capacity: null,
+    capacity: 100,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     paid_event: {
       has_payment: false,
+    },
+    eventLocationType: "online" as const,
+    reward: {
+      type: "default" as const,
     },
   },
   step: 1,
@@ -120,6 +136,16 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
       currentStep: defaultState.step,
       eventData: defaultState.event,
       paid_info_errors: {},
+
+      /*
+       * Set sbt reward type
+       */
+      setRewardType: (rewardType: SBTRewardType) => {
+        set((state) => {
+          state.eventData.reward.type = rewardType;
+        });
+      },
+
       clearImageErrors: () => {
         set((state) => ({
           ...state,
@@ -133,22 +159,43 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
         }));
       },
       setGeneralStepErrors: (errors) => {
-        set((state) => ({
-          ...state,
-          generalStepErrors: errors,
-        }));
+        set((state) => {
+          // WE ONLY WANT TO SET THE ERRORS THAT ARE RELATED TO GENERAL STEP
+          // extra keys will be ignored
+          const errorsData: GeneralFormErrors = {
+            title: errors.title,
+            subtitle: errors.subtitle,
+            description: errors.description,
+            image_url: errors.image_url,
+            society_hub: errors.society_hub,
+            has_registration: errors.has_registration,
+            has_approval: errors.has_approval,
+            capacity: errors.capacity,
+            category_id: errors.category_id,
+            start_date: errors.start_date,
+            end_date: errors.end_date,
+            timezone: errors.timezone,
+            duration: errors.duration,
+            location: errors.location,
+            cityId: errors.cityId,
+            countryId: errors.countryId,
+          };
+
+          state.generalStepErrors = errorsData;
+        });
       },
-      setTimePlaceStepErrors(errors) {
-        set((state) => ({
-          ...state,
-          timeplaceStepErrors: errors,
-        }));
-      },
-      setRewardStepErrors: (errors) => {
-        set((state) => ({
-          ...state,
-          rewardStepErrors: errors,
-        }));
+      setAttendanceStepErrors: (errors) => {
+        set((state) => {
+          // WE ONLY WANT TO SET THE ERRORS THAT ARE RELATED TO ATTENDANCE STEP
+          // extra keys will be ignored
+          const errorsData: AttendanceFormErrors = {
+            secret_phrase: errors.secret_phrase,
+            ts_reward_url: errors.ts_reward_url,
+            video_url: errors.video_url,
+          };
+
+          state.attendanceStepErrors = errorsData;
+        });
       },
       clearGeneralStepErrors: () => {
         set((state) => {
@@ -158,18 +205,10 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           };
         });
       },
-      clearTimePlaceStepErrors() {
-        set((state) => {
-          return {
-            ...state,
-            timeplaceStepErrors: {},
-          };
-        });
-      },
-      clearRewardStepErrors: () => {
+      clearAttendanceStepErrors: () => {
         set((state) => ({
           ...state,
-          rewardStepErrors: {},
+          attendanceStepErrors: {},
         }));
       },
       setCurrentStep: (step: number) => set((state) => ({ ...state, currentStep: step })),
@@ -179,6 +218,14 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
             ...state.eventData,
             ...data,
           };
+
+          if (newData.eventLocationType === "in_person") {
+            newData.has_registration = true;
+          }
+
+          if (data.countryId) {
+            newData.cityId = undefined;
+          }
 
           state.eventData = newData;
           state.eventData.hasEnded = !!(
@@ -212,7 +259,12 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
       },
       toggleHasRegistration: () => {
         set((state) => {
-          state.eventData.has_registration = !state.eventData.has_registration;
+          const hasRegistrationValue =
+            // if it's in person then we need to make true
+            state.eventData.eventLocationType === "in_person" || !state.eventData.has_registration;
+
+          state.eventData.has_registration = hasRegistrationValue;
+
           if (state.eventData.has_registration) {
             state.eventData.paid_event.has_payment = false;
             state.eventData.capacity = null;

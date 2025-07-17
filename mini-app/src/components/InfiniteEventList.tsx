@@ -24,7 +24,7 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
   const userId = webApp?.initDataUnsafe?.user?.id;
   const { data, isFetchingNextPage, hasNextPage, fetchNextPage, status } = infiniteApi;
 
-  const observer = useRef<IntersectionObserver>();
+  const observer = useRef<IntersectionObserver>(undefined);
   const lastItemRef = useCallback(
     (node: HTMLDivElement) => {
       if (isFetchingNextPage) return;

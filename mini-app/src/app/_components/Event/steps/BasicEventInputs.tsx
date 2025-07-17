@@ -50,7 +50,7 @@ function BasicEventInputs(props: Props) {
           }
         }}
         value={eventData?.society_hub}
-        errors={errors?.hub}
+        errors={errors?.society_hub}
       />
       <EventCategoryPicker
         onValueChange={(data) => {

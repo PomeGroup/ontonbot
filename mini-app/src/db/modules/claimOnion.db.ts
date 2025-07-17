@@ -19,6 +19,7 @@ export type WalletSummary = {
   totalScore: number; // only for primary wallets
   scoreOnions: number; // ONIONs from user-score (primary only)
   totalOnions: number; // nft.totalOnions + scoreOnions
+  partnershipOnions?: number; // ONIONs from partnership (if any)
 };
 
 /* -------------------------------------------------------------------------- */
@@ -114,9 +115,14 @@ export async function buildClaimOverview(userId: number, connectedWallet: string
         bronze: Number(r.onionsFromBronze),
       },
       totalOnions:
-        Number(r.onionsFromPlatinum) + Number(r.onionsFromGold) + Number(r.onionsFromSilver) + Number(r.onionsFromBronze),
+        Number(r.onionsFromPlatinum) +
+        Number(r.onionsFromGold) +
+        Number(r.onionsFromSilver) +
+        Number(r.onionsFromBronze) +
+        Number(r.onionsFromPartnership),
     },
     totalScore: r.walletType === "primary" ? Number(r.onionsFromScore) * POINTS_PER_ONION : 0,
+    partnershipOnions: Number(r.onionsFromPartnership),
     scoreOnions: r.walletType === "primary" ? Number(r.onionsFromScore) : 0,
     totalOnions: Number(r.totalOnions),
   }));

@@ -1,18 +1,19 @@
 import { db } from "@/db/db";
+import "@/lib/gracefullyShutdown";
 import { apiKeyAuthentication, getAuthenticatedUser } from "@/server/auth";
 import { NextRequest } from "next/server";
-import "@/lib/gracefullyShutdown";
 
 type OptionsProps = {
-  params: {
+  params: Promise<{
     order_id: string;
-  };
+  }>;
 };
 
-export async function GET(req: NextRequest, { params }: OptionsProps) {
+export async function GET(req: NextRequest, props: OptionsProps) {
+  const params = await props.params;
   const orderId = params.order_id;
 
-  const [, error] = getAuthenticatedUser();
+  const [, error] = await getAuthenticatedUser();
   const apiKeyError = apiKeyAuthentication(req);
   if (error && apiKeyError) return error || apiKeyError;
 

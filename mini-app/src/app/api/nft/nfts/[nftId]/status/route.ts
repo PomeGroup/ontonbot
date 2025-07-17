@@ -4,7 +4,8 @@ import { nftApiItemsDB } from "@/db/modules/nftApiItems.db";
 import { logger } from "@/server/utils/logger";
 import { nftApiCollectionsDB } from "@/db/modules/nftApiCollections.db"; // if you want to cross-check collection ownership
 
-export async function GET(request: Request, { params }: { params: { nftId: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ nftId: string }> }) {
+  const params = await props.params;
   // 1) Auth
   const [apiKeyRecord, authError] = await getAuthenticatedNftApi(request);
   if (authError) return authError;

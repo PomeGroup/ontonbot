@@ -6,9 +6,11 @@ import { Block } from "konsta/react";
 import { useEffect, useState } from "react";
 
 export const SelectLocation = () => {
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
-  const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
+  const { eventData, setEventData, errors } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    setEventData: state.setEventData,
+    errors: state.generalStepErrors,
+  }));
 
   // Fetch countries without search parameter
   const countries = trpc.location.getCountries.useQuery({});

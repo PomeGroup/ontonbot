@@ -4,7 +4,8 @@ import { logger } from "@/server/utils/logger";
 import { getAccountBalance } from "@/services/tonCenter"; // or wherever you have a function to fetch balance
 import { rawToFriendlyAddress } from "@/server/utils/rawToFriendlyAddress";
 
-export async function GET(request: Request, { params }: { params: { walletAddress: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ walletAddress: string }> }) {
+  const params = await props.params;
   // 1) Handle preflight if needed
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204 });

@@ -1,14 +1,10 @@
 "use client";
 
-import { ErrorState } from "@/app/_components/ErrorState";
 import { EventDataPage } from "@/app/_components/Event/EventPage";
+import { useParams } from "next/navigation";
 
-type Props = { params: { hash: string } };
-
-export default function EventPage({ params }: Props) {
-  if (params.hash.length !== 36) {
-    return <ErrorState errorCode="event_not_found" />;
-  }
+export default function EventPage() {
+  const params = useParams<{ hash: string }>();
 
   return <EventDataPage eventHash={params.hash} />;
 }

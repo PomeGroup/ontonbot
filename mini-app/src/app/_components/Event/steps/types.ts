@@ -3,25 +3,28 @@ export type GeneralFormErrors = {
   subtitle?: string[];
   description?: string[];
   image_url?: string[];
-  hub?: string[];
+  video_url?: string[];
+  society_hub?: string[];
+
   // registration
   has_registration?: string[];
   has_approval?: string[];
   capacity?: string[];
   category_id?: string[];
-};
 
-export type TimePlaceFormErorrs = {
+  // Date and Time
   start_date?: string[];
   end_date?: string[];
   timezone?: string[];
-  location?: string[];
   duration?: string[];
+
+  // Location
+  location?: string[];
   cityId?: string[];
   countryId?: string[];
 };
 
-export type RewardFormErrors = {
+export type AttendanceFormErrors = {
   secret_phrase?: string[];
   ts_reward_url?: string[];
   video_url?: string[];

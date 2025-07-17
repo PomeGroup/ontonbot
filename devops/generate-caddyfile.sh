@@ -8,7 +8,7 @@ if [ -n "${USE_CLOUDFLARE}" ]; then
         protocols tls1.2 tls1.3
     }"
 else
-    TLS_CONFIG="tls /certs/fullchain.pem /certs/privkey.pem {
+    TLS_CONFIG="tls /certs/fullchain.pem /certs/origin-key.pem {
         protocols tls1.2 tls1.3
     }"
 fi

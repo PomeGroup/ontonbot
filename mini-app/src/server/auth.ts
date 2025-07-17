@@ -1,13 +1,13 @@
 import { db } from "@/db/db";
 import { user_custom_flags } from "@/db/schema/user_custom_flags";
+import { AuthToken, verifyToken } from "@/server/utils/jwt";
+import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { verify } from "jsonwebtoken";
 import { cookies } from "next/headers";
-import { TRPCError } from "@trpc/server";
-import { AuthToken, verifyToken } from "@/server/utils/jwt";
-import type { FastifyRequest } from "fastify";
-export function getAuthenticatedUser(): [number, null] | [null, Response] {
-  const userToken = cookies().get("token");
+
+export async function getAuthenticatedUser(): Promise<[number, null] | [null, Response]> {
+  const userToken = (await cookies()).get("token");
 
   if (!userToken) {
     return [null, Response.json({ error: "Unauthorized: No token provided" }, { status: 401 })];
