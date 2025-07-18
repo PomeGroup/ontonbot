@@ -1,13 +1,9 @@
-import { Button } from "@/components/ui/button";
 import { useConfig } from "@/context/ConfigContext";
 import { getTimeLeft } from "@/lib/time.utils";
 import { formatPadNumber } from "@/lib/utils";
 import { cn } from "@/utils";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { GENESIS_ONIONS_PAGE_ROUTE } from "../../GenesisOnions.constants";
 import "./Banner.css";
-import SVGCubes from "./SVGCubes";
 
 import Typography from "@/components/Typography";
 import "./../../_assets/genesis-onions.css";
@@ -19,10 +15,12 @@ interface Props {
 }
 
 export const Banner = ({ className }: Props) => {
-  const router = useRouter();
   const config = useConfig();
-  const configEndDate = config["FAIR_LAUNCH_ACTIVE_DATE"] || [1753142400, 1753401600];
-
+  const configEndDate = config["FAIR_LAUNCH_ACTIVE_DATE"];
+  if (!configEndDate || configEndDate.length < 2) {
+    console.error("Invalid configEndDate:", configEndDate);
+    return null;
+  }
   const endDate = useMemo(() => new Date(Number(configEndDate[1])), [configEndDate[1]]);
   console.log(endDate);
   const handleOnClick = () => {
