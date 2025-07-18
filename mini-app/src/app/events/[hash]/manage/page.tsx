@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 // svg icons
 import coOrganizerIcon from "./co-organizers.svg";
 import guestListIcon from "./guest-list.svg";
-import ordersIcon from "./orders.svg";
 import promotionCodeIcon from "./promotion-code.svg";
 
 import CustomButton from "@/app/_components/Button/CustomButton";
@@ -12,6 +11,9 @@ import ScanRegistrantQRCode from "@/app/_components/Event/ScanRegistrantQRCode";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import { trpc } from "@/app/_trpc/client";
 import ActionCard from "@/components/ActionCard";
+import Divider from "@/components/Divider";
+import Typography from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +28,8 @@ import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/l
 import { wait } from "@/lib/utils";
 import { useSectionStore } from "@/zustand/useSectionStore";
 import { EllipsisVertical, Pen, QrCode, ScanLine } from "lucide-react";
+import Link from "next/link";
+import { HiChevronRight } from "react-icons/hi";
 
 export default function ManageIndexPage() {
   const webApp = useWebApp();
@@ -103,47 +107,87 @@ export default function ManageIndexPage() {
           }
         />
         {canEditEvent && (
-          <div className="grid xs:grid-cols-2 gap-3 mx-3 mt-3">
-            {eventData.participationType === "online" ? (
+          <div className="flex flex-col gap-4 px-4 mt-3">
+            <div className="grid xs:grid-cols-2 gap-3">
+              {eventData.participationType === "online" ? (
+                <CustomButton
+                  disabled={Boolean(eventData.hidden) || Boolean(!eventData.enabled)}
+                  onClick={async () => {
+                    if (eventData.event_uuid) {
+                      requestSendQRCode.mutateAsync({
+                        url: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
+                        hub: eventData.society_hub?.name || undefined,
+                        event_uuid: eventData.event_uuid,
+                      });
+                      webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`);
+                      webApp?.HapticFeedback?.impactOccurred("medium");
+                      await wait(200);
+                      webApp?.close();
+                    }
+                  }}
+                  variant="outline"
+                  icon={<QrCode />}
+                >
+                  Get QR Code
+                </CustomButton>
+              ) : (
+                <ScanRegistrantQRCode>
+                  <CustomButton
+                    variant="outline"
+                    icon={<ScanLine />}
+                  >
+                    Scan QR Code
+                  </CustomButton>
+                </ScanRegistrantQRCode>
+              )}
               <CustomButton
-                onClick={async (e) => {
-                  if (eventData.event_uuid) {
-                    requestSendQRCode.mutateAsync({
-                      url: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
-                      hub: eventData.society_hub?.name || undefined,
-                      event_uuid: eventData.event_uuid,
-                    });
-                    webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`);
-                    webApp?.HapticFeedback?.impactOccurred("medium");
-                    await wait(200);
-                    webApp?.close();
-                  }
+                onClick={() => {
+                  setSection("event_setup_form_general_step");
+                  router.push(`/events/${eventData.event_uuid}/manage/edit`);
                 }}
                 variant="outline"
-                icon={<QrCode />}
+                icon={<Pen />}
               >
-                Get QR Code
+                Edit Event Info
               </CustomButton>
-            ) : (
-              <ScanRegistrantQRCode>
-                <CustomButton
-                  variant="outline"
-                  icon={<ScanLine />}
-                >
-                  Scan QR Code
-                </CustomButton>
-              </ScanRegistrantQRCode>
+            </div>
+            <Divider />
+            {/* not published state */}
+            {eventData.hidden && (
+              <Typography
+                variant="subheadline2"
+                weight="normal"
+              >
+                Event isn't published yet. <span className="font-medium">Set up the tickets</span> and{" "}
+                <span className="font-medium">settle the bills</span> so guests can join!
+              </Typography>
             )}
-            <CustomButton
-              onClick={() => {
-                setSection("event_setup_form_general_step");
-                router.push(`/events/${eventData.event_uuid}/manage/edit`);
-              }}
-              variant="outline"
-              icon={<Pen />}
-            >
-              Edit Event Info
-            </CustomButton>
+            <div className="flex gap-2 ">
+              {eventData.has_payment && (
+                <>
+                  {/* Tickets */}
+                  <Link
+                    href={`/events/${eventData.event_uuid}/manage/tickets`}
+                    className="flex-1"
+                  >
+                    <Button className="w-full">
+                      Tickets
+                      <HiChevronRight className="text-2xl text-primary ms-auto" />
+                    </Button>
+                  </Link>
+                  {/* Billing */}
+                  <Link
+                    className="flex-1"
+                    href={`/events/${eventData.event_uuid}/manage/orders`}
+                  >
+                    <Button className="w-full">
+                      Billing
+                      <HiChevronRight className="text-2xl text-primary ms-auto" />
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -152,14 +196,6 @@ export default function ManageIndexPage() {
       <div className="px-4 !my-0 flex flex-col gap-4">
         {eventData.has_payment && canEditEvent && (
           <>
-            <ActionCard
-              onClick={() => router.push(`/events/${eventData.event_uuid}/manage/orders`)}
-              iconSrc={ordersIcon}
-              title="Orders"
-              subtitle="Event creation payments"
-              footerTexts={[]}
-            />
-
             <ActionCard
               onClick={() => router.push(`/events/${eventData.event_uuid}/manage/promotion-code`)}
               iconSrc={promotionCodeIcon}
