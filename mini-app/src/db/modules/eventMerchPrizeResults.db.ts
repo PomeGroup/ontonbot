@@ -218,7 +218,7 @@ export const setContactInfo = async (args: {
       shipping_address: args.shipping_address,
       phone: args.phone,
       notif_status: "sent", // optional – you may keep “pending” if you prefer
-      status: "awaiting_address", // ship-flow; pickup flow handled in proc
+      status: "awaiting_shipping", // ship-flow; pickup flow handled in proc
       updated_at: new Date(),
     })
     .where(

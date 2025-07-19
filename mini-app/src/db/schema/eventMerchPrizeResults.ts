@@ -12,6 +12,7 @@ export const eventMerchPrizeResultStatus = pgEnum("merch_result_status", [
   "pending",
   "awaiting_address",
   "awaiting_pickup",
+  "awaiting_shipping", // shipping address provided, waiting for merch to be shipped
   "shipped",
   "delivered",
   "collected",
