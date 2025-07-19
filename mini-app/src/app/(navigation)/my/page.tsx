@@ -9,6 +9,7 @@ import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import FabPlusIcon from "@/components/icons/plus-icon";
 import solarCupOutline from "@/components/icons/solar-cup-outline.svg";
+import OnionLogo from "@/components/icons/onion-logo.svg";
 // import { ALLOWED_USER_TO_TEST } from "@/constants";
 import { useUserStore } from "@/context/store/user.store";
 import { Channel } from "@/types";
@@ -85,7 +86,15 @@ export default function ProfilePage() {
         subtitle="You Acheived"
         footerTexts={[{ items: "Points", count: Number(totalPoints) || 0 }]}
       />
-
+      <ActionCard
+        onClick={(e) => {
+          router.push("/onion-snapshot/claim-points");
+        }}
+        iconSrc={OnionLogo}
+        title="My Onions"
+        subtitle="check your onions"
+        footerTexts={[]}
+      />
       {/*<ActionCard*/}
       {/*  onClick={(e) => {*/}
       {/*    router.push("/my/partner/onion-affiliate");*/}
