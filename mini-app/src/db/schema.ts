@@ -187,6 +187,12 @@ import {
   TokenCampaignClaimOnionRow,
   TokenCampaignClaimOnionInsert,
 } from "./schema/tokenCampaignClaimOnion";
+import {
+  partnershipAffiliatePurchases,
+  PartnershipAffiliatePurchasesRow,
+  PartnershipAffiliateUserEntryEnum,
+  PartnershipAffiliateUserEntryType,
+} from "./schema/partnershipAffiliatePurchases";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -302,6 +308,8 @@ export {
   userScoreSnapshots,
   tokenCampaignClaimOnion,
   couponMessageSendStatus,
+  partnershipAffiliatePurchases,
+  PartnershipAffiliateUserEntryEnum,
 };
 
 // Type Exports
@@ -409,4 +417,6 @@ export type {
   TokenCampaignClaimOnionRow,
   TokenCampaignClaimOnionInsert,
   CouponMessageSendStatus,
+  PartnershipAffiliatePurchasesRow,
+  PartnershipAffiliateUserEntryType,
 };
