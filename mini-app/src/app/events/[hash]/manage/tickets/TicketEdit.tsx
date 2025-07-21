@@ -145,7 +145,10 @@ const TicketEdit = (props: { ticket: Omit<EventPaymentSelectType, "created_at" |
   console.log("Form Errors", form.formState.errors);
 
   return (
-    <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+    <Drawer
+      open={isDrawerOpen}
+      onOpenChange={setIsDrawerOpen}
+    >
       <DrawerTrigger asChild>
         <button className="p-1 hover:bg-gray-50 rounded my-auto">
           <Pencil className="w-5 h-5 text-[#007aff]" />

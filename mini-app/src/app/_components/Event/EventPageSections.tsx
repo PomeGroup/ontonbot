@@ -610,14 +610,11 @@ export const PaidEventSections: React.FC = () => {
     >
       <EventHeader />
       <EventDescription />
-
       <ManageEventButton />
       <OrganizerCard />
       <SbtCollectionLink />
       <ConnectWalletCard />
-
       <SupportButtons orgSupportTelegramUserName={eventData.data?.organizer?.org_support_telegram_user_name || undefined} />
-
       {/* ───────── Purchase button (wallet required) ───────── */}
       {eventData.data?.has_payment &&
         walletConnected &&
@@ -627,7 +624,6 @@ export const PaidEventSections: React.FC = () => {
             onClick={() => setDrawerOpen(true)}
           />
         )}
-
       {/* ───────── Bottom-sheet with tickets ──────────────── */}
       {eventData.data?.event_uuid && (
         <TicketPurchaseDrawer

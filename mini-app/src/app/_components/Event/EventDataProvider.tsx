@@ -1,16 +1,15 @@
 import { trpc } from "@/app/_trpc/client";
-import { useUserStore } from "@/context/store/user.store";
 import { useGetEvent } from "@/hooks/events.hooks";
 import useWebApp from "@/hooks/useWebApp";
 import { useEffect, useMemo, useState } from "react";
 import zod from "zod";
 import { ErrorState } from "../ErrorState";
+import DataStatus from "../molecules/alerts/DataStatus";
 import { EventDataContext } from "./eventPageContext";
 
 export const EventDataProvider = ({ children, eventHash }: { children: React.ReactNode; eventHash: string }) => {
   const webApp = useWebApp();
   const trpcUtils = trpc.useUtils();
-  const currentUser = useUserStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [initData, setInitData] = useState<string>("");
@@ -86,6 +85,15 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
     }
     // ELSE
     return <ErrorState errorCode="something_went_wrong" />;
+  }
+
+  if (eventData.isLoading) {
+    return (
+      <DataStatus
+        title="Loading Event Data"
+        status="pending"
+      />
+    );
   }
 
   return (

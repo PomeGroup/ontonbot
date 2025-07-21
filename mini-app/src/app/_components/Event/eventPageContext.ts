@@ -1,7 +1,7 @@
-import { createContext, useContext } from "react";
+import { EventPaymentDTO, EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { RouterOutput } from "@/server";
 import { UseTRPCQueryResult } from "@trpc/react-query/shared";
-import { EventPaymentDTO, EventPaymentSelectType } from "@/db/schema/eventPayment";
+import { createContext, useContext } from "react";
 
 // Create a context for event data
 export const EventDataContext = createContext<{
@@ -55,6 +55,7 @@ export const useEventData = () => {
   }
   return context;
 };
+
 export const useTickets = (paymentDetails?: EventPaymentDTO[] | undefined) => {
   if (!paymentDetails) return [];
   return Array.isArray(paymentDetails)
