@@ -68,7 +68,7 @@ export default function CreateEventAdminPage() {
         });
       }
     }
-  }, [eventData]);
+  }, [eventData, isReset]);
 
   if (event.error) {
     return <div>Error: {event.error.message}</div>;

@@ -143,14 +143,14 @@ export const UploadVideoFile = (props: UploadFileProps) => {
                 type="video/mp4"
               />
             </video>
-            <p className="font-semibold flex items-center gap-2 text-lg">
+            <p className={cn("font-semibold flex items-center gap-2 text-lg", props.isError ? "text-red-500" : "")}>
               <CircleArrowUp className="w-5" />
               {props.changeText}
             </p>
           </div>
         ) : (
           <>
-            <p className="font-semibold flex items-center gap-2 text-lg">
+            <p className={cn("font-semibold flex items-center gap-1 text-lg", props.isError ? "text-red-500" : "")}>
               <CircleArrowUp className="w-5" />
               {props.triggerText}
             </p>

@@ -129,9 +129,9 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
               width={80}
               height={80}
             />
-            <p className="font-semibold flex items-center gap-2 text-[17px]">
+            <p className={cn("font-semibold flex items-center gap-2 text-[17px]", props.isError ? "text-red-500" : "")}>
               <BsArrowUpCircleFill
-                fill="#007AFF"
+                fill={props.isError ? "red" : "#007AFF"}
                 className="w-5"
               />
               {props.changeText}
@@ -139,9 +139,9 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
           </div>
         ) : (
           <>
-            <p className="font-semibold flex items-center gap-2 text-[17px]">
+            <p className={cn("font-semibold flex items-center gap-2 text-[17px]", props.isError ? "text-red-500" : "")}>
               <BsArrowUpCircleFill
-                fill="#007AFF"
+                fill={props.isError ? "red" : "#007AFF"}
                 className="w-5"
               />
               {props.triggerText}

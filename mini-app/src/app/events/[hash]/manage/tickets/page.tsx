@@ -1,5 +1,11 @@
-const TicketsPage = () => {
-  return <div>page</div>;
+import TicketsList from "./TicketsList";
+
+const TicketPage = () => {
+  return (
+    <div className="p-4">
+      <TicketsList />
+    </div>
+  );
 };
 
-export default TicketsPage;
+export default TicketPage;

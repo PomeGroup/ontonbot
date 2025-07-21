@@ -4,13 +4,18 @@ import { cn } from "@/lib/utils";
 import { FiAlertCircle } from "react-icons/fi";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  errors?: (string | undefined)[];
+  errors?: string[] | string;
   prefix_icon?: React.ReactNode;
   label?: React.ReactNode;
   info?: React.ReactNode;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, ...props }, ref) => {
+  const errors = React.useMemo(
+    () => (props.errors ? (Array.isArray(props.errors) ? props.errors : [props.errors]) : []).filter(Boolean),
+    [props.errors]
+  );
+
   return (
     <div>
       {props.label && (
@@ -26,7 +31,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type,
           "dark:text-white text-black flex h-10 bn b w-full rounded-2lg bg-brand-divider p-1 xxs:px-3 xxs:py-2 text-sm ring-offset-cn-background items-center space-x-2",
           className,
           {
-            "ring-red-400 ring-1": props.errors?.length,
+            "ring-red-400 ring-1": errors?.length > 0,
           }
         )}
       >
@@ -44,10 +49,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type,
           {props.info}
         </div>
       )}
-      {props.errors?.map((error) => (
+      {errors?.map((error, index) => (
         <div
           className="text-red-400 pl-3 pt-1 text-sm flex items-center"
-          key={error}
+          key={index}
         >
           <FiAlertCircle className="mr-2" /> {error}
         </div>

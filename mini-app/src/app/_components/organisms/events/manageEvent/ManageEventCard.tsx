@@ -3,7 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { ReactNode, useState } from "react";
 
 export type ManageEventCardProps = {
-  title: ReactNode;
+  title?: ReactNode;
   children: ReactNode;
   /* 
     Shows a switch that toggles the visibility of the children content.
@@ -26,40 +26,44 @@ const ManageEventCard = (props: ManageEventCardProps) => {
 
   return (
     <div className="bg-white p-3 flex flex-col gap-4 rounded-2lg">
-      <div>
-        {/* Title */}
-        <div className="flex items-center justify-between">
-          <Typography
-            variant="title3"
-            weight="normal"
-            className="flex-1 capitalize me-auto"
-          >
-            {props.title}
-          </Typography>
-          {props.hasSwitch && (
-            <Switch
-              checked={typeof props.switchState === "boolean" ? props.switchState : switchToggled}
-              onClick={(e) => {
-                e.preventDefault();
-                if (typeof props.switchState === "boolean") {
-                  props.onSwitch?.();
-                } else {
-                  setSwitchToggled(!switchToggled);
-                }
-              }}
-            />
+      {(props.title || props.error) && (
+        <div>
+          {/* Title */}
+          {props.title && (
+            <div className="flex items-center justify-between">
+              <Typography
+                variant="title3"
+                weight="normal"
+                className="flex-1 capitalize me-auto"
+              >
+                {props.title}
+              </Typography>
+              {props.hasSwitch && (
+                <Switch
+                  checked={typeof props.switchState === "boolean" ? props.switchState : switchToggled}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (typeof props.switchState === "boolean") {
+                      props.onSwitch?.();
+                    } else {
+                      setSwitchToggled(!switchToggled);
+                    }
+                  }}
+                />
+              )}
+            </div>
+          )}
+          {/* error */}
+          {props.error && (
+            <div
+              className="text-red-500 first-letter:capitalize text-sm"
+              title="Error"
+            >
+              {props.error}
+            </div>
           )}
         </div>
-        {/* error */}
-        {props.error && (
-          <div
-            className="text-red-500 first-letter:capitalize text-sm"
-            title="Error"
-          >
-            {props.error}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Content */}
       {props.hasSwitch
