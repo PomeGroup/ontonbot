@@ -335,6 +335,12 @@ export const cacheKeys = {
   getTournamentsByIds: "getTournamentsByIds:",
   category_id: "category_id:",
   category_uuid: "category_uuid:",
+  userX: "userX:", // X account for a Telegram user
+  userXByXId: "userXByXId:", // X user‑id to Telegram user‑id mapping
+  userGithub: "userGithub:", // GitHub account for a Telegram user
+  userGithubById: "userGithubById:", // GitHub user‑id to Telegram user‑id mapping
+  userLinkedin: "userLinkedin:", // LinkedIn account for a Telegram user
+  userLinkedinById: "userLinkedinById:", // LinkedIn user‑id to Telegram user‑id mapping
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes

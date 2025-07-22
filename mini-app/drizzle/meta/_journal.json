@@ -736,6 +736,27 @@
       "when": 1752579907926,
       "tag": "0104_unusual_sugar_man",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1753122016106,
+      "tag": "0105_natural_dark_beast",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1753206026358,
+      "tag": "0106_familiar_emma_frost",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1753213205991,
+      "tag": "0107_sparkling_mattie_franklin",
+      "breakpoints": true
     }
   ]
 }

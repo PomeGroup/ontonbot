@@ -25,6 +25,9 @@ import { campaignRouter } from "@/server/routers/campaignRouter";
 import { tasksRouter } from "@/server/routers/tasksRouter";
 import { tonProofRouter } from "@/server/routers/tonProofRouter";
 import { affiliateRouter } from "@/server/routers/affiliateRouter";
+import { usersXRouter } from "@/server/routers/usersXRouter";
+import { usersGithubRouter } from "@/server/routers/usersGithubRouter";
+import { usersLinkedinRouter } from "@/server/routers/usersLinkedinRouter";
 
 export const appRouter = router({
   users: usersRouter,
@@ -51,6 +54,9 @@ export const appRouter = router({
   task: tasksRouter,
   tonProof: tonProofRouter,
   affiliate: affiliateRouter,
+  usersX: usersXRouter,
+  usersGithub: usersGithubRouter,
+  usersLinkedin: usersLinkedinRouter,
 });
 
 export type AppRouter = typeof appRouter;
