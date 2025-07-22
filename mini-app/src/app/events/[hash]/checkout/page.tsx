@@ -1,14 +1,16 @@
 /*  app/events/[hash]/checkout/page.tsx  */
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { trpc } from "@/app/_trpc/client";
-import CustomButton from "@/app/_components/Button/CustomButton";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
+import CustomCard from "@/app/_components/atoms/cards/CustomCard";
+import { trpc } from "@/app/_trpc/client";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MouseEvent, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -132,99 +134,109 @@ export default function CheckoutPage({ params }: { params: { hash: string } }) {
   /* Render                                                              */
   /* ------------------------------------------------------------------ */
   return (
-    <div className="p-4 space-y-4">
-      <Typography variant="headline">Your Tickets</Typography>
+    <div className="p-4 flex flex-col gap-4">
+      <Typography
+        variant="title2"
+        weight="bold"
+      >
+        Checkout
+      </Typography>
+      <CustomCard
+        defaultPadding
+        className="space-y-4"
+        title="Your Tickets"
+      >
+        {cart.map(({ id, qty }) => {
+          const t = tickets.find((x) => x.id === id);
+          if (!t) return null;
 
-      {cart.map(({ id, qty }) => {
-        const t = tickets.find((x) => x.id === id);
-        if (!t) return null;
+          return (
+            <div
+              key={id}
+              className="flex items-start justify-between gap-3 border-b border-brand-stroke pb-4"
+            >
+              <LoadableImage
+                src={t.ticketImage || "/placeholder.png"}
+                alt={t.title}
+                width={64}
+                height={64}
+                className="rounded-md flex-shrink-0"
+              />
 
-        return (
-          <div
-            key={id}
-            className="flex items-start justify-between gap-3 border-b border-brand-stroke pb-4"
-          >
-            <LoadableImage
-              src={t.ticketImage || "/placeholder.png"}
-              alt={t.title}
-              width={64}
-              height={64}
-              className="rounded-md flex-shrink-0"
-            />
+              <div className="flex flex-col flex-grow min-w-0">
+                <Typography
+                  variant="subheadline1"
+                  weight="medium"
+                  truncate
+                >
+                  {t.title}
+                </Typography>
+                <Typography
+                  variant="body"
+                  className="text-brand-muted"
+                >
+                  {qty} × {t.price} {t.payment_type}
+                </Typography>
+              </div>
 
-            <div className="flex flex-col flex-grow min-w-0">
               <Typography
                 variant="subheadline1"
-                weight="medium"
-                truncate
+                weight="bold"
               >
-                {t.title}
-              </Typography>
-              <Typography
-                variant="body"
-                className="text-brand-muted"
-              >
-                {qty} × {t.price} {t.payment_type}
+                {round3(qty * t.price)} {t.payment_type}
               </Typography>
             </div>
+          );
+        })}
 
-            <Typography
-              variant="subheadline1"
-              weight="bold"
-            >
-              {round3(qty * t.price)} {t.payment_type}
-            </Typography>
-          </div>
-        );
-      })}
-
-      {/* ---- price breakdown ---- */}
-      <Line
-        label="Subtotal"
-        value={subTotal}
-        cur={cur}
-      />
-      {coupon && (
+        {/* ---- price breakdown ---- */}
         <Line
-          label={coupon.type === "percent" ? `Discount (${coupon.value}% off)` : `Discount (${coupon.value} off / ticket)`}
-          value={-discountTotal}
+          label="Subtotal"
+          value={subTotal}
           cur={cur}
-          negative
         />
-      )}
-      <Line
-        label="Your Payment"
-        value={grandTotal}
-        cur={cur}
-        bold
-      />
-
-      {/* ---- coupon input ---- */}
-      <div className="space-y-1">
-        <Typography variant="subheadline1">Discount Code</Typography>
-        <div className="flex gap-2">
-          <input
-            value={code}
-            onChange={(e) => setCode(e.currentTarget.value)}
-            placeholder="SUMMER25"
-            className="flex-grow bg-brand-fill-bg p-2 rounded-md outline-none"
+        {coupon && (
+          <Line
+            label={coupon.type === "percent" ? `Discount (${coupon.value}% off)` : `Discount (${coupon.value} off / ticket)`}
+            value={-discountTotal}
+            cur={cur}
+            negative
           />
-          <CustomButton
-            className="!px-4"
-            isLoading={busy}
-            disabled={!code.trim()}
-            onClick={applyCoupon}
-          >
-            Apply
-          </CustomButton>
-        </div>
-      </div>
+        )}
 
-      {/* ---- CTA ---- */}
-      <MainButton
-        text={`Continue • ${grandTotal} ${cur}`}
-        onClick={goToRegister}
-      />
+        <Line
+          label="Your Payment"
+          value={grandTotal}
+          cur={cur}
+          bold
+        />
+
+        {/* ---- coupon input ---- */}
+        <div className="space-y-1">
+          <div className="flex items-end gap-2">
+            <Input
+              label="Discount Code"
+              value={code}
+              onBlur={(e) => setCode(e.currentTarget.value)}
+              placeholder="SUMMER25"
+              wrappedClassName="w-full"
+            />
+            <Button
+              type="button"
+              variant="primary"
+              onClick={applyCoupon}
+            >
+              Apply
+            </Button>
+          </div>
+        </div>
+
+        {/* ---- CTA ---- */}
+        <MainButton
+          text={`Continue • ${grandTotal} ${cur}`}
+          onClick={goToRegister}
+        />
+      </CustomCard>
     </div>
   );
 }

@@ -1,21 +1,41 @@
-/* app/events/[hash]/register/page.tsx */
 "use client";
 
-import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { List, ListInput } from "konsta/react";
+import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
+import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { trpc } from "@/app/_trpc/client";
-import { GuestTicketSchema } from "@/types";
 import Typography from "@/components/Typography";
-import CustomButton from "@/app/_components/Button/CustomButton";
-import { Address } from "@ton/core";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-import useTransferTon from "@/hooks/useTransfer";
+import { Input } from "@/components/ui/input";
 import { useConfig } from "@/context/ConfigContext";
+import useTransferTon from "@/hooks/useTransfer";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Address } from "@ton/core";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
-/* ── helpers ─────────────────────────────────────────────── */
-type CartRow = { id: number; qty: number };
-type FieldErrs = Record<string, string[]>;
+// schema
+const guestSchema = z.object({
+  ticketId: z.number(),
+  full_name: z.string().min(1, "Name is required"),
+  wallet: z.string().refine((v) => {
+    try {
+      Address.parse(v);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Invalid TON address"),
+  company: z.string().optional(),
+  position: z.string().optional(),
+});
+
+const formSchema = z.object({
+  guests: z.array(guestSchema),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 /* ── page ────────────────────────────────────────────────── */
 export default function GuestRegisterPage() {
@@ -26,20 +46,20 @@ export default function GuestRegisterPage() {
   const transfer = useTransferTon();
 
   /* --- cart ------------------------------------------------ */
-  const cart: CartRow[] = useMemo(
+  const cart = useMemo(
     () =>
       search
         .getAll("t")
         .map((s) => s.split(":").map(Number))
         .filter(([id, q]) => !!id && !!q)
-        .map(([id, qty]) => ({ id, qty })),
+        .map(([id, qty]) => ({ id, qty: qty! })),
     [search]
   );
 
   /* extras */
   const couponCode = search.get("coupon") ?? undefined;
   const affiliateId = search.get("aff") ?? undefined;
-  console.log("Config:", config);
+
   /* --- ticket meta ---------------------------------------- */
   const { data: ticketResp } = trpc.events.getTickets.useQuery({ event_uuid: eventUuid }, { enabled: cart.length > 0 });
   const ticketMap = useMemo(
@@ -47,107 +67,55 @@ export default function GuestRegisterPage() {
     [ticketResp?.tickets]
   );
 
-  /* --- guests --------------------------------------------- */
-  const guests = useMemo(
-    () =>
-      cart.flatMap(({ id, qty }) =>
-        Array.from({ length: qty }, (_, i) => ({
-          ticketId: id,
-          key: `${id}-${i}`,
-        }))
-      ),
-    [cart]
-  );
-
   /* --- form state ----------------------------------------- */
-  const formRef = useRef<HTMLFormElement>(null);
-  const [rowErrs, setRowErrs] = useState<Record<string, FieldErrs>>({});
-  const [submitting, setSubmitting] = useState(false);
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+  });
+
+  useEffect(() => {
+    const defaultGuests = cart.flatMap(({ id, qty }) =>
+      Array.from({ length: qty }, () => ({
+        ticketId: id,
+        full_name: "",
+        wallet: "",
+        company: "",
+        position: "",
+      }))
+    );
+    form.reset({ guests: defaultGuests });
+  }, [cart, form.reset]);
 
   /* --- mutation - create order ---------------------------- */
   const addOrder = trpc.orders.addOrder.useMutation({
     onError: (err) => {
       toast.error(err.message);
-      setSubmitting(false);
     },
     onSuccess: async (data) => {
       try {
-        /* 1️⃣  trigger TON-Connect modal */
         if (!config.ONTON_WALLET_ADDRESS) {
           toast.error("TON wallet address is not configured.");
-          setSubmitting(false);
           return;
         }
-        console.log("Transferring TON to", config.ONTON_WALLET_ADDRESS, "for order", data.order_id);
         await transfer(config.ONTON_WALLET_ADDRESS as string, data.total_price, data.payment_type, {
           comment: `OntonOrder=${data.order_id}`,
         });
-
-        /* 2️⃣  go to the payment-watch page */
         router.replace(`/events/${eventUuid}/payment/${data.order_id}`);
       } catch (err) {
-        // user rejected or tx failed – do nothing except notify
         toast.error("Payment was cancelled.");
-        setSubmitting(false);
       }
     },
   });
 
   /* --- submit handler ------------------------------------- */
-  const onSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!formRef.current) return;
+  const onSubmit = (data: FormValues) => {
+    const guestsPayload = data.guests.map((guest) => ({
+      event_payment_id: guest.ticketId,
+      full_name: guest.full_name,
+      wallet: guest.wallet,
+      company: guest.company || undefined,
+      position: guest.position || undefined,
+    }));
 
-    const fd = new FormData(formRef.current);
-    const errs: Record<string, FieldErrs> = {};
-    const guestsPayload: {
-      event_payment_id: number;
-      full_name: string;
-      wallet: string;
-      company?: string;
-      position?: string;
-    }[] = [];
-
-    const get = (k: string) => fd.get(k)?.toString() ?? "";
-
-    /* validate every seat */
-    guests.forEach(({ key, ticketId }) => {
-      const candidate = {
-        event_uuid: eventUuid,
-        ticket_id: ticketId,
-        full_name: get(`${key}__full_name`),
-        wallet: get(`${key}__wallet`),
-        company: get(`${key}__company`),
-        position: get(`${key}__position`),
-      };
-
-      const parsed = GuestTicketSchema.safeParse(candidate);
-      if (!parsed.success) {
-        errs[key] = parsed.error.flatten().fieldErrors;
-        return;
-      }
-
-      try {
-        Address.parse(parsed.data.wallet); // extra TON validity check
-      } catch {
-        errs[key] = { wallet: ["Invalid TON address"] };
-        return;
-      }
-
-      guestsPayload.push({
-        event_payment_id: parsed.data.ticket_id,
-        full_name: parsed.data.full_name,
-        wallet: parsed.data.wallet,
-        company: parsed.data.company || undefined,
-        position: parsed.data.position || undefined,
-      });
-    });
-
-    setRowErrs(errs);
-    if (Object.keys(errs).length) return;
-
-    /* ---- create order then pay --------------------------- */
-    setSubmitting(true);
     addOrder.mutate({
       event_uuid: eventUuid,
       guests: guestsPayload,
@@ -158,15 +126,13 @@ export default function GuestRegisterPage() {
     });
   };
 
-  /* reset errors when guest count changes */
-  useEffect(() => setRowErrs({}), [guests.length]);
+  let guestIndex = 0;
 
   /* ========================== JSX ========================= */
   return (
     <form
-      ref={formRef}
-      onSubmit={onSubmit}
-      className="p-4 space-y-6 pb-32"
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="p-4 space-y-6"
     >
       <Typography
         variant="title3"
@@ -179,9 +145,9 @@ export default function GuestRegisterPage() {
         const title = ticketMap[id]?.title ?? `Ticket ${id}`;
 
         return (
-          <div
+          <CustomCard
             key={id}
-            className="bg-brand-fill-bg rounded-xl p-3 space-y-4"
+            className="rounded-xl p-3 space-y-4"
           >
             <Typography
               variant="headline"
@@ -191,12 +157,10 @@ export default function GuestRegisterPage() {
             </Typography>
 
             {Array.from({ length: qty }).map((_, idx) => {
-              const key = `${id}-${idx}`;
-              const err = rowErrs[key] ?? {};
-
+              const currentIndex = guestIndex++;
               return (
                 <div
-                  key={key}
+                  key={currentIndex}
                   className="border-t border-brand-stroke pt-3 space-y-2"
                 >
                   <Typography
@@ -206,53 +170,45 @@ export default function GuestRegisterPage() {
                     Guest&nbsp;{idx + 1}
                   </Typography>
 
-                  <List strongIos>
-                    <ListInput
-                      outline
+                  <div className="space-y-4">
+                    <Input
                       label="Name"
-                      name={`${key}__full_name`}
                       placeholder="Full name"
-                      error={err.full_name?.[0]}
+                      {...form.register(`guests.${currentIndex}.full_name`)}
+                      errors={form.formState.errors.guests?.[currentIndex]?.full_name?.message}
                     />
-                    <ListInput
-                      outline
+                    <Input
                       label="Wallet"
-                      name={`${key}__wallet`}
                       placeholder="EQ… / UQ…"
-                      error={err.wallet?.[0]}
+                      {...form.register(`guests.${currentIndex}.wallet`)}
+                      errors={form.formState.errors.guests?.[currentIndex]?.wallet?.message}
                     />
-                    <ListInput
-                      outline
+                    <Input
                       label="Company"
-                      name={`${key}__company`}
                       placeholder="Your Company"
-                      error={err.company?.[0]}
+                      {...form.register(`guests.${currentIndex}.company`)}
+                      errors={form.formState.errors.guests?.[currentIndex]?.company?.message}
                     />
-                    <ListInput
-                      outline
+                    <Input
                       label="Position"
-                      name={`${key}__position`}
                       placeholder="Your Job Position"
-                      error={err.position?.[0]}
+                      {...form.register(`guests.${currentIndex}.position`)}
+                      errors={form.formState.errors.guests?.[currentIndex]?.position?.message}
                     />
-                  </List>
+                  </div>
                 </div>
               );
             })}
-          </div>
+          </CustomCard>
         );
       })}
 
       {/* footer */}
-      <div className="fixed bottom-0 inset-x-0 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] bg-white pt-3 border-t border-brand-stroke">
-        <CustomButton
-          variant="primary"
-          isLoading={submitting}
-          onClick={() => formRef.current?.requestSubmit()}
-        >
-          Check&nbsp;out
-        </CustomButton>
-      </div>
+      <MainButton
+        text="Check&nbsp;out"
+        disabled={addOrder.isPending || addOrder.isSuccess}
+        onClick={form.handleSubmit(onSubmit)}
+      />
     </form>
   );
 }

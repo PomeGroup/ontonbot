@@ -8,6 +8,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   prefix_icon?: React.ReactNode;
   label?: React.ReactNode;
   info?: React.ReactNode;
+  wrappedClassName?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, ...props }, ref) => {
@@ -17,7 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type,
   );
 
   return (
-    <div>
+    <div className={cn(props.wrappedClassName)}>
       {props.label && (
         <label
           className="px-4 flex-1 font-normal text-[13px] leading-4 tracking-normal uppercase text-[#3C3C4399]"

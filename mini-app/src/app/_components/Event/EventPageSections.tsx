@@ -597,6 +597,8 @@ export const PaidEventSections: React.FC = () => {
 
   /* ── tickets helper (handles {} vs []) ─────────────────── */
   const tickets = useTickets(eventData.data?.payment_details as EventPaymentDTO[] | undefined);
+  console.log("tickets", tickets);
+  console.log("eventdata payment", eventData.data);
 
   /* ── wallet check & drawer state ───────────────────────── */
   const walletConnected = Boolean(user?.wallet_address);
@@ -616,7 +618,8 @@ export const PaidEventSections: React.FC = () => {
       <ConnectWalletCard />
       <SupportButtons orgSupportTelegramUserName={eventData.data?.organizer?.org_support_telegram_user_name || undefined} />
       {/* ───────── Purchase button (wallet required) ───────── */}
-      {eventData.data?.has_payment &&
+      {!drawerOpen &&
+        eventData.data?.has_payment &&
         walletConnected &&
         tickets.length > 0 && ( //   ← make sure we have ticket data
           <MainButton
