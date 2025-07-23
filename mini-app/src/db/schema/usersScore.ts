@@ -18,6 +18,14 @@ export const activityTypesArray = [
   "x_connect",
   "github_connect",
   "linked_in_connect",
+  "start_bot",
+  "open_mini_app",
+  "x_view_post",
+  "x_retweet",
+  "tg_join_channel",
+  "tg_join_group",
+  "tg_post_view",
+  "tg_access_location",
 ] as const;
 export const usersScoreActivity = pgEnum("users_score_activity_type", activityTypesArray);
 

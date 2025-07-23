@@ -28,6 +28,7 @@ import { affiliateRouter } from "@/server/routers/affiliateRouter";
 import { usersXRouter } from "@/server/routers/usersXRouter";
 import { usersGithubRouter } from "@/server/routers/usersGithubRouter";
 import { usersLinkedinRouter } from "@/server/routers/usersLinkedinRouter";
+import { questRouter } from "@/server/routers/questRouter";
 
 export const appRouter = router({
   users: usersRouter,
@@ -57,6 +58,7 @@ export const appRouter = router({
   usersX: usersXRouter,
   usersGithub: usersGithubRouter,
   usersLinkedin: usersLinkedinRouter,
+  quest: questRouter,
 });
 
 export type AppRouter = typeof appRouter;
