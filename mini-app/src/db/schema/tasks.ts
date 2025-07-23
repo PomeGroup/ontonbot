@@ -15,6 +15,9 @@ export const taskTypeEnum = pgEnum("task_type", [
   "play_a_tournament",
   "buy_token",
   "join_onton",
+  "x_connect",
+  "github_connect",
+  "linked_in_connect",
 ]);
 
 export const tasks = pgTable("tasks", {
