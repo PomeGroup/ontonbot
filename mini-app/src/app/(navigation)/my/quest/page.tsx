@@ -3,8 +3,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CopyIcon, SendIcon, Smartphone } from "lucide-react";
-import { FaXTwitter } from "react-icons/fa6";
 import { FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { RiTelegramLine } from "react-icons/ri";
+import { TbBrandTelegram } from "react-icons/tb";
 import { toast } from "sonner";
 
 import { trpc } from "@/app/_trpc/client";
@@ -16,17 +17,17 @@ import { Button } from "@/components/ui/button";
 import TotalPointsBox from "../points/TotalPointsBox";
 import EventPointsGroup from "../points/EventPointsGroup";
 import ConnectTaskCard from "@/app/_components/Tasks/ConnectTaskCard";
-import { RiTelegramLine } from "react-icons/ri";
-import { TbBrandTelegram } from "react-icons/tb";
+import { FaXTwitter } from "react-icons/fa6";
 
-/* util: “1 Point” / “3 Points” / “Points” */
+/* -------- helpers ---------------------------------------------------- */
 const pts = (n: number | null | undefined) => (n ? `${n} Point${n === 1 ? "" : "s"}` : "Points");
 const isDone = (t?: { userTaskStatus: { status: string } | null }) => t?.userTaskStatus?.status === "done";
 
-/* Task types handled by the generic quest router */
+/* quests handled by generic router */
 const QUEST_TYPES = [
   "start_bot",
   "x_view_post",
+  "x_retweet",
   "open_mini_app",
   "tg_join_channel",
   "tg_join_group",
@@ -37,30 +38,40 @@ export default function MyQuestsPage() {
   const { user } = useUserStore();
   const webApp = useWebApp();
 
-  /* ─────────────────────────── TASK QUERIES ─────────────────────────── */
-  /* Connect‑account tasks (unchanged) */
+  /** --------------------------------------------------------------- */
+  /**            1.  LOAD **ALL** TASK LISTS WE NEED                 */
+  /** --------------------------------------------------------------- */
+  /* account‑connect */
   const xTaskQ = trpc.task.getTasksByType.useQuery({ taskType: "x_connect", onlyAvailableNow: false });
   const ghTaskQ = trpc.task.getTasksByType.useQuery({ taskType: "github_connect", onlyAvailableNow: false });
   const liTaskQ = trpc.task.getTasksByType.useQuery({ taskType: "linked_in_connect", onlyAvailableNow: false });
 
-  /* -------- generic quest tasks -------- */
-  /* One useQuery per instant‑quest type */
+  /* instant‑quests */
   const questQueries = QUEST_TYPES.map((tt) => trpc.task.getTasksByType.useQuery({ taskType: tt, onlyAvailableNow: false }));
-
-  /* merge all quest arrays */
   const questTasks = questQueries.flatMap((q) => q.data?.tasks ?? []);
 
-  /* ─────────────────── ACCOUNT‑CONNECT HELPERS ─────────────────── */
+  /* map<taskId → done?> + map<taskId → title>  for dependency checks */
+  const allTasks = [
+    ...(xTaskQ.data?.tasks ?? []),
+    ...(ghTaskQ.data?.tasks ?? []),
+    ...(liTaskQ.data?.tasks ?? []),
+    ...questTasks,
+  ];
+  const doneMap = new Map(allTasks.map((t) => [t.id, t.userTaskStatus?.status === "done"]));
+  const titleMap = new Map(allTasks.map((t) => [t.id, t.title]));
+
+  /** --------------------------------------------------------------- */
+  /**            2.  AUTH URL helpers  (connect‑accounts)            */
+  /** --------------------------------------------------------------- */
   const getXAuth = trpc.usersX.getAuthUrl.useQuery(undefined, { enabled: false });
   const getGhAuth = trpc.usersGithub.getAuthUrl.useQuery(undefined, { enabled: false });
   const getLiAuth = trpc.usersLinkedin.getAuthUrl.useQuery(undefined, { enabled: false });
 
   const openTab = (url?: string) => url && window.open(url, "_blank", "noopener");
   const closeMini = () => {
-    if (webApp?.platform !== "tdesktop") {
-      webApp?.close();
-    }
+    if (webApp?.platform !== "tdesktop") webApp?.close();
   };
+
   const startX = () =>
     getXAuth.refetch().then((r) => {
       openTab(r.data?.authUrl);
@@ -77,34 +88,33 @@ export default function MyQuestsPage() {
       closeMini();
     });
 
-  /* ───────────────────── GENERIC QUEST BEGIN / CHECK ─────────────────── */
+  /** --------------------------------------------------------------- */
+  /**            3.  GENERIC quest.begin / quest.check               */
+  /** --------------------------------------------------------------- */
   const [pendingId, setPendingId] = useState<number | null>(null);
   const pollRef = useRef<NodeJS.Timeout>();
 
-  /* if server already shows an in‑progress quest → show spinner */
+  /* auto‑adopt an existing "in_progress" task (on first render) */
   useEffect(() => {
     if (pendingId !== null) return;
     const firstPending = questTasks.find((t) => t.userTaskStatus?.status === "in_progress");
     if (firstPending) setPendingId(firstPending.id);
   }, [questTasks, pendingId]);
 
-  /* begin */
   const beginQuest = trpc.quest.begin.useMutation({
     onSuccess: ({ startBotLink }, vars) => {
       openTab(startBotLink);
       setPendingId(vars.taskId);
       closeMini();
     },
-    onError: () => toast.error("Could not start the quest – try again later."),
+    onError: (e) => toast.error("Could not start quest"),
   });
 
-  /* check */
   const checkQuest = trpc.quest.check.useQuery(
     { taskId: pendingId as number },
     { enabled: false, retry: false, refetchOnWindowFocus: false }
   );
 
-  /* polling while pending */
   useEffect(() => {
     if (pendingId === null) {
       pollRef.current && clearInterval(pollRef.current);
@@ -123,7 +133,9 @@ export default function MyQuestsPage() {
     return () => pollRef.current && clearInterval(pollRef.current);
   }, [pendingId]);
 
-  /* ───────────────────── affiliate & score hooks ────────────────── */
+  /** --------------------------------------------------------------- */
+  /**             4.  Affiliate‑link helpers                          */
+  /** --------------------------------------------------------------- */
   const affDataQ = trpc.task.getOntonJoinAffiliateData.useQuery();
   const joinScore = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
     activityTypes: ["join_onton_affiliate"],
@@ -138,64 +150,23 @@ export default function MyQuestsPage() {
   };
   const shareLink = () => {
     if (!affDataQ.data?.linkHash) return toast.error("No link");
-
     webApp?.openTelegramLink(telegramShareLink(affDataQ.data.linkHash, "Join me on ONTON and earn points!"));
   };
 
-  /* ───────────────────────── loading guard ──────────────────────── */
+  /** --------------------------------------------------------------- */
+  /**             5.  Loading guard                                   */
+  /** --------------------------------------------------------------- */
   const loading = [xTaskQ, ghTaskQ, liTaskQ, ...questQueries, affDataQ, joinScore, totalPtsQ].some((q) => q.isLoading);
-
   if (!user || loading) return null;
 
-  /* ───────────────────────────── UI ─────────────────────────────── */
+  /** --------------------------------------------------------------- */
+  /**                            UI                                   */
+  /** --------------------------------------------------------------- */
   return (
     <div className="flex flex-col gap-4 px-4">
       <TotalPointsBox totalPoints={totalPtsQ.data ?? 0} />
 
-      {/* ---------- Quick Quests ---------- */}
-      {questTasks.length > 0 && (
-        <EventPointsGroup title="Quick Quests">
-          {questTasks.map((task) => {
-            const loading = pendingId === task.id || beginQuest.isLoading;
-            const finished = isDone(task);
-
-            /* icon selection */
-            let icon;
-            if (task.taskType.startsWith("x_")) icon = <FaXTwitter className="text-xl" />;
-            else if (task.taskType === "tg_join_channel") icon = <RiTelegramLine className="h-5 w-5" />;
-            else if (task.taskType === "tg_join_group") icon = <TbBrandTelegram className="h-5 w-5" />;
-            else if (task.taskType.startsWith("tg_")) {
-              icon = (
-                <svg
-                  className="h-5 w-5 text-[#0088cc]"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2Zm4.28 6.36l-1.37 6.48c-.11.5-.4.62-.82.39l-2.3-1.7-1.11 1.07c-.12.12-.23.23-.46.23l.16-2.27 4.15-3.75c.18-.16-.04-.25-.28-.09l-5.13 3.22-2.21-.69c-.48-.15-.49-.48.1-.71l8.66-3.34c.4-.15.75.09.62.67Z"
-                  />
-                </svg>
-              );
-            } else if (task.taskType === "open_mini_app") icon = <Smartphone className="h-5 w-5" />;
-            else icon = <Smartphone className="h-5 w-5" />; /* fallback */
-
-            return (
-              <ConnectTaskCard
-                key={task.id}
-                description={task.description}
-                title={task.title}
-                pointsLabel={pts(task.rewardPoint)}
-                icon={icon}
-                done={finished}
-                loading={loading}
-                onGo={() => beginQuest.mutate({ taskId: task.id })}
-              />
-            );
-          })}
-        </EventPointsGroup>
-      )}
-
-      {/* ---------- Connect Accounts ---------- */}
+      {/* -------------------- Connect Accounts -------------------- */}
       <EventPointsGroup title="Connect Your Accounts">
         {xTaskQ.data?.tasks?.[0] && (
           <ConnectTaskCard
@@ -229,7 +200,64 @@ export default function MyQuestsPage() {
         )}
       </EventPointsGroup>
 
-      {/* ---------- Affiliate Quest ---------- */}
+      {/* -------------------- Quick Quests -------------------- */}
+      {questTasks.length > 0 && (
+        <EventPointsGroup title="Quick Quests">
+          {questTasks.map((task) => {
+            const loading = pendingId === task.id || beginQuest.isLoading;
+            const finished = isDone(task);
+
+            /* dependency gate */
+            let locked = false;
+            let unlockHint: string | undefined;
+            if (task.taskConnectedItemTypes === "task" && task.taskConnectedItem) {
+              const reqId = Number(task.taskConnectedItem);
+              const parentDone = doneMap.get(reqId) ?? false;
+              if (!parentDone) {
+                locked = true;
+                unlockHint = `Unlock by completing “${titleMap.get(reqId) ?? "required task"}”`;
+              }
+            }
+
+            /* choose icon */
+            let icon;
+            if (task.taskType.startsWith("x_")) icon = <FaXTwitter className="text-xl" />;
+            else if (task.taskType === "tg_join_channel") icon = <RiTelegramLine className="h-5 w-5" />;
+            else if (task.taskType === "tg_join_group") icon = <TbBrandTelegram className="h-5 w-5" />;
+            else if (task.taskType.startsWith("tg_")) {
+              icon = (
+                <svg
+                  className="h-5 w-5 text-[#0088cc]"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2Zm4.28 6.36l-1.37 6.48c-.11.5-.4.62-.82.39l-2.3-1.7-1.11 1.07c-.12.12-.23.23-.46.23l.16-2.27 4.15-3.75c.18-.16-.04-.25-.28-.09l-5.13 3.22-2.21-.69c-.48-.15-.49-.48.1-.71l8.66-3.34c.4-.15.75.09.62.67Z"
+                  />
+                </svg>
+              );
+            } else if (task.taskType === "open_mini_app") icon = <Smartphone className="h-5 w-5" />;
+            else icon = <Smartphone className="h-5 w-5" />;
+
+            return (
+              <ConnectTaskCard
+                key={task.id}
+                title={task.title}
+                description={task.description}
+                pointsLabel={pts(task.rewardPoint)}
+                icon={icon}
+                done={finished}
+                loading={loading}
+                disabled={locked}
+                hintWhenLocked={unlockHint}
+                onGo={() => beginQuest.mutate({ taskId: task.id })}
+              />
+            );
+          })}
+        </EventPointsGroup>
+      )}
+
+      {/* -------------------- Affiliate Quest -------------------- */}
       <EventPointsGroup title="Invite Friends – ONTON Affiliate">
         <p className="text-sm">{affDataQ.data ? "Share your link and earn!" : "No affiliate quest right now."}</p>
 

@@ -1,15 +1,17 @@
 // src/server/routers/questRouter.ts
 import { router, initDataProtectedProcedure } from "../trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 import { tasksDB } from "@/db/modules/tasks.db";
 import { taskUsersDB } from "@/db/modules/taskUsers.db";
 import { maybeInsertScoreGeneric } from "@/lib/maybeInsertScoreGeneric";
-import { logger } from "@/server/utils/logger";
 
 const DELAY_MS = 30_000;
 
-/* helper: map task → link to open */
+/* -------------------------------------------------------------
+ *  Resolve “link to open” based on task_type & json_for_checker
+ * ----------------------------------------------------------- */
 function resolveLink(task: NonNullable<Awaited<ReturnType<typeof tasksDB.getTaskById>>>) {
   const cfg = (task.jsonForChecker ?? {}) as any;
 
@@ -44,7 +46,7 @@ function resolveLink(task: NonNullable<Awaited<ReturnType<typeof tasksDB.getTask
 }
 
 export const questRouter = router({
-  /* ---------- BEGIN ---------- */
+  /* -------------------- BEGIN -------------------- */
   begin: initDataProtectedProcedure.input(z.object({ taskId: z.number() })).mutation(async ({ ctx, input }) => {
     const { taskId } = input;
     const userId = ctx.user.user_id;
@@ -52,7 +54,20 @@ export const questRouter = router({
     const task = await tasksDB.getTaskById(taskId);
     if (!task) throw new Error("Task not found");
 
-    /* upsert users_task */
+    /* dependency gate */
+    if (task.taskConnectedItemTypes === "task" && task.taskConnectedItem) {
+      const parentId = Number(task.taskConnectedItem);
+      const parentUT = await taskUsersDB.getUserTaskByUserAndTask(userId, parentId);
+      if (!parentUT || parentUT.status !== "done") {
+        const parentTask = await tasksDB.getTaskById(parentId);
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `Finish “${parentTask?.title ?? "required task"}” first`,
+        });
+      }
+    }
+
+    /* upsert users_task row */
     let ut = await taskUsersDB.getUserTaskByUserAndTask(userId, taskId);
     if (!ut) {
       ut = await taskUsersDB.addUserTask({
@@ -66,10 +81,10 @@ export const questRouter = router({
       });
     }
 
-    return { startBotLink: resolveLink(task) }; // same response key as before
+    return { startBotLink: resolveLink(task) };
   }),
 
-  /* ---------- CHECK ---------- */
+  /* -------------------- CHECK -------------------- */
   check: initDataProtectedProcedure.input(z.object({ taskId: z.number() })).query(async ({ ctx, input }) => {
     const { taskId } = input;
     const userId = ctx.user.user_id;
@@ -81,7 +96,6 @@ export const questRouter = router({
     if (!ut) return { status: "not_started" } as const;
     if (ut.status === "done") return { status: "done" } as const;
 
-    /* 30‑second grace period */
     const elapsed = Date.now() - new Date(ut.createdAt).getTime();
     if (elapsed >= DELAY_MS) {
       await taskUsersDB.updateUserTaskById(ut.id, { status: "done" });
