@@ -82,6 +82,7 @@ x-common-env: &common-env
   SWAGGER_UI_PORT: ${SWAGGER_UI_PORT}
   USE_CLOUDFLARE: ${USE_CLOUDFLARE}
   CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+
 services:
   caddy:
 #    image: caddy:latest
@@ -254,6 +255,16 @@ services:
     stop_signal: SIGTERM
     environment:
       <<: *common-env
+      TWITTER_CLIENT_ID: ${TWITTER_CLIENT_ID}
+      TWITTER_CLIENT_SECRET: ${TWITTER_CLIENT_SECRET}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      MS_CLIENT_ID: ${MS_CLIENT_ID}
+      MS_CLIENT_SECRET: ${MS_CLIENT_SECRET}
     depends_on:
       - postgres
       - redis
