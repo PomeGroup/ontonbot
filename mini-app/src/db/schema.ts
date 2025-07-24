@@ -193,6 +193,11 @@ import {
   PartnershipAffiliateUserEntryEnum,
   PartnershipAffiliateUserEntryType,
 } from "./schema/partnershipAffiliatePurchases";
+import { usersX } from "./schema/usersX";
+import { usersGithub } from "./schema/usersGithub";
+import { usersLinkedin } from "./schema/usersLinkedin";
+import { usersGoogle } from "./schema/usersGoogle";
+import { usersOutlook } from "./schema/usersOutlook";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -310,6 +315,11 @@ export {
   couponMessageSendStatus,
   partnershipAffiliatePurchases,
   PartnershipAffiliateUserEntryEnum,
+  usersX,
+  usersGithub,
+  usersLinkedin,
+  usersGoogle,
+  usersOutlook,
 };
 
 // Type Exports

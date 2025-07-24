@@ -95,6 +95,15 @@ export default function ProfilePage() {
         subtitle="check your onions"
         footerTexts={[]}
       />
+      <ActionCard
+        onClick={(e) => {
+          router.push("/my/quest");
+        }}
+        iconSrc={OnionLogo}
+        title="Quest"
+        subtitle="Complete Quests and earn rewards"
+        footerTexts={[]}
+      />
       {/*<ActionCard*/}
       {/*  onClick={(e) => {*/}
       {/*    router.push("/my/partner/onion-affiliate");*/}

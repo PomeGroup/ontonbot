@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import { airdropRoutines } from "@/db/schema/airdropRoutines";
 import { tickets } from "@/db/schema/tickets";
 import { userEventFields } from "@/db/schema/userEventFields";
+import { usersX } from "./usersX";
 
 // @ts-ignore
 // @ts-ignore
@@ -60,5 +61,6 @@ export const userRelations = relations(users, ({ many }) => ({
   userEventFields: many(userEventFields),
   airdropRoutines: many(airdropRoutines),
   tickets: many(tickets),
+  xAccounts: many(usersX),
   // orders: many(orders),
 }));
