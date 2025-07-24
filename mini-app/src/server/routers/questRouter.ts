@@ -40,6 +40,9 @@ function resolveLink(task: NonNullable<Awaited<ReturnType<typeof tasksDB.getTask
       if (!cfg.webapp_url) throw new Error("webapp_url missing");
       return cfg.webapp_url;
 
+    case "web_visit":
+      if (!cfg.web_url) throw new Error("web_url missing");
+      return cfg.web_url;
     default:
       throw new Error(`Quest type '${task.taskType}' unsupported`);
   }

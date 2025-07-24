@@ -3,9 +3,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CopyIcon, SendIcon, Smartphone } from "lucide-react";
-import { FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { FaGithub, FaLinkedinIn, FaGoogle } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import { RiTelegramLine } from "react-icons/ri";
 import { TbBrandTelegram } from "react-icons/tb";
+import { PiMicrosoftOutlookLogoFill } from "react-icons/pi";
 import { toast } from "sonner";
 
 import { trpc } from "@/app/_trpc/client";
@@ -17,13 +19,12 @@ import { Button } from "@/components/ui/button";
 import TotalPointsBox from "../points/TotalPointsBox";
 import EventPointsGroup from "../points/EventPointsGroup";
 import ConnectTaskCard from "@/app/_components/Tasks/ConnectTaskCard";
-import { FaXTwitter } from "react-icons/fa6";
 
-/* -------- helpers ---------------------------------------------------- */
+/* ───────────────────────── helpers ───────────────────────── */
 const pts = (n: number | null | undefined) => (n ? `${n} Point${n === 1 ? "" : "s"}` : "Points");
 const isDone = (t?: { userTaskStatus: { status: string } | null }) => t?.userTaskStatus?.status === "done";
 
-/* quests handled by generic router */
+/* instant‑quest types handled by generic quest router */
 const QUEST_TYPES = [
   "start_bot",
   "x_view_post",
@@ -32,82 +33,92 @@ const QUEST_TYPES = [
   "tg_join_channel",
   "tg_join_group",
   "tg_post_view",
+  "web_visit",
 ] as const;
 
+/* ───────────────── component ───────────────── */
 export default function MyQuestsPage() {
   const { user } = useUserStore();
   const webApp = useWebApp();
 
-  /** --------------------------------------------------------------- */
-  /**            1.  LOAD **ALL** TASK LISTS WE NEED                 */
-  /** --------------------------------------------------------------- */
-  /* account‑connect */
+  /* 1️⃣  ── LOAD TASK LISTS ───────────────────────────────────────── */
   const xTaskQ = trpc.task.getTasksByType.useQuery({ taskType: "x_connect", onlyAvailableNow: false });
   const ghTaskQ = trpc.task.getTasksByType.useQuery({ taskType: "github_connect", onlyAvailableNow: false });
   const liTaskQ = trpc.task.getTasksByType.useQuery({ taskType: "linked_in_connect", onlyAvailableNow: false });
+  const gTaskQ = trpc.task.getTasksByType.useQuery({ taskType: "google_connect", onlyAvailableNow: false });
+  const oTaskQ = trpc.task.getTasksByType.useQuery({ taskType: "outlook_connect", onlyAvailableNow: false });
 
-  /* instant‑quests */
   const questQueries = QUEST_TYPES.map((tt) => trpc.task.getTasksByType.useQuery({ taskType: tt, onlyAvailableNow: false }));
   const questTasks = questQueries.flatMap((q) => q.data?.tasks ?? []);
 
-  /* map<taskId → done?> + map<taskId → title>  for dependency checks */
+  /* maps for dependency gating */
   const allTasks = [
     ...(xTaskQ.data?.tasks ?? []),
     ...(ghTaskQ.data?.tasks ?? []),
     ...(liTaskQ.data?.tasks ?? []),
+    ...(gTaskQ.data?.tasks ?? []),
+    ...(oTaskQ.data?.tasks ?? []),
     ...questTasks,
   ];
   const doneMap = new Map(allTasks.map((t) => [t.id, t.userTaskStatus?.status === "done"]));
   const titleMap = new Map(allTasks.map((t) => [t.id, t.title]));
 
-  /** --------------------------------------------------------------- */
-  /**            2.  AUTH URL helpers  (connect‑accounts)            */
-  /** --------------------------------------------------------------- */
+  /* 2️⃣  ── AUTH‑URL HELPERS (connect accounts) ───────────────────── */
   const getXAuth = trpc.usersX.getAuthUrl.useQuery(undefined, { enabled: false });
   const getGhAuth = trpc.usersGithub.getAuthUrl.useQuery(undefined, { enabled: false });
   const getLiAuth = trpc.usersLinkedin.getAuthUrl.useQuery(undefined, { enabled: false });
+  const getGAuth = trpc.usersGoogle.getAuthUrl.useQuery(undefined, { enabled: false });
+  const getOAuth = trpc.usersOutlook.getAuthUrl.useQuery(undefined, { enabled: false });
 
   const openTab = (url?: string) => url && window.open(url, "_blank", "noopener");
-  const closeMini = () => {
+  const closeApp = () => {
     if (webApp?.platform !== "tdesktop") webApp?.close();
   };
 
   const startX = () =>
     getXAuth.refetch().then((r) => {
       openTab(r.data?.authUrl);
-      closeMini();
+      closeApp();
     });
   const startGh = () =>
     getGhAuth.refetch().then((r) => {
       openTab(r.data?.authUrl);
-      closeMini();
+      closeApp();
     });
   const startLi = () =>
     getLiAuth.refetch().then((r) => {
       openTab(r.data?.authUrl);
-      closeMini();
+      closeApp();
+    });
+  const startG = () =>
+    getGAuth.refetch().then((r) => {
+      openTab(r.data?.authUrl);
+      closeApp();
+    });
+  const startO = () =>
+    getOAuth.refetch().then((r) => {
+      openTab(r.data?.authUrl);
+      closeApp();
     });
 
-  /** --------------------------------------------------------------- */
-  /**            3.  GENERIC quest.begin / quest.check               */
-  /** --------------------------------------------------------------- */
+  /* 3️⃣  ── GENERIC quest.begin / quest.check ─────────────────────── */
   const [pendingId, setPendingId] = useState<number | null>(null);
   const pollRef = useRef<NodeJS.Timeout>();
 
-  /* auto‑adopt an existing "in_progress" task (on first render) */
+  /* adopt first in‑progress quest */
   useEffect(() => {
     if (pendingId !== null) return;
-    const firstPending = questTasks.find((t) => t.userTaskStatus?.status === "in_progress");
-    if (firstPending) setPendingId(firstPending.id);
+    const p = questTasks.find((t) => t.userTaskStatus?.status === "in_progress");
+    if (p) setPendingId(p.id);
   }, [questTasks, pendingId]);
 
   const beginQuest = trpc.quest.begin.useMutation({
     onSuccess: ({ startBotLink }, vars) => {
       openTab(startBotLink);
       setPendingId(vars.taskId);
-      closeMini();
+      closeApp();
     },
-    onError: (e) => toast.error("Could not start quest"),
+    onError: () => toast.error("Could not start quest"),
   });
 
   const checkQuest = trpc.quest.check.useQuery(
@@ -120,22 +131,22 @@ export default function MyQuestsPage() {
       pollRef.current && clearInterval(pollRef.current);
       return;
     }
+
     const poll = () =>
       checkQuest.refetch().then((res) => {
         if (res.data?.status === "done") {
           setPendingId(null);
-          questQueries.forEach((q) => q.refetch());
+          [...questQueries].forEach((q) => q.refetch());
           toast.success("Quest completed – points added!");
         }
       });
+
     poll();
     pollRef.current = setInterval(poll, 10_000);
     return () => pollRef.current && clearInterval(pollRef.current);
   }, [pendingId]);
 
-  /** --------------------------------------------------------------- */
-  /**             4.  Affiliate‑link helpers                          */
-  /** --------------------------------------------------------------- */
+  /* 4️⃣  ── Affiliate & Score helpers ─────────────────────────────── */
   const affDataQ = trpc.task.getOntonJoinAffiliateData.useQuery();
   const joinScore = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
     activityTypes: ["join_onton_affiliate"],
@@ -153,20 +164,19 @@ export default function MyQuestsPage() {
     webApp?.openTelegramLink(telegramShareLink(affDataQ.data.linkHash, "Join me on ONTON and earn points!"));
   };
 
-  /** --------------------------------------------------------------- */
-  /**             5.  Loading guard                                   */
-  /** --------------------------------------------------------------- */
-  const loading = [xTaskQ, ghTaskQ, liTaskQ, ...questQueries, affDataQ, joinScore, totalPtsQ].some((q) => q.isLoading);
-  if (!user || loading) return null;
+  /* 5️⃣  ── Loading guard ─────────────────────────────────────────── */
+  const queriesLoading = [xTaskQ, ghTaskQ, liTaskQ, gTaskQ, oTaskQ, ...questQueries, affDataQ, joinScore, totalPtsQ].some(
+    (q) => q.isLoading
+  );
 
-  /** --------------------------------------------------------------- */
-  /**                            UI                                   */
-  /** --------------------------------------------------------------- */
+  if (!user || queriesLoading) return null;
+
+  /* 6️⃣  ── UI ─────────────────────────────────────────────────────── */
   return (
     <div className="flex flex-col gap-4 px-4">
       <TotalPointsBox totalPoints={totalPtsQ.data ?? 0} />
 
-      {/* -------------------- Connect Accounts -------------------- */}
+      {/* CONNECT ACCOUNTS ------------------------------------------------ */}
       <EventPointsGroup title="Connect Your Accounts">
         {xTaskQ.data?.tasks?.[0] && (
           <ConnectTaskCard
@@ -198,9 +208,29 @@ export default function MyQuestsPage() {
             onGo={startLi}
           />
         )}
+        {gTaskQ.data?.tasks?.[0] && (
+          <ConnectTaskCard
+            title={gTaskQ.data.tasks[0].title}
+            description={gTaskQ.data.tasks[0].description}
+            pointsLabel={pts(gTaskQ.data.tasks[0].rewardPoint)}
+            icon={<FaGoogle className="text-xl" />}
+            done={isDone(gTaskQ.data.tasks[0])}
+            onGo={startG}
+          />
+        )}
+        {oTaskQ.data?.tasks?.[0] && (
+          <ConnectTaskCard
+            title={oTaskQ.data.tasks[0].title}
+            description={oTaskQ.data.tasks[0].description}
+            pointsLabel={pts(oTaskQ.data.tasks[0].rewardPoint)}
+            icon={<PiMicrosoftOutlookLogoFill className="text-xl text-[#0078d4]" />}
+            done={isDone(oTaskQ.data.tasks[0])}
+            onGo={startO}
+          />
+        )}
       </EventPointsGroup>
 
-      {/* -------------------- Quick Quests -------------------- */}
+      {/* QUICK QUESTS ---------------------------------------------------- */}
       {questTasks.length > 0 && (
         <EventPointsGroup title="Quick Quests">
           {questTasks.map((task) => {
@@ -208,23 +238,23 @@ export default function MyQuestsPage() {
             const finished = isDone(task);
 
             /* dependency gate */
-            let locked = false;
-            let unlockHint: string | undefined;
+            let locked = false,
+              unlockHint: string | undefined;
             if (task.taskConnectedItemTypes === "task" && task.taskConnectedItem) {
               const reqId = Number(task.taskConnectedItem);
-              const parentDone = doneMap.get(reqId) ?? false;
-              if (!parentDone) {
+              const ok = doneMap.get(reqId) ?? false;
+              if (!ok) {
                 locked = true;
                 unlockHint = `Unlock by completing “${titleMap.get(reqId) ?? "required task"}”`;
               }
             }
 
-            /* choose icon */
+            /* icon selection */
             let icon;
             if (task.taskType.startsWith("x_")) icon = <FaXTwitter className="text-xl" />;
             else if (task.taskType === "tg_join_channel") icon = <RiTelegramLine className="h-5 w-5" />;
             else if (task.taskType === "tg_join_group") icon = <TbBrandTelegram className="h-5 w-5" />;
-            else if (task.taskType.startsWith("tg_")) {
+            else if (task.taskType.startsWith("tg_"))
               icon = (
                 <svg
                   className="h-5 w-5 text-[#0088cc]"
@@ -232,11 +262,15 @@ export default function MyQuestsPage() {
                 >
                   <path
                     fill="currentColor"
-                    d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2Zm4.28 6.36l-1.37 6.48c-.11.5-.4.62-.82.39l-2.3-1.7-1.11 1.07c-.12.12-.23.23-.46.23l.16-2.27 4.15-3.75c.18-.16-.04-.25-.28-.09l-5.13 3.22-2.21-.69c-.48-.15-.49-.48.1-.71l8.66-3.34c.4-.15.75.09.62.67Z"
+                    d="M12 2c5.52 0 10 4.48 10 10s-4.48
+                       10-10 10S2 17.52 2 12 6.48 2 12 2Zm4.28
+                       6.36l-1.37 6.48c-.11.5-.4.62-.82.39l-2.3-1.7-1.11
+                       1.07c-.12.12-.23.23-.46.23l.16-2.27 4.15-3.75c.18-.16-.04-.25-.28-.09l-5.13
+                       3.22-2.21-.69c-.48-.15-.49-.48.1-.71l8.66-3.34c.4-.15.75.09.62.67Z"
                   />
                 </svg>
               );
-            } else if (task.taskType === "open_mini_app") icon = <Smartphone className="h-5 w-5" />;
+            else if (task.taskType === "open_mini_app") icon = <Smartphone className="h-5 w-5" />;
             else icon = <Smartphone className="h-5 w-5" />;
 
             return (
@@ -257,7 +291,7 @@ export default function MyQuestsPage() {
         </EventPointsGroup>
       )}
 
-      {/* -------------------- Affiliate Quest -------------------- */}
+      {/* AFFILIATE ------------------------------------------------------- */}
       <EventPointsGroup title="Invite Friends – ONTON Affiliate">
         <p className="text-sm">{affDataQ.data ? "Share your link and earn!" : "No affiliate quest right now."}</p>
 

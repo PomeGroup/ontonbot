@@ -341,6 +341,10 @@ export const cacheKeys = {
   userGithubById: "userGithubById:", // GitHub user‑id to Telegram user‑id mapping
   userLinkedin: "userLinkedin:", // LinkedIn account for a Telegram user
   userLinkedinById: "userLinkedinById:", // LinkedIn user‑id to Telegram user‑id mapping
+  userGoogle: "userGoogle:", // Google account for a Telegram user
+  userGoogleByGId: "userGoogleByGId:", // Google user‑id to Telegram user‑id mapping
+  userOutlook: "userOutlook:", // Outlook account for a Telegram user
+  userOutlookByMsId: "userOutlookById:", // Outlook user‑id to Telegram user‑id mapping
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes

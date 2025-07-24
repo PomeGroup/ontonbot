@@ -196,6 +196,8 @@ import {
 import { usersX } from "./schema/usersX";
 import { usersGithub } from "./schema/usersGithub";
 import { usersLinkedin } from "./schema/usersLinkedin";
+import { usersGoogle } from "./schema/usersGoogle";
+import { usersOutlook } from "./schema/usersOutlook";
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -316,6 +318,8 @@ export {
   usersX,
   usersGithub,
   usersLinkedin,
+  usersGoogle,
+  usersOutlook,
 };
 
 // Type Exports

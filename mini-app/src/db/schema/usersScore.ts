@@ -26,6 +26,9 @@ export const activityTypesArray = [
   "tg_join_group",
   "tg_post_view",
   "tg_access_location",
+  "google_connect",
+  "outlook_connect",
+  "web_visit",
 ] as const;
 export const usersScoreActivity = pgEnum("users_score_activity_type", activityTypesArray);
 

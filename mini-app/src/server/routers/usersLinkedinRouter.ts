@@ -32,7 +32,7 @@ export const usersLinkedinRouter = router({
       `lioauth:${state}`,
       {
         telegramUserId: user.user_id,
-        returnUrl: "https://t.me/ontonmohammad_bot/event?startapp=tab_sample",
+        returnUrl: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tab_quest`,
       },
       OAUTH_TTL
     );

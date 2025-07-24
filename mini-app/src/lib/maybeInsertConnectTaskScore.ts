@@ -4,20 +4,21 @@ import { userScoreDb } from "@/db/modules/userScore.db";
 import { userScoreRulesDB } from "@/db/modules/userScoreRules.db";
 import { UsersScoreActivityType } from "@/db/schema/usersScore";
 import { logger } from "@/server/utils/logger";
+import { TaskTypeType } from "@/db/schema/tasks";
 
 export type MaybeInsertConnectScoreResult = { point: number; error: null } | { point: number | null; error: string };
 
 /**
  * Awards points for X / GitHub / LinkedIn “connect” quests.
  *
- * • `taskType` must be "x_connect" | "github_connect" | "linked_in_connect".
+ * • `taskType` must be TaskTypeType
  * • Points default to `rewardPoint` in the `tasks` row.
  * • If a custom user‑score rule matches, that rule overrides the point value.
  * • If a score already exists (unique constraint), nothing is inserted.
  */
 export async function maybeInsertConnectTaskScore(
   userId: number,
-  taskType: "x_connect" | "github_connect" | "linked_in_connect"
+  taskType: TaskTypeType
 ): Promise<MaybeInsertConnectScoreResult> {
   /* 1️⃣  Find the single task definition */
   const [task] = await tasksDB.getTasksByType(taskType, false);

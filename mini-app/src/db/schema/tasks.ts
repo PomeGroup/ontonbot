@@ -26,6 +26,9 @@ export const taskTypeEnum = pgEnum("task_type", [
   "tg_join_group",
   "tg_post_view",
   "tg_access_location",
+  "google_connect",
+  "outlook_connect",
+  "web_visit",
 ]);
 
 export const tasks = pgTable("tasks", {
