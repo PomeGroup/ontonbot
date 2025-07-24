@@ -57,6 +57,7 @@ export async function GET(req: NextRequest) {
     return Response.redirect(returnUrl, 302);
   } catch (e) {
     logger.error("Outlook OAuth cb", e);
+    console.log(e);
     return new Response("OAuth error", { status: 500 });
   }
 }

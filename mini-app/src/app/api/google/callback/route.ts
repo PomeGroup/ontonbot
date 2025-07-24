@@ -81,7 +81,8 @@ export async function GET(req: NextRequest) {
     await redisTools.deleteCache(`goauth:${state}`);
     return Response.redirect(returnUrl, 302);
   } catch (err) {
-    logger.error("Google OAuth callback error", err);
+    logger.error("Google OAuth callback error" + (err instanceof Error ? `: ${err.message}` : ""), { err });
+    console.log(err);
     return new Response("OAuth error", { status: 500 });
   }
 }
