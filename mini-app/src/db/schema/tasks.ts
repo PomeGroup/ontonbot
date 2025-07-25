@@ -15,6 +15,20 @@ export const taskTypeEnum = pgEnum("task_type", [
   "play_a_tournament",
   "buy_token",
   "join_onton",
+  "x_connect",
+  "github_connect",
+  "linked_in_connect",
+  "start_bot",
+  "open_mini_app",
+  "x_view_post",
+  "x_retweet",
+  "tg_join_channel",
+  "tg_join_group",
+  "tg_post_view",
+  "tg_access_location",
+  "google_connect",
+  "outlook_connect",
+  "web_visit",
 ]);
 
 export const tasks = pgTable("tasks", {

@@ -10,6 +10,7 @@ import channelAvatar from "@/components/icons/channel-avatar.svg";
 import FabPlusIcon from "@/components/icons/plus-icon";
 import solarCupOutline from "@/components/icons/solar-cup-outline.svg";
 import OnionLogo from "@/components/icons/onion-logo.svg";
+import questLogo from "@/components/icons/quest-flag.svg";
 // import { ALLOWED_USER_TO_TEST } from "@/constants";
 import { useUserStore } from "@/context/store/user.store";
 import { Channel } from "@/types";
@@ -23,7 +24,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import PaymentCard from "./PaymentCard";
 import calendarStarIcon from "./calendar-star.svg";
-
+import { TbBowFilled } from "react-icons/tb";
 export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!useTonAddress();
@@ -76,7 +77,15 @@ export default function ProfilePage() {
             : { items: "Become an organizer first" },
         ]}
       />
-
+      <ActionCard
+        onClick={(e) => {
+          router.push("/my/quest");
+        }}
+        iconSrc={questLogo}
+        title="Quest"
+        subtitle="Complete Quests and earn rewards"
+        footerTexts={[]}
+      />
       <ActionCard
         onClick={(e) => {
           router.push("/my/points/");
@@ -95,6 +104,7 @@ export default function ProfilePage() {
         subtitle="check your onions"
         footerTexts={[]}
       />
+
       {/*<ActionCard*/}
       {/*  onClick={(e) => {*/}
       {/*    router.push("/my/partner/onion-affiliate");*/}
