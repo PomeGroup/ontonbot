@@ -21,6 +21,7 @@ function resolveLink(task: NonNullable<Awaited<ReturnType<typeof tasksDB.getTask
 
     case "x_view_post":
     case "x_retweet":
+    case "x_follow":
       if (!cfg.x_url) throw new Error("x_url missing");
       return cfg.x_url;
 

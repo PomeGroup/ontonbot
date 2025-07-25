@@ -34,6 +34,7 @@ const QUEST_TYPES = [
   "tg_join_group",
   "tg_post_view",
   "web_visit",
+  "x_follow",
 ] as const;
 
 /* ───────────────── component ───────────────── */
