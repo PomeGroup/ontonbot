@@ -182,7 +182,7 @@ export default function MyQuestsPage() {
         {xTaskQ.data?.tasks?.[0] && (
           <ConnectTaskCard
             title={xTaskQ.data.tasks[0].title}
-            description={xTaskQ.data.tasks[0].description}
+            description={`${xTaskQ.data.tasks[0].description} ( ${xTaskQ.data.tasks[0].rewardPoint} points )`}
             pointsLabel={pts(xTaskQ.data.tasks[0].rewardPoint)}
             icon={<FaXTwitter />}
             done={isDone(xTaskQ.data.tasks[0])}
@@ -192,7 +192,7 @@ export default function MyQuestsPage() {
         {ghTaskQ.data?.tasks?.[0] && (
           <ConnectTaskCard
             title={ghTaskQ.data.tasks[0].title}
-            description={ghTaskQ.data.tasks[0].description}
+            description={`${ghTaskQ.data.tasks[0].description} ( ${ghTaskQ.data.tasks[0].rewardPoint} points )`}
             pointsLabel={pts(ghTaskQ.data.tasks[0].rewardPoint)}
             icon={<FaGithub />}
             done={isDone(ghTaskQ.data.tasks[0])}
@@ -202,7 +202,7 @@ export default function MyQuestsPage() {
         {liTaskQ.data?.tasks?.[0] && (
           <ConnectTaskCard
             title={liTaskQ.data.tasks[0].title}
-            description={liTaskQ.data.tasks[0].description}
+            description={`${liTaskQ.data.tasks[0].description} ( ${liTaskQ.data.tasks[0].rewardPoint} points )`}
             pointsLabel={pts(liTaskQ.data.tasks[0].rewardPoint)}
             icon={<FaLinkedinIn />}
             done={isDone(liTaskQ.data.tasks[0])}
@@ -212,7 +212,7 @@ export default function MyQuestsPage() {
         {gTaskQ.data?.tasks?.[0] && (
           <ConnectTaskCard
             title={gTaskQ.data.tasks[0].title}
-            description={gTaskQ.data.tasks[0].description}
+            description={`${gTaskQ.data.tasks[0].description} ( ${gTaskQ.data.tasks[0].rewardPoint} points )`}
             pointsLabel={pts(gTaskQ.data.tasks[0].rewardPoint)}
             icon={<FaGoogle className="text-xl" />}
             done={isDone(gTaskQ.data.tasks[0])}
@@ -222,7 +222,7 @@ export default function MyQuestsPage() {
         {oTaskQ.data?.tasks?.[0] && (
           <ConnectTaskCard
             title={oTaskQ.data.tasks[0].title}
-            description={oTaskQ.data.tasks[0].description}
+            description={`${oTaskQ.data.tasks[0].description} ( ${oTaskQ.data.tasks[0].rewardPoint} points )`}
             pointsLabel={pts(oTaskQ.data.tasks[0].rewardPoint)}
             icon={<PiMicrosoftOutlookLogoFill className="text-xl text-[#0078d4]" />}
             done={isDone(oTaskQ.data.tasks[0])}
@@ -278,7 +278,7 @@ export default function MyQuestsPage() {
               <ConnectTaskCard
                 key={task.id}
                 title={task.title}
-                description={task.description}
+                description={`${task.description} ( ${task.rewardPoint} points )`}
                 pointsLabel={pts(task.rewardPoint)}
                 icon={icon}
                 done={finished}
