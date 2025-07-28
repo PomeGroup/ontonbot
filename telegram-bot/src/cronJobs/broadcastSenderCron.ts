@@ -135,7 +135,7 @@ async function personalise(baseText: string, userId: number, bot: Bot): Promise<
         let link = linkRow ? `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=campaign-aff-${linkRow.link_hash}` : "[LINK_ERROR]";
         // Special case for fairlaunch-partnership because it is an external miniapp
         if(itemType === "fairlaunch-partnership") {
-            link = linkRow ? TBOOK_FAIRLAUNCH_MINIAPP_URL +`&affiliate=${linkRow.link_hash}` : "[LINK_ERROR]";
+            link = linkRow ? TBOOK_FAIRLAUNCH_MINIAPP_URL +`?partner=${linkRow.link_hash}` : "[LINK_ERROR]";
         }
 
 

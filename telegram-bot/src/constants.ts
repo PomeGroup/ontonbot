@@ -37,4 +37,4 @@ export const AFFILIATE_PLACEHOLDERS = [
 ];
 
 export const TBOOK_FAIRLAUNCH_MINIAPP_URL =
-    "https://t.me/tbook_incentive_bot/tbook?startapp=WyIxIiwidG9uc29jaWV0eSIsIjU2MTIwODI3Nzc5MTU5Il0";
+    "https://engage.tbook.com/fair-launch/onion";
