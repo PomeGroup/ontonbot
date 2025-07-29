@@ -52,7 +52,7 @@ async function forcePersonaliseMessage(
 /* main cron                                                          */
 /* ------------------------------------------------------------------ */
 export async function broadcastSenderCron(bot: Bot) {
-    const rows = await fetchPendingBroadcastSends(100);
+    const rows = await fetchPendingBroadcastSends(200);
     if (!rows.length) return;
 
     logger.info(`broadcastSenderCron: processing ${rows.length} rows`);
@@ -104,7 +104,7 @@ export async function broadcastSenderCron(bot: Bot) {
             await markBroadcastUserFailed(bu_id, retry_count + 1, String(err), fatal);
         }
 
-        await delay(50); // throttle 10 msgs/sec
+        await delay(40); // throttle msg/second  =
     }
 
     /* -------------------------------------------------------------------- */
