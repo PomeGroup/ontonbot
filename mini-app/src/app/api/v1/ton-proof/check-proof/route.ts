@@ -26,15 +26,15 @@ export const POST = async (req: Request) => {
       );
     }
 
-    const payloadToken = body.proof.payload;
-    if (!(await verifyToken(payloadToken))) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        {
-          status: 400,
-        }
-      );
-    }
+    // const payloadToken = body.proof.payload;
+    // if (!(await verifyToken(payloadToken))) {
+    //   return NextResponse.json(
+    //     { error: "Invalid token" },
+    //     {
+    //       status: 400,
+    //     }
+    //   );
+    // }
 
     const token = await createAuthToken({
       address: body.address,
