@@ -24,7 +24,7 @@ export async function getJustEndedTournaments(): Promise<
   }[]
 > {
   const now = new Date();
-  const fiveMinAgo = new Date(now.getTime() - 5 * 60_000); // 5 minutes ago
+  const fiveMinAgo = new Date(now.getTime() - 100 * 86400_000); // 5 minutes ago
 
   // 1) Build the query, but don't execute yet
   const query = db
