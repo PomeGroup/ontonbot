@@ -3,7 +3,7 @@ import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { partnershipAffiliatePurchasesDB } from "@/db/modules/partnershipAffiliatePurchases.db";
 import { initDataProtectedProcedure, router } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import { PARTNER_ONION_CAP } from "@/constants";
+import { PARTNER_ONION_CAP, TBOOK_FAIRLAUNCH_MINIAPP_URL } from "@/constants";
 
 export const affiliateRouter = router({
   getFairlaunchAffiliate: initDataProtectedProcedure.query(async ({ ctx }) => {
@@ -53,10 +53,10 @@ export const affiliateRouter = router({
     const globalTotals = await partnershipAffiliatePurchasesDB.getGlobalTotals();
     const onionSoldGlobal = globalTotals.onion;
     const progressPct = Math.min((onionSoldGlobal / PARTNER_ONION_CAP) * 100, 100);
-
+    //engage.tbook.com/fair-launch/onion?partner=tol
     /* 6) shareable deep link */
     const botUser = process.env.NEXT_PUBLIC_BOT_USERNAME || "theontonbot";
-    const url = `https://t.me/${botUser}/event?startapp=fairlaunch-aff-${link.linkHash}`;
+    const url = `${TBOOK_FAIRLAUNCH_MINIAPP_URL}?partner=${link.linkHash}`;
 
     return {
       ...link,

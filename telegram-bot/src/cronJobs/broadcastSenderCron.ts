@@ -52,7 +52,7 @@ async function forcePersonaliseMessage(
 /* main cron                                                          */
 /* ------------------------------------------------------------------ */
 export async function broadcastSenderCron(bot: Bot) {
-    const rows = await fetchPendingBroadcastSends(100);
+    const rows = await fetchPendingBroadcastSends(200);
     if (!rows.length) return;
 
     logger.info(`broadcastSenderCron: processing ${rows.length} rows`);
@@ -104,7 +104,7 @@ export async function broadcastSenderCron(bot: Bot) {
             await markBroadcastUserFailed(bu_id, retry_count + 1, String(err), fatal);
         }
 
-        await delay(50); // throttle 10 msgs/sec
+        await delay(40); // throttle msg/second  =
     }
 
     /* -------------------------------------------------------------------- */
@@ -135,7 +135,7 @@ async function personalise(baseText: string, userId: number, bot: Bot): Promise<
         let link = linkRow ? `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=campaign-aff-${linkRow.link_hash}` : "[LINK_ERROR]";
         // Special case for fairlaunch-partnership because it is an external miniapp
         if(itemType === "fairlaunch-partnership") {
-            link = linkRow ? TBOOK_FAIRLAUNCH_MINIAPP_URL +`&affiliate=${linkRow.link_hash}` : "[LINK_ERROR]";
+            link = linkRow ? TBOOK_FAIRLAUNCH_MINIAPP_URL +`?partner=${linkRow.link_hash}` : "[LINK_ERROR]";
         }
 
 

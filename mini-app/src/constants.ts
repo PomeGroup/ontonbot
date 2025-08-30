@@ -757,9 +757,8 @@ export const PARTNER_HASH_SEARCH_PARAM_KEY = "affp"; // ?affp=<hash>
 export const PARTNER_HASH_LOCAL_KEY = "fairlaunch_partner_aff"; // localStorage key
 /* fixed cap for the partner launch */
 export const PARTNER_ONION_CAP = 3000000;
-export const TBOOK_FAIRLAUNCH_MINIAPP_URL =
-  "https://t.me/tbook_incentive_bot/tbook?startapp=WyIxIiwidG9uc29jaWV0eSIsIjU2MTIwODI3Nzc5MTU5Il0";
+export const TBOOK_FAIRLAUNCH_MINIAPP_URL = "https://engage.tbook.com/fair-launch/onion";
 
-export const ORGANIZER_PROMOTE_PRICE = is_prod_env() ? 1 : 0.0154; // TON
-export const NFT_EVENT_PRICE = is_prod_env() ? 1 : 0.0155; // TON
-export const CSBT_EVENT_PRICE = is_prod_env() ? 1 : 0.0077; // TON
+export const ORGANIZER_PROMOTE_PRICE = 1; // TON
+export const NFT_EVENT_PRICE = 1; // TON
+export const CSBT_EVENT_PRICE = 1; // TON

@@ -29,7 +29,9 @@ export async function getJustEndedTournaments(): Promise<
   }[]
 > {
   const now = new Date();
+ 
   const fiveMinAgo = new Date(now.getTime() - 150 * 86400_000); // 5 minutes ago
+ 
 
   // 1) Build the query, but don't execute yet
   const query = db
@@ -43,6 +45,9 @@ export async function getJustEndedTournaments(): Promise<
     })
     .from(tournaments)
     .innerJoin(games, eq(tournaments.gameId, games.id))
+ 
+    // .where(and(lt(tournaments.endDate, fiveMinAgo), isNull(tournaments.rewardLink), isNotNull(tournaments.activityId)));
+ 
     .where(and(isNull(tournaments.rewardLink), isNotNull(tournaments.activityId)));
   //,
   // 2) Convert to SQL
