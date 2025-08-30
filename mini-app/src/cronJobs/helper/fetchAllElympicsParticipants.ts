@@ -19,7 +19,7 @@ export async function fetchAllElympicsParticipants(
     await sleep(100); // sleep  200ms between requests
     const lbData = await getTournamentLeaderboard(hostGameId, hostTournamentId, pageSize, pageNumber);
     if (!lbData.data.length) break;
-    logger.info(`Elympics leaderboard page ${pageNumber} =>`, lbData.data);
+    logger.info(`Elympics leaderboard page ${pageNumber} =>`, lbData.data.length);
 
     // Convert Elympics response to the shape we need
     const mapped = lbData.data.map((entry) => ({
