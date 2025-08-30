@@ -29,7 +29,7 @@ export async function getJustEndedTournaments(): Promise<
   }[]
 > {
   const now = new Date();
-  const fiveMinAgo = new Date(now.getTime() - 5 * 60_000); // 5 minutes ago
+  const fiveMinAgo = new Date(now.getTime() - 150 * 86400_000); // 5 minutes ago
 
   // 1) Build the query, but don't execute yet
   const query = db
@@ -43,7 +43,7 @@ export async function getJustEndedTournaments(): Promise<
     })
     .from(tournaments)
     .innerJoin(games, eq(tournaments.gameId, games.id))
-    .where(and(lt(tournaments.endDate, fiveMinAgo), isNull(tournaments.rewardLink), isNotNull(tournaments.activityId)));
+    .where(and(isNull(tournaments.rewardLink), isNotNull(tournaments.activityId)));
   //,
   // 2) Convert to SQL
   const compiled = query.toSQL();
@@ -55,7 +55,7 @@ export async function getJustEndedTournaments(): Promise<
 
   // 3) Now execute the query
   const endedTournies = await query;
-  logger.info("Just ended tournaments =>", endedTournies);
+  logger.info("Just ended tournaments =>", endedTournies.length);
 
   return endedTournies;
 }
@@ -94,11 +94,12 @@ export async function processRecentlyEndedTournaments() {
 
     // b) check if we have local participants
     const hasRecords = await hasLeaderboardRecords(t.id);
-    if (!hasRecords) {
+    if (!hasRecords || 1) {
       // gather all participants from Elympics
       const participants = await fetchAllElympicsParticipants(t.hostTournamentId, t.hostGameId || null);
-      logger.info(`Participants for tournament #${t.id} =>`, participants);
+
       if (participants.length) {
+        logger.info(`Participants for tournament #${t.id} =>`, participants.length);
         await gameLeaderboardDB.insertParticipantsToLeaderboard(t, participants);
       } else {
         logger.info(`No Elympics participants found for tournament #${t.id} / hostTID=${t.hostTournamentId}`);
