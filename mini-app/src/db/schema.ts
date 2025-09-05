@@ -36,7 +36,7 @@ import { eventPayment, EventTicketType, organizerPaymentStatus, pgTicketTypes, t
 import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults";
 import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
-import { events } from "./schema/events";
+import { events, raffleKindEnum, RaffleKindType } from "./schema/events";
 import { giataCity } from "./schema/giataCity";
 import { moderationLog, ModerationLogActionType } from "./schema/moderation_log";
 import { nftItems } from "./schema/nft_items";
@@ -187,6 +187,43 @@ import {
   TokenCampaignClaimOnionRow,
   TokenCampaignClaimOnionInsert,
 } from "./schema/tokenCampaignClaimOnion";
+
+import { eventWallets, EventWalletRow } from "./schema/eventWallets";
+import { eventRaffles, raffleStatus, EventRaffleInsert, EventRaffleRow, RaffleStatusType } from "./schema/eventRaffles";
+import {
+  eventRaffleResults,
+  EventRaffleResultRow,
+  EventRaffleResultInsert,
+  eventRaffleResultStatus,
+  eventRaffleResultStatusType,
+} from "./schema/eventRaffleResults";
+import { eventMerchRaffles } from "./schema/eventMerchRaffles";
+import {
+  eventMerchRaffleResults,
+  merchResultStatus,
+  MerchResultStatusType,
+  EventMerchRaffleResultRow,
+} from "./schema/eventMerchRaffleResults";
+import {
+  eventMerchPrizes,
+  eventMerchFulfilMethod,
+  eventMerchPrizeStatus,
+  EventMerchFulfilMethodType,
+  EventMerchPrizeRow,
+  EventMerchPrizeInsert,
+  EventMerchPrizeStatusType,
+} from "./schema/eventMerchPrizes";
+
+import {
+  eventMerchPrizeResults,
+  eventMerchPrizeResultStatus,
+  EventMerchPrizeResultStatusType,
+  EventMerchPrizeResultInsert,
+  EventMerchPrizeResultRow,
+  eventMerchNotifStatus,
+  EventMerchNotifStatusType,
+} from "./schema/eventMerchPrizeResults";
+
 import {
   partnershipAffiliatePurchases,
   PartnershipAffiliatePurchasesRow,
@@ -198,6 +235,7 @@ import { usersGithub } from "./schema/usersGithub";
 import { usersLinkedin } from "./schema/usersLinkedin";
 import { usersGoogle } from "./schema/usersGoogle";
 import { usersOutlook } from "./schema/usersOutlook";
+
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -238,6 +276,21 @@ export {
   snapshotCollections,
   claimStatusEnum,
   walletTypeEnum,
+  eventWallets,
+  eventRaffles,
+  raffleStatus,
+  eventRaffleResults,
+  eventRaffleResultStatus,
+  eventMerchRaffles,
+  eventMerchRaffleResults,
+  merchResultStatus,
+  eventMerchFulfilMethod,
+  eventMerchPrizeStatus,
+  eventMerchPrizes,
+  eventMerchPrizeResults,
+  eventMerchPrizeResultStatus,
+  raffleKindEnum,
+  eventMerchNotifStatus,
 };
 
 // export all the tables and relations
@@ -427,6 +480,25 @@ export type {
   TokenCampaignClaimOnionRow,
   TokenCampaignClaimOnionInsert,
   CouponMessageSendStatus,
+  EventWalletRow,
+  EventRaffleRow,
+  EventRaffleInsert,
+  EventRaffleResultRow,
+  EventRaffleResultInsert,
+  eventRaffleResultStatusType,
+  RaffleStatusType,
+  EventMerchRaffleResultRow,
+  MerchResultStatusType,
+  EventMerchPrizeRow,
+  EventMerchPrizeInsert,
+  EventMerchFulfilMethodType,
+  EventMerchPrizeStatusType,
+  EventMerchPrizeResultRow,
+  EventMerchPrizeResultInsert,
+  EventMerchPrizeResultStatusType,
+  RaffleKindType,
+  EventMerchNotifStatusType,
   PartnershipAffiliatePurchasesRow,
   PartnershipAffiliateUserEntryType,
+
 };

@@ -753,6 +753,31 @@ export const WalletNetCHAIN_MAP: Record<number | string, "-239" | "-3"> = {
   "-3": "-3",
 };
 
+/* TON-denominated constants that BOTH front- & back-end import.
+ * Keep them in **TON**, not nano-TON, so the browser can consume them.
+ */
+
+/* 1️⃣  pull‐in BigInt typings without touching tsconfig.json */
+/// <reference lib="esnext.bigint" />
+
+/* 1 TON = 1 000 000 000 nano-TON */
+export const TON_IN_NANO = BigInt("1000000000");
+
+/* paginator */
+export const CHUNK_SIZE_RAFFLE = 254;
+
+/* fee budget (nano-TON, all bigint) */
+export const EXT_FEE_NANO = BigInt("50000000"); // 0.05 TON
+export const INT_FEE_NANO = BigInt("20000000"); // 0.02 TON
+export const SAFETY_FLOOR_NANO = BigInt("10000000"); // 0.01 TON
+export const DEPLOY_FEE_NANO = BigInt("60000000"); // 0.06 TON
+// Extra cushion added to funding check to avoid edge equality issues
+export const STATE_FLIP_BUFFER_NANO = BigInt("10000000"); // 0.01 TON
+
+/* helpers */
+export const nanoToTon = (nano: bigint) => Number(nano) / 1e9; // → float TON
+export const tonToNano = (ton: number) => BigInt(Math.round(ton * 1e9)); // → bigint nano
+
 export const PARTNER_HASH_SEARCH_PARAM_KEY = "affp"; // ?affp=<hash>
 export const PARTNER_HASH_LOCAL_KEY = "fairlaunch_partner_aff"; // localStorage key
 /* fixed cap for the partner launch */
@@ -762,3 +787,4 @@ export const TBOOK_FAIRLAUNCH_MINIAPP_URL = "https://engage.tbook.com/fair-launc
 export const ORGANIZER_PROMOTE_PRICE = 1; // TON
 export const NFT_EVENT_PRICE = 1; // TON
 export const CSBT_EVENT_PRICE = 1; // TON
+

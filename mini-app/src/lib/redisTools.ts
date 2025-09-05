@@ -335,6 +335,7 @@ export const cacheKeys = {
   getTournamentsByIds: "getTournamentsByIds:",
   category_id: "category_id:",
   category_uuid: "category_uuid:",
+  event_wallet_event_id: "event_wallet_event_id:",
   userX: "userX:", // X account for a Telegram user
   userXByXId: "userXByXId:", // X user‑id to Telegram user‑id mapping
   userGithub: "userGithub:", // GitHub account for a Telegram user

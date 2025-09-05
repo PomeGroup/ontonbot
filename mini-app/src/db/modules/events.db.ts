@@ -743,6 +743,17 @@ export const fetchUpcomingEventsWithGroup = async (timeInSeconds: number) =>
     )
     .execute();
 
+const patchEvent = async (idOrUuid: number | string, payload: Partial<typeof events.$inferInsert>) => {
+  // 1️⃣  build a proper WHERE clause
+  const where = typeof idOrUuid === "number" ? eq(events.event_id, idOrUuid) : eq(events.event_uuid, idOrUuid);
+
+  // 2️⃣  execute the update
+  await db.update(events).set(payload).where(where);
+
+  // 3️⃣  wipe both id- & uuid-based caches
+  await deleteEventCache(idOrUuid);
+};
+
 const eventDB = {
   checkIsEventOwner,
   checkIsAdminOrOrganizer,
@@ -768,5 +779,6 @@ const eventDB = {
   shouldEventBeHidden,
   updateActivityId,
   fetchUpcomingEventsWithGroup,
+  patchEvent,
 };
 export default eventDB;
