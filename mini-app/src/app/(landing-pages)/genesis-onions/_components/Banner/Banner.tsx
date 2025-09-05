@@ -1,30 +1,33 @@
-import { Button } from "@/components/ui/button";
 import { useConfig } from "@/context/ConfigContext";
 import { getTimeLeft } from "@/lib/time.utils";
 import { formatPadNumber } from "@/lib/utils";
 import { cn } from "@/utils";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { GENESIS_ONIONS_PAGE_ROUTE } from "../../GenesisOnions.constants";
 import "./Banner.css";
-import SVGCubes from "./SVGCubes";
 
 import Typography from "@/components/Typography";
 import "./../../_assets/genesis-onions.css";
+import { TBOOK_FAIRLAUNCH_MINIAPP_URL } from "@/constants";
+import Cubes from "./Cubes";
 
 interface Props {
   className?: string;
 }
 
 export const Banner = ({ className }: Props) => {
-  return null
-  const router = useRouter();
   const config = useConfig();
-  const configEndDate = config["campeign_merge_date"];
-  const endDate = useMemo(() => new Date(Number(configEndDate)), [configEndDate]);
-
+  const configEndDate = config["FAIR_LAUNCH_ACTIVE_DATE"];
+  if (!configEndDate || configEndDate.length < 2) {
+    console.error("Invalid configEndDate:", configEndDate);
+    return null;
+  }
+  const endDate = useMemo(() => new Date(Number(configEndDate[1])), [configEndDate[1]]);
+  console.log(endDate);
   const handleOnClick = () => {
-    router.push(GENESIS_ONIONS_PAGE_ROUTE);
+    // telegram web app open link
+    if (window.Telegram?.WebApp?.openLink) {
+      window.Telegram.WebApp.openLink(TBOOK_FAIRLAUNCH_MINIAPP_URL);
+    }
   };
 
   const [timeLeft, setTimeLeft] = useState(getTimeLeft(endDate));
@@ -65,12 +68,12 @@ export const Banner = ({ className }: Props) => {
                 {formatPadNumber(timeLeft.days)}:{formatPadNumber(timeLeft.hours)}:{formatPadNumber(timeLeft.minutes)}:
                 {formatPadNumber(timeLeft.seconds)}
               </div>
-              <Typography variant="footnote">Merge to Platinum ONION</Typography>
+              <Typography variant="footnote">⏰ Act fast — Onion FairLaunch closes soon!</Typography>
             </div>
-            <Button variant="outline-onion">Start Now</Button>
+            {/*<Button variant="outline-onion">Join Now</Button>*/}
           </div>
 
-          <SVGCubes />
+          <Cubes />
         </div>
       </div>
     </>

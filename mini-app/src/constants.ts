@@ -1,5 +1,5 @@
 import { Play2WinCampaignType } from "@/db/schema/play2winCampaigns";
-import { is_local_env } from "@/server/utils/evnutils";
+import { is_local_env, is_prod_env } from "@/server/utils/evnutils";
 
 export const gmtTimeZones = [
   "GMT",
@@ -777,3 +777,14 @@ export const STATE_FLIP_BUFFER_NANO = BigInt("10000000"); // 0.01 TON
 /* helpers */
 export const nanoToTon = (nano: bigint) => Number(nano) / 1e9; // → float TON
 export const tonToNano = (ton: number) => BigInt(Math.round(ton * 1e9)); // → bigint nano
+
+export const PARTNER_HASH_SEARCH_PARAM_KEY = "affp"; // ?affp=<hash>
+export const PARTNER_HASH_LOCAL_KEY = "fairlaunch_partner_aff"; // localStorage key
+/* fixed cap for the partner launch */
+export const PARTNER_ONION_CAP = 3000000;
+export const TBOOK_FAIRLAUNCH_MINIAPP_URL = "https://engage.tbook.com/fair-launch/onion";
+
+export const ORGANIZER_PROMOTE_PRICE = 1; // TON
+export const NFT_EVENT_PRICE = 1; // TON
+export const CSBT_EVENT_PRICE = 1; // TON
+

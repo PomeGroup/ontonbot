@@ -142,7 +142,7 @@ export async function fetchPendingBroadcastSends(limit = 100) {
       JOIN broadcast_messages m USING (broadcast_id)
       WHERE u.send_status = 'pending'
         AND u.retry_count < 10
-      ORDER BY u.id
+      ORDER BY u.id DESC 
       LIMIT $1
   `;
     const res = await pool.query(sql, [limit]);

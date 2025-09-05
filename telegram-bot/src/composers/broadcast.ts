@@ -1,4 +1,7 @@
+// broadcastComposer.ts — rewritten end‑to‑end
+
 import { Composer, InlineKeyboard } from "grammy";
+import { MessageEntity } from "grammy/types";
 import { MyContext } from "../types/MyContext";
 import {
   isUserAdmin,
@@ -14,29 +17,92 @@ import { parse } from "csv-parse/sync";
 import axios from "axios";
 import { isNewCommand } from "../helpers/isNewCommand";
 import { logger } from "../utils/logger";
-import {
-  checkBotIsAdmin,
-  extractInviteChatIds,
-} from "../utils/utils";
-import { AFFILIATE_PLACEHOLDERS, INVITE_PLACEHOLDER_REGEX } from "../constants";
+import { checkBotIsAdmin, extractInviteChatIds } from "../utils/utils";
+import { AFFILIATE_PLACEHOLDERS } from "../constants";
 import { getOrCreateSingleAffiliateLink } from "../db/affiliateLinks";
-import {json} from "express";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Utils — entity → HTML conversion (for rich links, bold, etc.)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const htmlEscape = (s: string) =>
+    s.replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+function entityOpen(e: MessageEntity, raw: string): string {
+  switch (e.type) {
+    case "bold": return "<b>";
+    case "italic": return "<i>";
+    case "underline": return "<u>";
+    case "strikethrough": return "<s>";
+    case "code": return "<code>";
+    case "pre": return "<pre>";
+    case "text_link": return `<a href=\"${htmlEscape(e.url!)}\">`;
+    case "url": {
+      const urlText = raw.substr(e.offset, e.length);
+      return `<a href=\"${htmlEscape(urlText)}\">`;
+    }
+    default: return "";
+  }
+}
+function entityClose(e: MessageEntity): string {
+  switch (e.type) {
+    case "bold": return "</b>";
+    case "italic": return "</i>";
+    case "underline": return "</u>";
+    case "strikethrough": return "</s>";
+    case "code": return "</code>";
+    case "pre": return "</pre>";
+    case "text_link":
+    case "url": return "</a>";
+    default: return "";
+  }
+}
+
+function toHtml(text: string, entities?: readonly MessageEntity[]): string {
+  if (!entities?.length) return htmlEscape(text);
+  const segs: string[] = [];
+  let cursor = 0;
+
+  // Telegram ensures entities are non‑overlapping but not strictly ordered
+  for (const e of [...entities].sort((a, b) => a.offset - b.offset)) {
+    if (e.offset > cursor) segs.push(htmlEscape(text.slice(cursor, e.offset)));
+    segs.push(entityOpen(e, text));
+    segs.push(htmlEscape(text.slice(e.offset, e.offset + e.length)));
+    segs.push(entityClose(e));
+    cursor = e.offset + e.length;
+  }
+  segs.push(htmlEscape(text.slice(cursor)));
+  return segs.join("");
+}
+
+function extractHtml(msg: MyContext["message"]): string | null {
+  if (!msg) return null;
+  if ("text" in msg && msg.text !== undefined) return toHtml(msg.text, msg.entities);
+  if ("caption" in msg && msg.caption !== undefined) return toHtml(msg.caption, msg.caption_entities);
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Composer
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const broadcastComposer = new Composer<MyContext>();
 
-/* -------------------------------------------------------------------------- */
-/* /broadcast – entry                                                         */
-/* -------------------------------------------------------------------------- */
+// Entry — /broadcast
 broadcastComposer.command("broadcast", async (ctx) => {
-  const { isAdmin } = await isUserAdmin(ctx.from?.id.toString() || "");
+  const { isAdmin } = await isUserAdmin(String(ctx.from?.id ?? ""));
   if (!isAdmin) return;
 
-  /* reset wizard state */
-  ctx.session.broadcastStep = "chooseTarget";
-  ctx.session.broadcastType = undefined;
-  ctx.session.broadcastEventUuid = undefined;
-  ctx.session.broadcastEventTitle = undefined;
-  ctx.session.broadcastUserIds = [];
+  ctx.session = {
+    broadcastStep: "chooseTarget",
+    broadcastType: undefined,
+    broadcastEventUuid: undefined,
+    broadcastEventTitle: undefined,
+    broadcastUserIds: [],
+  } as any;
 
   const kb = new InlineKeyboard()
       .text("Event Participants", "bc_event")
@@ -45,38 +111,29 @@ broadcastComposer.command("broadcast", async (ctx) => {
   await ctx.reply("Who do you want to broadcast to?", { reply_markup: kb });
 });
 
-/* -------------------------------------------------------------------------- */
-/* Callback‑query router                                                      */
-/* -------------------------------------------------------------------------- */
+// Callback router
 broadcastComposer.on("callback_query:data", async (ctx, next) => {
   if (ctx.session.broadcastStep !== "chooseTarget") return next();
-
   await ctx.answerCallbackQuery();
-  const choice = ctx.callbackQuery.data;
 
-  if (choice === "bc_event") {
-    ctx.session.broadcastType = "event";
-    ctx.session.broadcastStep = "askEventUuid";
-    await ctx.reply("Please send the Event UUID (36 characters).");
-    return;
-  }
-  if (choice === "bc_csv") {
-    ctx.session.broadcastType = "csv";
-    ctx.session.broadcastStep = "askCsv";
-    await ctx.reply("Please upload your CSV file now (one user_id per line).");
-    return;
+  switch (ctx.callbackQuery.data) {
+    case "bc_event":
+      ctx.session.broadcastType = "event";
+      ctx.session.broadcastStep = "askEventUuid";
+      return ctx.reply("Please send the Event UUID (36 characters).");
+    case "bc_csv":
+      ctx.session.broadcastType = "csv";
+      ctx.session.broadcastStep = "askCsv";
+      return ctx.reply("Please upload your CSV file now (one user_id per line).");
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/* Message router                                                             */
-/* -------------------------------------------------------------------------- */
+// Message router
 broadcastComposer.on("message", async (ctx, next) => {
   if (isNewCommand(ctx)) {
     ctx.session = {} as any;
     return next();
   }
-
   switch (ctx.session.broadcastStep) {
     case "askEventUuid":
       if (ctx.message?.text) return handleEventUuid(ctx);
@@ -87,163 +144,102 @@ broadcastComposer.on("message", async (ctx, next) => {
     case "askBroadcast":
       return handleBroadcastMessage(ctx);
   }
-
   return next();
 });
 
-/* -------------------------------------------------------------------------- */
-/* Step: Event UUID                                                            */
-/* -------------------------------------------------------------------------- */
+// ─────────────────────────────────────────────────────────────────────────────
+// Step handlers
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function handleEventUuid(ctx: MyContext) {
-  const uuidCandidate = ctx.message?.text?.trim();
-  if (!uuidCandidate) return;
+  const uuid = ctx.message?.text?.trim();
+  if (!uuid) return;
+  if (uuid.length !== 36) return ctx.reply("Event UUID must be 36 characters. Try again or /cancel.");
 
-  if (uuidCandidate.length !== 36) {
-    await ctx.reply("Event UUID must be 36 characters. Try again or /cancel.");
-    return;
-  }
+  const eventRow = await getEvent(uuid);
+  if (!eventRow) return ctx.reply("Event not found. Check the UUID and try again.");
 
-  const eventRow = await getEvent(uuidCandidate);
-  if (!eventRow) {
-    await ctx.reply("Event not found. Check the UUID and try again.");
-    return;
-  }
-
-  const tickets = await getEventTickets(uuidCandidate);
+  const tickets = await getEventTickets(uuid);
   if (!tickets?.length) {
-    await ctx.reply(
-        `No participants found for event \"${eventRow.title}\". Nothing to broadcast.`,
-    );
     ctx.session.broadcastStep = "done";
-    return;
+    return ctx.reply(`No participants found for \"${eventRow.title}\".`);
   }
 
-  ctx.session.broadcastEventUuid = uuidCandidate;
-  ctx.session.broadcastEventTitle = eventRow.title;
-  ctx.session.broadcastUserIds = tickets.map((t) => String(t.user_id));
-  ctx.session.broadcastStep = "askBroadcast";
+  Object.assign(ctx.session, {
+    broadcastEventUuid: uuid,
+    broadcastEventTitle: eventRow.title,
+    broadcastUserIds: tickets.map((t) => String(t.user_id)),
+    broadcastStep: "askBroadcast",
+  });
 
-  await ctx.reply(
-      `✅ Event \"${eventRow.title}\" found with ${tickets.length} participant(s).\n` +
-      "Now send any message (text, photo, video, etc.) you want to broadcast.",
-  );
+  await ctx.reply(`✅ Event \"${eventRow.title}\" found with ${tickets.length} participant(s).\nNow send any message (text, photo, video, etc.) you want to broadcast.`);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Step: CSV upload                                                            */
-/* -------------------------------------------------------------------------- */
 async function handleCsvUpload(ctx: MyContext) {
   const doc = ctx.message?.document;
-  if (!doc) {
-    await ctx.reply("No file found. Please upload a CSV.");
-    return;
-  }
-  if (!doc.file_name?.endsWith(".csv")) {
-    await ctx.reply("Please upload a file ending with .csv.");
-    return;
-  }
+  if (!doc) return ctx.reply("No file found. Please upload a CSV.");
+  if (!doc.file_name?.endsWith(".csv")) return ctx.reply("File must end with .csv.");
 
-  const fileInfo = await ctx.api.getFile(doc.file_id);
-  if (!fileInfo.file_path) {
-    await ctx.reply("Unable to retrieve file path from Telegram.");
-    return;
-  }
+  const { file_path } = await ctx.api.getFile(doc.file_id);
+  if (!file_path) return ctx.reply("Unable to retrieve file path from Telegram.");
 
-  const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${fileInfo.file_path}`;
   try {
+    const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file_path}`;
     const res = await axios.get<ArrayBuffer>(url, { responseType: "arraybuffer" });
-    const buffer = Buffer.from(res.data);
-    const rows = parse(buffer.toString("utf-8"), { skip_empty_lines: true });
-    const userIds: string[] = rows.map((r: string[]) => r[0]?.trim()).filter(Boolean);
-
+    const rows = parse(Buffer.from(res.data).toString("utf-8"), { skip_empty_lines: true });
+    const userIds = rows.map((r: string[]) => r[0]?.trim()).filter(Boolean);
     if (!userIds.length) {
-      await ctx.reply("No user IDs found in the CSV. Flow canceled.");
       ctx.session.broadcastStep = "done";
-      return;
+      return ctx.reply("No user IDs found in the CSV. Flow canceled.");
     }
-
-    ctx.session.broadcastUserIds = userIds;
-    ctx.session.broadcastStep = "askBroadcast";
-    await ctx.reply(
-        `✅ CSV parsed. Found ${userIds.length} user(s).\n` +
-        "Now send any message (text, photo, video, etc.) you want to broadcast.\n" +
-        "Placeholders {invite:<chatID>} for single-use links; {onion1-campaign} etc. for affiliates.",
-    );
-  } catch (err) {
-    await ctx.reply(`Error parsing CSV: ${String(err)}`);
+    Object.assign(ctx.session, {
+      broadcastUserIds: userIds,
+      broadcastStep: "askBroadcast",
+    });
+    await ctx.reply(`✅ CSV parsed. Found ${userIds.length} user(s).\nNow send any message (text, photo, video, etc.) you want to broadcast.`);
+  } catch (e) {
     ctx.session.broadcastStep = "done";
+    await ctx.reply(`Error parsing CSV: ${String(e)}`);
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Step: receive the actual message to broadcast                               */
-/* -------------------------------------------------------------------------- */
 async function handleBroadcastMessage(ctx: MyContext) {
-  const userIds = ctx.session.broadcastUserIds;
+  const { broadcastUserIds: userIds, broadcastType } = ctx.session;
   if (!userIds?.length) {
-    await ctx.reply("No valid user IDs to broadcast. Flow ended.");
     ctx.session.broadcastStep = "done";
-    return;
+    return ctx.reply("No valid user IDs to broadcast.");
   }
 
-  /* ------------------------------------------------------------- */
-  /* For CSV broadcasts: validate that the bot is admin in all      */
-  /* chats referenced by {invite:<chatId>} placeholders so the cron */
-  /* won't crash later.                                             */
-  /* ------------------------------------------------------------- */
-  if (ctx.session.broadcastType === "csv") {
-    const msg = ctx.message!;
-    const baseText = msg.text ?? msg.caption ?? "";
-
-    // 1) ensure bot admin rights for every chatID used
-    for (const chatId of extractInviteChatIds(baseText)) {
-      const isAdmin = await checkBotIsAdmin(ctx.api, chatId);
-      if (!isAdmin) {
-        await ctx.reply(
-            `❌ The bot is NOT an admin in chatId=${chatId}.\n` +
-            "Please make the bot admin and restart the process.",
-        );
+  // CSV admin‑rights check for every {invite:<chatId>} placeholder
+  if (broadcastType === "csv") {
+    const html = extractHtml(ctx.message!);
+    const placeholderChatIds = extractInviteChatIds(html ?? "");
+    for (const chatId of placeholderChatIds) {
+      if (!(await checkBotIsAdmin(ctx.api, chatId))) {
         ctx.session.broadcastStep = "done";
-        return;
+        return ctx.reply(`❌ Bot is NOT admin in chat ${chatId}.`);
       }
     }
   }
 
-  /* ------------------------------------------------------------- */
-  /*   persist broadcast + recipients, with error handling          */
-  /* ------------------------------------------------------------- */
+  /* persist broadcast */
   try {
-    const rawText =
-        ctx.message?.text ??
-        ctx.message?.caption ??
-        null;                    // media without caption → null
-
+    const messageHtml = extractHtml(ctx.message!);
     const broadcastId = await createBroadcastMessage({
       broadcaster_id: ctx.from!.id,
       source_chat_id: ctx.chat!.id,
       source_message_id: ctx.message!.message_id,
-      broadcast_type: ctx.session.broadcastType as "event" | "csv",
+      broadcast_type: broadcastType as "event" | "csv",
       event_uuid: ctx.session.broadcastEventUuid ?? null,
       title: ctx.session.broadcastEventTitle ?? "(custom list)",
-      message_text: rawText,
+      message_text: messageHtml,
     });
-
     await bulkInsertBroadcastUsers(broadcastId, userIds);
-
-    /* success → inform admin */
-    await ctx.reply(
-        `✅ Broadcast queued! ${userIds.length} user(s) will receive the message shortly.\n` +
-        "You can safely close Telegram – delivery runs in the background.",
-    );
-  } catch (err) {
-    logger.error(`broadcastComposer: DB error while queuing broadcast: ${err}`);
-
-    await ctx.reply(
-        "❌ Failed to queue the broadcast.\n" +
-        JSON.stringify(err, null, 2) + "\n" +
-        "Please try again later or contact support.",
-    );
+    ctx.session.broadcastStep = "done";
+    await ctx.reply(`✅ Broadcast queued! ${userIds.length} user(s) will receive the message shortly.`);
+  } catch (e) {
+    ctx.session.broadcastStep = "done";
+    logger.error(`broadcastComposer: DB error: ${e}`);
+    await ctx.reply(`❌ Failed to queue the broadcast. ${String(e)}`);
   }
-
-  ctx.session.broadcastStep = "done";
 }

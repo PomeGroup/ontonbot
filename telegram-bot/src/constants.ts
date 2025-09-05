@@ -33,4 +33,8 @@ export const INVITE_PLACEHOLDER_REGEX = /\{invite:(-?\d+)\}/g;
 export const AFFILIATE_PLACEHOLDERS = [
   "{onion1-special-affiliations}",
   "{onion1-campaign}",
+    "{fairlaunch-partnership}",
 ];
+
+export const TBOOK_FAIRLAUNCH_MINIAPP_URL =
+    "https://engage.tbook.com/fair-launch/onion";

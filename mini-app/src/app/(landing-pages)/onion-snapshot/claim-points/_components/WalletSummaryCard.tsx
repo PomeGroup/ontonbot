@@ -111,9 +111,41 @@ export default function WalletSummaryCard({ wallet }: { wallet: WalletSummary })
               </Typography>
             </div>
           </div>
-          <AlertGeneric variant="info-light">Your ONTON points will be used in your first wallet only.</AlertGeneric>
         </>
       )}
+      {/* Partnership ONIONs */}
+      {wallet?.partnershipOnions && wallet.partnershipOnions > 0 && (
+        <div className="flex flex-col gap-2 bg-white p-3 rounded-2lg">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <img
+                src="https://storage.onton.live/ontonimage/ticket_onions_icon.svg"
+                alt="Partnership ONIONs icon"
+                className="w-[24px] h-[24px]"
+              />
+              <Typography
+                variant="subheadline1"
+                weight="normal"
+              >
+                Partnership ONIONs
+              </Typography>
+            </div>
+            <Typography
+              variant="body"
+              weight="medium"
+            >
+              {wallet.partnershipOnions} ONIONs
+            </Typography>
+          </div>
+        </div>
+      )}
+      {(wallet.scoreOnions > 0 || (wallet?.partnershipOnions && wallet.partnershipOnions > 0)) && (
+        <AlertGeneric variant="info-light">
+          Your ONTON points {wallet?.partnershipOnions && wallet.partnershipOnions > 0 ? "and partnership ONIONs " : ""}
+          will be used in your first wallet only.
+        </AlertGeneric>
+      )}
+      {/* Total Score */}
       {/* Total ONIONs */}
       {wallet.claimStatus === "not_claimed" && <ClaimPointsModal wallet={wallet} />}
     </div>
