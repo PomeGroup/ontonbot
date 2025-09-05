@@ -25,6 +25,13 @@ import { campaignRouter } from "@/server/routers/campaignRouter";
 import { tasksRouter } from "@/server/routers/tasksRouter";
 import { tonProofRouter } from "@/server/routers/tonProofRouter";
 import { raffleRouter } from "@/server/routers/raffleRouter";
+import { affiliateRouter } from "@/server/routers/affiliateRouter";
+import { usersXRouter } from "@/server/routers/usersXRouter";
+import { usersGithubRouter } from "@/server/routers/usersGithubRouter";
+import { usersLinkedinRouter } from "@/server/routers/usersLinkedinRouter";
+import { questRouter } from "@/server/routers/questRouter";
+import { usersGoogleRouter } from "@/server/routers/usersGoogleRouter";
+import { usersOutlookRouter } from "@/server/routers/usersOutlookRouter";
 
 export const appRouter = router({
   users: usersRouter,
@@ -51,6 +58,13 @@ export const appRouter = router({
   task: tasksRouter,
   tonProof: tonProofRouter,
   raffle: raffleRouter,
+  affiliate: affiliateRouter,
+  usersX: usersXRouter,
+  usersGithub: usersGithubRouter,
+  usersLinkedin: usersLinkedinRouter,
+  quest: questRouter,
+  usersGoogle: usersGoogleRouter,
+  usersOutlook: usersOutlookRouter,
 });
 
 export type AppRouter = typeof appRouter;

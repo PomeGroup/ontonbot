@@ -1,27 +1,25 @@
+// app/my/points/page.tsx  (rename path as needed)
 "use client";
-import { trpc } from "@/app/_trpc/client";
-import { Button } from "@/components/ui/button";
-import { useUserStore } from "@/context/store/user.store";
-import useWebApp from "@/hooks/useWebApp";
-import { telegramShareLink } from "@/utils";
-import { CopyIcon, SendIcon } from "lucide-react";
-import Link from "next/link";
+
 import { useState } from "react";
-import { toast } from "sonner";
-import ChevronDownIconAccord from "./ChevronDownIcon";
-import EventPointsCard from "./EventPointsCard";
-import EventPointsGroup from "./EventPointsGroup";
+import Link from "next/link";
+import { trpc } from "@/app/_trpc/client";
+import { useUserStore } from "@/context/store/user.store";
+
 import TotalPointsBox from "./TotalPointsBox";
+import EventPointsGroup from "./EventPointsGroup";
+import EventPointsCard from "./EventPointsCard";
+import ChevronDownIconAccord from "./ChevronDownIcon";
+
+/* tiny helper */
+const pts = (n: number | null | undefined) => (n ? `${n} Point${n === 1 ? "" : "s"}` : "Points");
 
 export default function MyPointsPage() {
   const { user } = useUserStore();
-  const webapp = useWebApp();
+  const [open, setOpen] = useState(true);
 
-  const [isOpen, setIsOpen] = useState(true);
-
-  /* ---------- data hooks ---------- */
-  const ontonJoinAffiliateDataQuery = trpc.task.getOntonJoinAffiliateData.useQuery();
-
+  /* ── queries that stay on the Points page ────────────────────────── */
+  const totalPoints = trpc.usersScore.getTotalScoreByUserId.useQuery();
   const paidOnline = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
     activityTypes: ["paid_online_event"],
     itemType: "event",
@@ -38,87 +36,48 @@ export default function MyPointsPage() {
     activityTypes: ["free_offline_event"],
     itemType: "event",
   });
-  const joinAffiliate = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
-    activityTypes: ["join_onton_affiliate"],
-    itemType: "task",
-  });
-  const organizeEvents = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
-    activityTypes: ["paid_online_event", "paid_offline_event", "free_online_event", "free_offline_event"],
-    itemType: "organize_event",
-  });
 
-  // NEW: Play‑to‑Win activity types ----------------
-  const freePlay2Win = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
+  const freeP2W = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
     activityTypes: ["free_play2win"],
     itemType: "game",
   });
-  const paidPlay2Win = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
+  const paidP2W = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
     activityTypes: ["paid_play2win"],
     itemType: "game",
   });
 
-  const totalPointsQuery = trpc.usersScore.getTotalScoreByUserId.useQuery();
+  const organise = trpc.usersScore.getTotalScoreByActivityTypesAndUserId.useQuery({
+    activityTypes: ["paid_online_event", "paid_offline_event", "free_online_event", "free_offline_event"],
+    itemType: "organize_event",
+  });
 
-  /* ---------- loading guard ---------- */
-  const anyLoading = [
-    paidOnline,
-    freeOnline,
-    paidOffline,
-    freeOffline,
-    joinAffiliate,
-    organizeEvents,
-    freePlay2Win,
-    paidPlay2Win,
-    totalPointsQuery,
-  ].some((q) => q.isLoading);
+  const loading = [totalPoints, paidOnline, freeOnline, paidOffline, freeOffline, freeP2W, paidP2W, organise].some(
+    (q) => q.isLoading
+  );
 
-  if (!user || anyLoading) return null;
-
-  /* ---------- helpers ---------- */
-  const copyLink = async () => {
-    if (ontonJoinAffiliateDataQuery.data?.linkHash) {
-      await navigator.clipboard.writeText(ontonJoinAffiliateDataQuery.data.linkHash);
-      toast.success("Link copied to clipboard");
-    } else {
-      toast.error("No link hash found");
-    }
-  };
-
-  const shareLink = () => {
-    if (ontonJoinAffiliateDataQuery.data?.linkHash) {
-      webapp?.openTelegramLink(
-        telegramShareLink(
-          ontonJoinAffiliateDataQuery.data.linkHash,
-          `\nJoin ONTON Affiliate\n\nCheck out this exclusive ONTON referral link for special tasks and bonuses:\n\nGood luck and see you in the ONTON world! 🏆`
-        )
-      );
-    } else {
-      toast.error("No link hash found");
-    }
-  };
+  if (!user || loading) return null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <TotalPointsBox totalPoints={totalPointsQuery.data ?? 0} />
+    <div className="flex flex-col gap-4 ">
+      <TotalPointsBox totalPoints={totalPoints.data ?? 0} />
 
-      <div className="bg-white rounded-md p-4">
+      <div className="rounded-md bg-white p-4">
+        {/* header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Event Participation</h1>
+          <h1 className="text-lg font-semibold">Event Participation &amp; Games</h1>
           <button
             className="ml-2 text-gray-700"
-            onClick={() => setIsOpen((p) => !p)}
+            onClick={() => setOpen((p) => !p)}
           >
-            <ChevronDownIconAccord isOpen={isOpen} />
+            <ChevronDownIconAccord isOpen={open} />
           </button>
         </div>
-        <p className="text-xs text-gray-500 mb-2">6 Tasks</p>
+        <p className="mb-2 text-xs text-gray-500">Your point‑earning history</p>
 
         <div
-          className={`overflow-hidden flex flex-col gap-4 transition-all duration-300 ${
-            isOpen ? "max-h-[1000px]" : "max-h-0"
-          }`}
+          className={`flex flex-col gap-4 overflow-hidden transition-all duration-300 ${open ? "max-h-[1200px]" : "max-h-0"}`}
         >
-          {/* Online events */}
+          {/* Online */}
           <EventPointsGroup title="Online Events">
             <Link
               href="/my/points/paid_online_event/details"
@@ -126,8 +85,8 @@ export default function MyPointsPage() {
             >
               <EventPointsCard
                 eventTitle="Attend paid online events"
-                tasksCount={Number(paidOnline.data?.count ?? 0)}
-                description="10 Points"
+                tasksCount={paidOnline.data?.count ?? 0}
+                description={pts(10)}
                 totalPoints={Number(paidOnline.data?.total ?? 0)}
                 type="paid_online_event"
               />
@@ -138,15 +97,15 @@ export default function MyPointsPage() {
             >
               <EventPointsCard
                 eventTitle="Attend free online events"
-                tasksCount={Number(freeOnline.data?.count ?? 0)}
-                description="1 Point"
+                tasksCount={freeOnline.data?.count ?? 0}
+                description={pts(1)}
                 totalPoints={Number(freeOnline.data?.total ?? 0)}
                 type="free_online_event"
               />
             </Link>
           </EventPointsGroup>
 
-          {/* In‑person events */}
+          {/* In‑person */}
           <EventPointsGroup title="In‑Person Events">
             <Link
               href="/my/points/paid_offline_event/details"
@@ -154,8 +113,8 @@ export default function MyPointsPage() {
             >
               <EventPointsCard
                 eventTitle="Attend paid in‑person events"
-                tasksCount={Number(paidOffline.data?.count ?? 0)}
-                description="20 Points"
+                tasksCount={paidOffline.data?.count ?? 0}
+                description={pts(20)}
                 totalPoints={Number(paidOffline.data?.total ?? 0)}
                 type="paid_offline_event"
               />
@@ -166,74 +125,37 @@ export default function MyPointsPage() {
             >
               <EventPointsCard
                 eventTitle="Attend free in‑person events"
-                tasksCount={Number(freeOffline.data?.count ?? 0)}
-                description="10 Points"
+                tasksCount={freeOffline.data?.count ?? 0}
+                description={pts(10)}
                 totalPoints={Number(freeOffline.data?.total ?? 0)}
                 type="free_offline_event"
               />
             </Link>
           </EventPointsGroup>
 
-          {/* Play‑to‑Win games (NEW) */}
-          <EventPointsGroup title="Play‑to‑Win Points">
+          {/* Play‑to‑Win */}
+          <EventPointsGroup title="Play‑to‑Win Games">
             <EventPointsCard
               eventTitle="Paid play‑to‑win games"
-              tasksCount={Number(paidPlay2Win.data?.count ?? 0)}
-              description="10 Points"
-              totalPoints={Number(paidPlay2Win.data?.total ?? 0)}
+              tasksCount={paidP2W.data?.count ?? 0}
+              description={pts(10)}
+              totalPoints={Number(paidP2W.data?.total ?? 0)}
             />
-
             <EventPointsCard
               eventTitle="Free play‑to‑win games"
-              tasksCount={Number(freePlay2Win.data?.count ?? 0)}
-              description="1 Point"
-              totalPoints={Number(freePlay2Win.data?.total ?? 0)}
+              tasksCount={freeP2W.data?.count ?? 0}
+              description={pts(1)}
+              totalPoints={Number(freeP2W.data?.total ?? 0)}
             />
           </EventPointsGroup>
 
-          {/* Referrals */}
-          <EventPointsGroup title="Referrals">
-            <Link
-              href="/my/points/join_onton_affiliate/details"
-              className="w-full"
-            >
-              <EventPointsCard
-                eventTitle="Join ONTON Affiliate"
-                tasksCount={Number(joinAffiliate.data?.count ?? 0)}
-                description="0.2 Points"
-                totalPoints={Number(joinAffiliate.data?.total ?? 0)}
-                type="join_onton_affiliate"
-              />
-            </Link>
-            <div className="flex w-full gap-2 flex-wrap">
-              <Button
-                className="flex-1 rounded-md border-2 flex items-center justify-center gap-2"
-                variant="outline"
-                disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
-                onClick={copyLink}
-              >
-                <CopyIcon className="w-4 h-4" />
-                <span>Copy Link</span>
-              </Button>
-              <Button
-                className="flex-1 rounded-md border-2 flex items-center justify-center gap-2"
-                variant="outline"
-                disabled={!ontonJoinAffiliateDataQuery.data?.linkHash}
-                onClick={shareLink}
-              >
-                <SendIcon className="w-4 h-4" />
-                <span>Share link</span>
-              </Button>
-            </div>
-          </EventPointsGroup>
-
-          {/* Organize events */}
-          <EventPointsGroup title="Organize Events">
+          {/* Organise */}
+          <EventPointsGroup title="Organise Events">
             <EventPointsCard
-              eventTitle="Organize events"
-              tasksCount={Number(organizeEvents.data?.count ?? 0)}
+              eventTitle="Organise events"
+              tasksCount={organise.data?.count ?? 0}
               description="0.2 × participation points × participant count"
-              totalPoints={Number(organizeEvents.data?.total ?? 0)}
+              totalPoints={Number(organise.data?.total ?? 0)}
             />
           </EventPointsGroup>
         </div>

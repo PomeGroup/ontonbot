@@ -187,6 +187,7 @@ import {
   TokenCampaignClaimOnionRow,
   TokenCampaignClaimOnionInsert,
 } from "./schema/tokenCampaignClaimOnion";
+
 import { eventWallets, EventWalletRow } from "./schema/eventWallets";
 import { eventRaffles, raffleStatus, EventRaffleInsert, EventRaffleRow, RaffleStatusType } from "./schema/eventRaffles";
 import {
@@ -222,6 +223,19 @@ import {
   eventMerchNotifStatus,
   EventMerchNotifStatusType,
 } from "./schema/eventMerchPrizeResults";
+
+import {
+  partnershipAffiliatePurchases,
+  PartnershipAffiliatePurchasesRow,
+  PartnershipAffiliateUserEntryEnum,
+  PartnershipAffiliateUserEntryType,
+} from "./schema/partnershipAffiliatePurchases";
+import { usersX } from "./schema/usersX";
+import { usersGithub } from "./schema/usersGithub";
+import { usersLinkedin } from "./schema/usersLinkedin";
+import { usersGoogle } from "./schema/usersGoogle";
+import { usersOutlook } from "./schema/usersOutlook";
+
 export {
   accessRoleEnum,
   accessRoleItemTypeEnum,
@@ -352,6 +366,13 @@ export {
   userScoreSnapshots,
   tokenCampaignClaimOnion,
   couponMessageSendStatus,
+  partnershipAffiliatePurchases,
+  PartnershipAffiliateUserEntryEnum,
+  usersX,
+  usersGithub,
+  usersLinkedin,
+  usersGoogle,
+  usersOutlook,
 };
 
 // Type Exports
@@ -477,4 +498,7 @@ export type {
   EventMerchPrizeResultStatusType,
   RaffleKindType,
   EventMerchNotifStatusType,
+  PartnershipAffiliatePurchasesRow,
+  PartnershipAffiliateUserEntryType,
+
 };

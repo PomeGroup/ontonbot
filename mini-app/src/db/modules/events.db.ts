@@ -17,6 +17,7 @@ import { and, asc, count, desc, eq, gt, inArray, isNotNull, lt, or, sql } from "
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { logger } from "../../server/utils/logger";
+import { CSBT_EVENT_PRICE, NFT_EVENT_PRICE } from "@/constants";
 
 export const getEventIDCacheKey = (eventID: number) => redisTools.cacheKeys.event_id + eventID;
 export const getEventUUIDCacheKey = (eventUUID: string) => redisTools.cacheKeys.event_uuid + eventUUID;
@@ -697,9 +698,9 @@ export const getPaidEventPrice = (capacity: number, ticketType: EventTicketType)
   // test environments for all ticket types:
   const notProductionPrice = 0.001 + 0.00055 * capacity;
   // NFT Event Creation Price
-  const nftEventCreationPrice = 10 + 0.06 * capacity;
+  const nftEventCreationPrice = NFT_EVENT_PRICE + 0.06 * capacity;
   // TSCSBT Event Creation Price
-  const tscsbtEventCreationPrice = 10; // we didnt get money for tscsbt event creation capacity
+  const tscsbtEventCreationPrice = CSBT_EVENT_PRICE; // we didnt get money for tscsbt event creation capacity
 
   // local/dev/stage environments for all ticket types:
   if (!is_prod_env()) {

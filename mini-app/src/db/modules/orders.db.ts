@@ -3,6 +3,7 @@ import { orders } from "@/db/schema";
 import { and, count, eq, isNull, not, or } from "drizzle-orm";
 import { is_dev_env, is_stage_env } from "../../server/utils/evnutils";
 import { OrderTypeValues } from "@/db/schema/orders";
+import { ORGANIZER_PROMOTE_PRICE } from "@/constants";
 
 const getEventOrders = async (event_uuid: string) => {
   return db
@@ -53,15 +54,13 @@ const findPromoteToOrganizerOrder = async (userId: number) => {
  * and return the newly inserted row(s).
  */
 const createPromoteToOrganizerOrder = async (userId: number, eventUuid: string) => {
-  const price = is_dev_env() || is_stage_env() ? 0.0154 : 10;
-
   return db
     .insert(orders)
     .values({
       order_type: "promote_to_organizer",
       user_id: userId,
       payment_type: "TON",
-      total_price: price,
+      total_price: ORGANIZER_PROMOTE_PRICE,
       state: "new",
       event_uuid: eventUuid,
     })

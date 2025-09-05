@@ -302,7 +302,8 @@ export const getOngoingTournaments = async (): Promise<
     })
     .from(tournaments)
     .innerJoin(games, eq(tournaments.gameId, games.id))
-    .where(and(lt(tournaments.startDate, now), gt(tournaments.endDate, now), isNotNull(tournaments.activityId)));
+    // .where(and(lt(tournaments.startDate, now), gt(tournaments.endDate, now), isNotNull(tournaments.activityId)));
+    .where(and(lt(tournaments.startDate, now), isNotNull(tournaments.activityId)));
 
   // 2) Convert to SQL (for debugging/logging)
   const compiled = query.toSQL();

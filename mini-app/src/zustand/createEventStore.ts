@@ -5,6 +5,7 @@ import type {} from "@redux-devtools/extension";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { NFT_EVENT_PRICE } from "@/constants";
 // required for devtools typing
 
 export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
@@ -235,7 +236,9 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           if (!state.eventData.paid_event.has_payment) {
             try {
               window.Telegram.WebApp.showConfirm(
-                "You will need to pay 10 TON to create a paid event if the ticket type is NFT it will include 0.06 TON for each person buying the ticket (minting fees) this does not include cSBT ticket type",
+                "You will need to pay " +
+                  NFT_EVENT_PRICE +
+                  " TON to create a paid event if the ticket type is NFT it will include 0.06 TON for each person buying the ticket (minting fees) this does not include cSBT ticket type",
                 (confirmed) => {
                   if (confirmed) {
                     set((state) => {
