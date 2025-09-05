@@ -189,6 +189,23 @@ export const raffleRouter = router({
     return summary;
   }),
 
+  /* Lightweight wallet balance probe (v2-backed) */
+  getWalletBalance: eventManagementProtectedProcedure
+    .input(
+      z.object({
+        address: z.string().min(36).max(66), // user-friendly or raw
+      })
+    )
+    .query(async ({ input }) => {
+      // Reuse the shared helper with caching and v2 fallback
+      const balanceNano = await fetchTonBalance(input.address);
+      return {
+        address: input.address,
+        balanceNano: balanceNano.toString(),
+        balanceTon: Number(balanceNano) / 1e9,
+      };
+    }),
+
   /* ───────────────────────── organiser – merch raffle ───────────────────────── */
   infoForOrganizerMerch: eventManagementProtectedProcedure.query(async ({ ctx }) => {
     /* endpoint only valid for merch raffles */

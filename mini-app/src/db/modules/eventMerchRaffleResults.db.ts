@@ -34,7 +34,7 @@ export const computeTopN = async (
         need_shipping: eventMerchRaffles.need_shipping,
       })
       .from(eventMerchRaffles)
-      .where(eq(eventMerchRaffles.merch_raffle_id, merchRaffleId))
+      .where(eq(eventMerchRaffles.merchRaffleId, merchRaffleId))
       .limit(1)
   ).pop();
 
@@ -123,7 +123,7 @@ export const fetchUserResult = async (merch_raffle_uuid: string, user_id: number
       .select()
       .from(eventMerchRaffleResults)
       .where(
-        and(eq(eventMerchRaffleResults.merch_raffle_id, merch.merch_raffle_id), eq(eventMerchRaffleResults.user_id, user_id))
+        and(eq(eventMerchRaffleResults.merch_raffle_id, merch.merchRaffleId), eq(eventMerchRaffleResults.user_id, user_id))
       )
   ).pop();
 };
