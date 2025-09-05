@@ -14,9 +14,9 @@
  *   until it becomes 1.
  */
 
-import { WalletContractV5R1, SendMode } from "@ton/ton";
+import { WalletContractV5R1, SendMode, internal } from "@ton/ton";
 import { mnemonicToWalletKey } from "@ton/crypto";
-import { Address, beginCell } from "@ton/core";
+import { Address } from "@ton/core";
 import { v2_client } from "@/services/tonCenter";
 import { logger } from "@/server/utils/logger";
 import { DEPLOY_FEE_NANO } from "@/constants"; // ≈ 0.06 TON
@@ -25,6 +25,11 @@ const toWords = (src: string | string[]) => (Array.isArray(src) ? src : src.trim
 
 export async function deployWallet(mnemonic: string | string[], storedAddress: string): Promise<boolean> {
   /* 1️⃣  derive & sanity-check address */
+  logger.log(
+    "deployWallet: deriving address from mnemonic and checking against stored menmonic is :",
+    toWords(mnemonic).join(" "),
+    storedAddress
+  );
   const keyPair = await mnemonicToWalletKey(toWords(mnemonic));
   const wallet = WalletContractV5R1.create({ workchain: 0, publicKey: keyPair.publicKey });
 
@@ -35,61 +40,56 @@ export async function deployWallet(mnemonic: string | string[], storedAddress: s
     return false;
   }
 
-  const provider = v2_client().provider(derived);
+  const client = v2_client();
+  const provider = client.provider(derived);
+  const opened = client.open(wallet);
 
   /* 2️⃣  active already? */
-  const seqno = await wallet.getSeqno(provider);
+  const seqno = await opened.getSeqno();
   if (seqno !== 0) {
     logger.log(`wallet ${derived} active (seqno ${seqno})`);
     return true;
   }
-
+  logger.log(`wallet ${derived} not yet deployed (seqno 0) – deploying...`);
   /* 3️⃣  funded enough? (needs ≥ deploy gas) */
   const { balance } = await provider.getState();
   if (balance < DEPLOY_FEE_NANO) {
     logger.warn(`wallet balance ${Number(balance) / 1e9} TON < deploy gas (~0.06 TON)`);
     return false;
   }
+  logger.log(`wallet balance ${Number(balance) / 1e9} TON – proceeding with deploy`);
+  /* 4️⃣  let the SDK assemble and broadcast the initial external message */
+  // Using wallet.sendTransfer with seqno=0 ensures the correct StateInit
+  // and message layout for V5R1. Include a small self-transfer to cover gas.
 
-  /* 4️⃣  let the SDK build the **signed** body for seqno 0 */
-  const validUntil = Math.floor(Date.now() / 1e3) + 60; // 60-s TTL
-  const body = await wallet.createTransfer({
-    authType: "external", // required for seqno 0
-    secretKey: keyPair.secretKey as Buffer, // SDK signs internally
+  await opened.sendTransfer({
     seqno: 0,
-    timeout: validUntil,
-    sendMode: SendMode.PAY_GAS_SEPARATELY, // mode 3
-    messages: [], // no internal msgs
-  }); // <- returns Cell
+    secretKey: keyPair.secretKey as Buffer,
+    sendMode: SendMode.PAY_GAS_SEPARATELY | SendMode.IGNORE_ERRORS,
+    messages: [
+      internal({
+        to: derived,
+        value: DEPLOY_FEE_NANO, // covers initial gas
+        bounce: false,
+      }),
+    ],
+  });
 
-  /* 5️⃣  build StateInit (code + data refs) */
-  const stateInit = beginCell()
-    .storeBit(0)
-    .storeBit(0) // no split_depth, no special
-    .storeBit(1)
-    .storeRef(wallet.init.code) // code
-    .storeBit(1)
-    .storeRef(wallet.init.data) // data
-    .storeBit(0) // no library
-    .endCell();
+  // Wait for seqno to increment (3 retries)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await new Promise((r) => setTimeout(r, 2000));
+      const s = await opened.getSeqno();
+      if (s > 0) {
+        logger.log(`deploy complete; seqno=${s} (attempt ${attempt})`);
+        return true;
+      }
+      logger.log(`deploy pending; seqno still 0 (attempt ${attempt})`);
+    } catch (e) {
+      logger.warn(`deploy seqno poll error (attempt ${attempt})`, e);
+    }
+  }
 
-  /* 6️⃣  assemble raw external message */
-  const external = beginCell()
-    .storeUint(0b10, 2) // incoming external
-    .storeUint(0, 2) // src = addr_none
-    .storeAddress(derived) // destination
-    .storeCoins(0) // import fee
-    .storeBit(1)
-    .storeBit(1)
-    .storeRef(stateInit) // attach StateInit
-    .storeBit(1)
-    .storeRef(body) // attach signed body
-    .endCell();
-
-  /* 7️⃣  broadcast */
-  logger.log(`deploying wallet ${derived} via raw external BOC`);
-  await provider.external(external); // throws on RPC error
-
-  logger.log("deploy tx broadcast – poll getSeqno() until it becomes 1");
+  logger.log("deploy tx submitted – seqno still 0 after retries (cron will retry later)");
   return false;
 }
