@@ -8,6 +8,8 @@ import { redisTools } from "@/lib/redisTools";
 import { is_prod_env, is_stage_env } from "@/server/utils/evnutils";
 import { checkMinterTransactions } from "@/cronJobs/tasks/checkNFTTransactions";
 import { mintPlatinumNftForMergedNFTS } from "@/cronJobs/tasks/mintPlatinumNftForMergedNFTS";
+import { distributeRafflesTon } from "@/cronJobs/tasks/distributeRaffleTon";
+import { sendAllPendingPrizeNotifications } from "@/cronJobs/tasks/sendAllPendingPrizeNotifications";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -62,6 +64,44 @@ async function MainCronJob() {
     false, // unrefTimeout
     true // waitForCompletion
   );
+  new CronJob(
+    "*/7 * * * * *", // second 0, minute 0, hour 0 → every midnight UTC
+    cronJobs.createWalletsForUpcomingEvents,
+    null, // onComplete
+    true, // start immediately
+    "Europe/Helsinki", // <<— run in   Helsinki time
+    null, // context
+    false, // runOnInit
+    null, // utcOffset (deprecated; keep null)
+    false, // unrefTimeout
+    true // waitForCompletion
+  );
+  new CronJob(
+    "*/50 * * * * *", // second 0, minute 0, hour 0 → every midnight UTC
+    cronJobs.distributeRafflesTon,
+    null, // onComplete
+    true, // start immediately
+    "Europe/Helsinki", // <<— run in   Helsinki time
+    null, // context
+    false, // runOnInit
+    null, // utcOffset (deprecated; keep null)
+    false, // unrefTimeout
+    true // waitForCompletion
+  );
+
+  new CronJob(
+    "*/50 * * * * *", // second 0, minute 0, hour 0 → every midnight UTC
+    cronJobs.sendAllPendingPrizeNotifications,
+    null, // onComplete
+    true, // start immediately
+    "Europe/Helsinki", // <<— run in   Helsinki time
+    null, // context
+    false, // runOnInit
+    null, // utcOffset (deprecated; keep null)
+    false, // unrefTimeout
+    true // waitForCompletion
+  );
+
   // new CronJob(
   //   "*/2 * * * * *",
   //   cronJobs.processCampaignOrders, // The function to run

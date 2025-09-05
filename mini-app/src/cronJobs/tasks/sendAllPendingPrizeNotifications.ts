@@ -82,7 +82,7 @@ export async function sendAllPendingPrizeNotifications() {
 
   if (winners.length === 0) {
     logger.info("[notif] nothing to send – queue empty");
-    return { sent: 0, failed: 0 };
+    // return { sent: 0, failed: 0 };
   }
 
   /* 2 . iterate & DM ----------------------------------------------- */
@@ -122,5 +122,6 @@ export async function sendAllPendingPrizeNotifications() {
   }
 
   logger.info(`[notif] complete – sent ${sent}, failed ${failed}`);
-  return { sent, failed };
+  // return { sent, failed };
+  return;
 }
