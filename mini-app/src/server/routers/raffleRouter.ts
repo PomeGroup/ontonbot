@@ -12,13 +12,21 @@ import eventRaffleResultsDB from "@/db/modules/eventRaffleResults.db";
 import eventMerchRafflesDB from "@/db/modules/eventMerchRaffles.db";
 import eventMerchPrizesDB from "@/db/modules/eventMerchPrizes.db";
 import eventMerchPrizeResultsDB from "@/db/modules/eventMerchPrizeResults.db";
-import { eventRaffles } from "@/db/schema/eventRaffles";
+import { eventRaffles, RaffleStatusType } from "@/db/schema/eventRaffles";
 
 import { db } from "@/db/db";
 
 import { fetchTonBalance } from "@/lib/tonBalance";
-import { CHUNK_SIZE_RAFFLE, DEPLOY_FEE_NANO, EXT_FEE_NANO, INT_FEE_NANO, SAFETY_FLOOR_NANO } from "@/constants";
+import {
+  CHUNK_SIZE_RAFFLE,
+  DEPLOY_FEE_NANO,
+  EXT_FEE_NANO,
+  INT_FEE_NANO,
+  SAFETY_FLOOR_NANO,
+  STATE_FLIP_BUFFER_NANO,
+} from "@/constants";
 import eventDB from "@/db/modules/events.db";
+import { v2_client } from "@/services/tonCenter";
 
 export const ensureDateWindowOK = async (eventId: number): Promise<void> => {
   const event = await eventDB.getEventById(eventId);
@@ -151,38 +159,43 @@ export const raffleRouter = router({
 
     /* 3️⃣ live wallet probe */
     let balanceNano = BigInt(0);
-    let deployed = true;
+    let deployed = false;
     try {
       balanceNano = await fetchTonBalance(summary.wallet.address!);
     } catch {
-      deployed = false; // wallet not deployed
+      // balance probe failed; keep as 0 and deployed=false
+    }
+    try {
+      const provider = v2_client().provider(Address.parse(summary.wallet.address!));
+      const st: any = await provider.getState();
+      deployed = st?.state === "active"; // explicit deployment flag for UI
+    } catch {
+      deployed = false;
     }
     Object.assign(summary.wallet as any, {
       balanceNano: balanceNano.toString(),
       deployed,
     });
 
-    /* 4️⃣ auto-flip status (same logic as before) */
+    /* 4️⃣ auto-flip status based on balance ONLY (deployment independent) */
     if (raffle.status !== "distributing" && raffle.status !== "completed") {
-      if (deployed) {
-        const batches = BigInt(Math.ceil(raffle.top_n / CHUNK_SIZE_RAFFLE));
-        const poolNano = BigInt(raffle.prize_pool_nanoton ?? 0);
-        const needNano =
-          poolNano + EXT_FEE_NANO * batches + INT_FEE_NANO * BigInt(raffle.top_n) + DEPLOY_FEE_NANO + SAFETY_FLOOR_NANO;
+      const batches = BigInt(Math.ceil(raffle.top_n / CHUNK_SIZE_RAFFLE));
+      const poolNano = BigInt(raffle.prize_pool_nanoton ?? 0);
+      const needNano =
+        poolNano + EXT_FEE_NANO * batches + INT_FEE_NANO * BigInt(raffle.top_n) + DEPLOY_FEE_NANO + SAFETY_FLOOR_NANO;
 
-        const funded = balanceNano >= needNano;
+      const funded = balanceNano >= needNano;
 
-        if (funded && raffle.status === "waiting_funding") {
-          await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: "funded" });
-          (summary.raffle as any).status = "funded";
-        }
-        if (!funded && raffle.status === "funded") {
-          await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: "waiting_funding" });
-          (summary.raffle as any).status = "waiting_funding";
-        }
-      } else if (raffle.status === "funded") {
-        await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: "waiting_funding" });
-        (summary.raffle as any).status = "waiting_funding";
+      const FUNDED: RaffleStatusType = "funded";
+      const WAITING_FUNDING: RaffleStatusType = "waiting_funding";
+
+      if (funded && raffle.status === WAITING_FUNDING) {
+        await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: FUNDED });
+        summary.raffle = { ...summary.raffle, status: FUNDED };
+      }
+      if (!funded && raffle.status === FUNDED) {
+        await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: WAITING_FUNDING });
+        summary.raffle = { ...summary.raffle, status: WAITING_FUNDING };
       }
     }
 

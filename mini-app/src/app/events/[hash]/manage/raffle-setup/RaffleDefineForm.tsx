@@ -15,7 +15,14 @@ import { FiUser } from "react-icons/fi";
 
 import { trpc } from "@/app/_trpc/client";
 import CustomButton from "@/app/_components/Button/CustomButton";
-import { CHUNK_SIZE_RAFFLE, DEPLOY_FEE_NANO, EXT_FEE_NANO, INT_FEE_NANO, SAFETY_FLOOR_NANO } from "@/constants";
+import {
+  CHUNK_SIZE_RAFFLE,
+  DEPLOY_FEE_NANO,
+  EXT_FEE_NANO,
+  INT_FEE_NANO,
+  SAFETY_FLOOR_NANO,
+  STATE_FLIP_BUFFER_NANO,
+} from "@/constants";
 
 /* ------------------------------------------------------------------ *
  * helpers                                                            *
@@ -138,8 +145,11 @@ function SummaryTon({ info }: { info: any }) {
 
   const batches = Math.ceil(r.top_n / CHUNK_SIZE_RAFFLE);
   const pool = BigInt(r.prize_pool_nanoton ?? 0);
-  const need = pool + DEPLOY_FEE_NANO + EXT_FEE_NANO * BigInt(batches) + INT_FEE_NANO * BigInt(r.top_n) + SAFETY_FLOOR_NANO;
+  const bufferFloor = SAFETY_FLOOR_NANO + STATE_FLIP_BUFFER_NANO;
+  const need = pool + DEPLOY_FEE_NANO + EXT_FEE_NANO * BigInt(batches) + INT_FEE_NANO * BigInt(r.top_n) + bufferFloor;
   const bal = BigInt(w.balanceNano ?? 0);
+  const extFees = EXT_FEE_NANO * BigInt(batches);
+  const intFees = INT_FEE_NANO * BigInt(r.top_n);
 
   return (
     <>
@@ -158,6 +168,18 @@ function SummaryTon({ info }: { info: any }) {
         )}
         <p>
           <b>Prize pool:</b> {fmtNano(pool)} TON
+        </p>
+        <p>
+          <b>Deployment fee:</b> {fmtNano(DEPLOY_FEE_NANO)} TON
+        </p>
+        <p>
+          <b>External fees:</b> {fmtNano(extFees)} TON ({batches} batch{batches !== 1 ? "es" : ""})
+        </p>
+        <p>
+          <b>Internal fees:</b> {fmtNano(intFees)} TON ({r.top_n} winners)
+        </p>
+        <p>
+          <b>Safety floor:</b> {fmtNano(bufferFloor)} TON
         </p>
         <p>
           <b>Total needed:</b> {fmtNano(need)} TON

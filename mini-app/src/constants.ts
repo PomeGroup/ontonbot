@@ -771,6 +771,8 @@ export const EXT_FEE_NANO = BigInt("50000000"); // 0.05 TON
 export const INT_FEE_NANO = BigInt("20000000"); // 0.02 TON
 export const SAFETY_FLOOR_NANO = BigInt("10000000"); // 0.01 TON
 export const DEPLOY_FEE_NANO = BigInt("60000000"); // 0.06 TON
+// Extra cushion added to funding check to avoid edge equality issues
+export const STATE_FLIP_BUFFER_NANO = BigInt("10000000"); // 0.01 TON
 
 /* helpers */
 export const nanoToTon = (nano: bigint) => Number(nano) / 1e9; // → float TON
