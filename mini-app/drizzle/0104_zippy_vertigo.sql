@@ -1,1 +1,0 @@
-ALTER TYPE "raffle_result_status" ADD VALUE 'not_eligible';
