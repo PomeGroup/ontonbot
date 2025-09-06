@@ -1,7 +1,7 @@
 "use client";
 
 import useWebApp from "@/hooks/useWebApp";
-import * as Sentry from "@sentry/nextjs";
+// import * as Sentry from "@sentry/nextjs";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef } from "react";
 import EventsSkeleton from "./molecules/skeletons/EventsSkeleton";
@@ -21,15 +21,15 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
   // Access multi-level stack from the store
   const { goBack } = useSectionStore();
 
-  // 1) Sentry + initialization
+  // 1) Sentry + initialization (disabled)
   useEffect(() => {
     if (webApp?.initDataUnsafe.user?.id) {
       setInitData(webApp.initData);
-      Sentry.init({ environment: process.env.NEXT_PUBLIC_ENV });
-      Sentry.setUser({
-        id: webApp.initDataUnsafe.user?.id,
-        username: webApp.initDataUnsafe.user?.username,
-      });
+      // Sentry.init({ environment: process.env.NEXT_PUBLIC_ENV });
+      // Sentry.setUser({
+      //   id: webApp.initDataUnsafe.user?.id,
+      //   username: webApp.initDataUnsafe.user?.username,
+      // });
     }
   }, [setInitData, webApp?.initData, webApp?.initDataUnsafe.user?.id, webApp?.initDataUnsafe.user?.username]);
 
