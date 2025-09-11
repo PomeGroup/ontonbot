@@ -159,26 +159,25 @@ function SummaryTon({ info }: { info: any }) {
       {/* Wallet */}
       <div className="mt-3">
       <ListLayout title="Funding Wallet">
-        {!w.address && <ListItem title="Wallet address will created soon" />}
+        {!w.address && <ListItem title="Wallet address will be created soon" />}
         {w.address && (
-          <div className="relative">
-            <ListInput
-              outline
-              readOnly
-              label="Wallet Address"
-              value={w.address}
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-600"
-              onClick={() =>
-                navigator.clipboard
-                  .writeText(w.address)
-                  .then(() => toast.success("Wallet address copied"))
-              }
-            >
-              <FiCopy size={18} />
-            </button>
+          <div>
+            <div className="text-sm text-gray-700 mb-1">Wallet Address</div>
+            <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+              <ListInput outline readOnly value={w.address} />
+              <Button
+                variant="secondary"
+                className="h-10 px-3 mr-2"
+                onClick={() =>
+                  navigator.clipboard
+                    .writeText(w.address)
+                    .then(() => toast.success("Wallet address copied"))
+                }
+                title="Copy address"
+              >
+                <FiCopy size={18} />
+              </Button>
+            </div>
           </div>
         )}
       </ListLayout>
@@ -629,7 +628,8 @@ export default function RaffleDefineForm() {
 
               {tonData.raffle.status === "funded" && (
                 <CustomButton
-                  className="mx-4 w-[calc(100%-2rem)] justify-center"
+                  buttonClassName="mx-4 w-[calc(100%-2rem)]"
+                  className="justify-center"
                   onClick={() =>
                     toast.promise(
                       trigTon
