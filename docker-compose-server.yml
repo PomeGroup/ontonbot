@@ -88,7 +88,7 @@ x-common-env: &common-env
   ONTON_API_SECRET: ${ONTON_API_SECRET}
   SWAGGER_UI_DOMAIN: ${SWAGGER_UI_DOMAIN}
   SWAGGER_UI_PORT: ${SWAGGER_UI_PORT}
-
+  EVENT_WALLET_ENC_KEY: ${EVENT_WALLET_ENC_KEY}
 services:
   minio:
     hostname: minio

@@ -5,9 +5,8 @@ import { is_local_env, is_prod_env, is_stage_env } from "@/server/utils/evnutils
 import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 
+// Network selection follows ENV: production => mainnet, otherwise testnet
 export const is_mainnet = is_prod_env();
-//export const is_mainnet = true;
-// export const is_mainnet = false;
 /* -------------------------------------------------------------------------- */
 /*                                   API KEY                                  */
 /* -------------------------------------------------------------------------- */
@@ -53,6 +52,10 @@ export function v2_client() {
   });
 
   return client;
+}
+
+function v2_base_url() {
+  return !is_mainnet ? "https://testnet.toncenter.com" : "https://toncenter.com";
 }
 
 /* -------------------------------------------------------------------------- */
@@ -453,7 +456,9 @@ export async function getAccountBalance(address: string, retries = 3): Promise<n
     try {
       await sleep(30);
       const apiKey = getApiKey();
-
+      logger.log(
+        `getAccountBalance: Attempt ${attempt} for address ${address} using apiKey ${apiKey} , params: ${JSON.stringify(params)} , endpoint: ${endpoint}`
+      );
       // Make the request with axios
       const response = await axios.get<TonCenterAccountStatesResponse>(endpoint, {
         params,
@@ -495,6 +500,50 @@ export async function getAccountBalance(address: string, retries = 3): Promise<n
 }
 
 /* -------------------------------------------------------------------------- */
+/*                      Wallet info via v2 (robust for init)                  */
+/* -------------------------------------------------------------------------- */
+export async function getWalletInformationBalance(address: string, retries = 3): Promise<number> {
+  const endpoint = `${v2_base_url()}/api/v2/getWalletInformation`;
+  const params = { address };
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const apiKey = getApiKey();
+      logger.log(
+        `getWalletInformationBalance: Attempt ${attempt} for address ${address} , endpoint: ${endpoint}`
+      );
+      const response = await axios.get(endpoint, {
+        params,
+        headers: { accept: "application/json", "X-Api-Key": apiKey },
+      });
+
+      const data: any = response.data;
+      // TonCenter v2 typically returns { ok, result: { balance: <nanoton>|"<nanoton>" , ... } }
+      const raw = data?.result?.balance ?? data?.balance;
+      if (raw === undefined || raw === null) {
+        throw new Error(`No balance in v2 payload: ${JSON.stringify(data)?.slice(0, 256)}`);
+      }
+      const nano = typeof raw === "string" ? parseInt(raw, 10) : Number(raw);
+      if (!Number.isFinite(nano)) {
+        throw new Error(`Invalid numeric balance in v2 payload: ${raw}`);
+      }
+      const ton = nano / 1e9;
+      return ton;
+    } catch (error) {
+      if (attempt === retries) {
+        throw new Error(
+          `getWalletInformationBalance failed after ${retries} retries for ${address}. Last error: ${error}`
+        );
+      }
+      logger.error(`Attempt #${attempt} to fetch v2 wallet information failed. Error: ${error}`);
+      await delay(100);
+    }
+  }
+
+  throw new Error("Failed to fetch wallet information after multiple retries.");
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                     END                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -505,6 +554,7 @@ const tonCenter = {
   parseTransactions,
   fetchCollection,
   getAccountBalance,
+  getWalletInformationBalance,
 };
 
 export default tonCenter;

@@ -24,6 +24,7 @@ import { router } from "./trpc";
 import { campaignRouter } from "@/server/routers/campaignRouter";
 import { tasksRouter } from "@/server/routers/tasksRouter";
 import { tonProofRouter } from "@/server/routers/tonProofRouter";
+import { raffleRouter } from "@/server/routers/raffleRouter";
 import { affiliateRouter } from "@/server/routers/affiliateRouter";
 import { usersXRouter } from "@/server/routers/usersXRouter";
 import { usersGithubRouter } from "@/server/routers/usersGithubRouter";
@@ -56,6 +57,7 @@ export const appRouter = router({
   campaign: campaignRouter,
   task: tasksRouter,
   tonProof: tonProofRouter,
+  raffle: raffleRouter,
   affiliate: affiliateRouter,
   usersX: usersXRouter,
   usersGithub: usersGithubRouter,
