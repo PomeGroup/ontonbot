@@ -40,7 +40,7 @@ function makeMessage(args: { who: string; item: string; fulfil: "ship" | "pickup
   return (
     `🎉 Hi ${args.who}!\n\n` +
     `You’ve won **${args.item}** in the *${args.event}* merch raffle.\n` +
-    `Tap the link below and fill in your shipping address (name, street, city, phone) so we can dispatch your prize.\n\n` +
+    `Tap the link below and fill in your shipping address (name, street, city, ZIP, phone) so we can dispatch your prize.\n\n` +
     `${args.link}\n\n` +
     `Congratulations!\n— The organisers`
   );

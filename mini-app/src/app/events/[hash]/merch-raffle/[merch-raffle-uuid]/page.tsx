@@ -78,6 +78,7 @@ const SpinBtn = ({ show, busy, onClick }: { show: boolean; busy: boolean; onClic
 const shipSchema = z.object({
   full_name: z.string().min(3, "Required"),
   shipping_address: z.string().min(10, "Required"),
+  zip_code: z.string().min(3, "Required").max(16, "Too long"),
   phone: z.string().min(6, "Required"),
 });
 type ShipVals = z.infer<typeof shipSchema>;
@@ -109,6 +110,7 @@ function ShippingForm({
     defaultValues: {
       full_name: defaultVals.full_name ?? "",
       shipping_address: defaultVals.shipping_address ?? "",
+      zip_code: (defaultVals as any).zip_code ?? "",
       phone: defaultVals.phone ?? "",
     },
   });
@@ -160,6 +162,19 @@ function ShippingForm({
               inputClassName="min-h-24"
               autoComplete="street-address"
               error={errors.shipping_address?.message}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="zip_code"
+          render={({ field }) => (
+            <ListInput
+              {...field}
+              label="ZIP / Postal code"
+              outline
+              autoComplete="postal-code"
+              error={errors.zip_code?.message}
             />
           )}
         />
@@ -235,6 +250,7 @@ export default function RaffleMerchUiPage() {
       status: string | null;
       full_name?: string | null;
       shipping_address?: string | null;
+      zip_code?: string | null;
       phone?: string | null;
     };
   }[];
@@ -388,6 +404,7 @@ export default function RaffleMerchUiPage() {
                   defaultVals={{
                     full_name: my?.full_name ?? "",
                     shipping_address: my?.shipping_address ?? "",
+                    zip_code: my?.zip_code ?? "",
                     phone: my?.phone ?? "",
                   }}
                   mutate={(data) => shipMut.mutateAsync(data)}

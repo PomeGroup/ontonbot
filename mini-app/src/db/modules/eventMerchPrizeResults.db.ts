@@ -209,6 +209,7 @@ export const setContactInfo = async (args: {
   user_id: number;
   full_name: string;
   shipping_address: string;
+  zip_code: string;
   phone: string;
 }) =>
   db
@@ -216,6 +217,7 @@ export const setContactInfo = async (args: {
     .set({
       full_name: args.full_name,
       shipping_address: args.shipping_address,
+      zip_code: args.zip_code,
       phone: args.phone,
       notif_status: "sent", // optional – you may keep “pending” if you prefer
       status: "awaiting_shipping", // ship-flow; pickup flow handled in proc
@@ -264,6 +266,7 @@ export async function listParticipantsForPrize(prizeId: number) {
       /* shipping fields – may be null */
       full_name: eventMerchPrizeResults.full_name,
       shipping_address: eventMerchPrizeResults.shipping_address,
+      zip_code: eventMerchPrizeResults.zip_code,
       phone: eventMerchPrizeResults.phone,
     })
     .from(eventMerchPrizeResults)

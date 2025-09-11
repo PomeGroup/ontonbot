@@ -26,7 +26,10 @@ export const addUserScore = async (params: { merch_raffle_id: number; user_id: n
 /* ------------------------------------------------------------------ */
 /*              SHIPPING / PICKUP STATE TRANSITIONS                   */
 /* ------------------------------------------------------------------ */
-export const saveShippingAddress = (id: number, fields: { full_name: string; shipping_address: string; phone?: string }) =>
+export const saveShippingAddress = (
+  id: number,
+  fields: { full_name: string; shipping_address: string; zip_code?: string; phone?: string }
+) =>
   db
     .update(eventMerchRaffleResults)
     .set({ ...fields, status: "awaiting_pickup", updated_at: new Date() })

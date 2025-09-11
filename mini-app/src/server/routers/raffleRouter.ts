@@ -471,6 +471,7 @@ export const raffleRouter = router({
         merch_prize_id: z.number(),
         full_name: z.string().min(3).max(80),
         shipping_address: z.string().min(10).max(255),
+        zip_code: z.string().min(3).max(16),
         phone: z.string().min(6).max(32),
       })
     )
@@ -494,6 +495,7 @@ export const raffleRouter = router({
         user_id: user.user_id,
         full_name: input.full_name,
         shipping_address: input.shipping_address,
+        zip_code: input.zip_code,
         phone: input.phone,
       });
 

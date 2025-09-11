@@ -389,8 +389,10 @@ function UserDialog({ user, onClose }: { user: any; onClose: () => void }) {
   if (!user) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <Block className="bg-white rounded-lg w-[90%] max-w-md p-4 space-y-2">
-        <BlockTitle>Participant details</BlockTitle>
+      <Block className="bg-white rounded-lg w-[90%] max-w-md p-4">
+        <BlockTitle className="!mt-0 mb-3">Participant details</BlockTitle>
+
+        <div className="space-y-2">
 
         <p>
           <b>Username / name:</b> {bestName(user)}
@@ -405,6 +407,11 @@ function UserDialog({ user, onClose }: { user: any; onClose: () => void }) {
             <b>Address:</b> {user.shipping_address}
           </p>
         )}
+        {user.zip_code && (
+          <p>
+            <b>ZIP:</b> {user.zip_code}
+          </p>
+        )}
         {user.phone && (
           <p>
             <b>Phone:</b> {user.phone}
@@ -414,12 +421,10 @@ function UserDialog({ user, onClose }: { user: any; onClose: () => void }) {
           <b>Status:</b> {user.status ?? "—"}
         </p>
 
-        <Button
-          className="w-full mt-4"
-          onClick={onClose}
-        >
+        <Button className="w-full mt-4" onClick={onClose}>
           Close
         </Button>
+        </div>
       </Block>
     </div>
   );
