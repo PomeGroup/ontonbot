@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Block, BlockTitle, List, ListInput, ListItem, Preloader, Radio } from "konsta/react";
 import { Button } from "@/components/ui/button";
 import { Plus, Share as ShareIcon } from "lucide-react";
-import { FiUser } from "react-icons/fi";
+import { FiUser, FiCopy } from "react-icons/fi";
 
 import { trpc } from "@/app/_trpc/client";
 import CustomButton from "@/app/_components/Button/CustomButton";
@@ -154,6 +154,15 @@ function SummaryTon({ info }: { info: any }) {
   return (
     <>
       <BlockTitle className="mb-2">Raffle summary</BlockTitle>
+      {/* Wallet address row / message */}
+      {!w.address ? (
+        <Block
+          strong
+          className="text-sm text-gray-700 bg-yellow-50 border border-yellow-200"
+        >
+          wallet address will created soon
+        </Block>
+      ) : null}
       <Block
         strong
         className="text-sm space-y-1"
@@ -162,9 +171,20 @@ function SummaryTon({ info }: { info: any }) {
           <b>Status:</b> {r.status}
         </p>
         {w.address && (
-          <p className="break-all">
-            <b>Wallet:</b> {w.address}
-          </p>
+          <div className="flex items-center gap-2">
+            <input
+              readOnly
+              value={w.address}
+              className="flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs sm:text-sm text-gray-800"
+            />
+            <Button
+              className="aspect-square"
+              variant="secondary"
+              onClick={() => navigator.clipboard.writeText(w.address).then(() => toast.success("Wallet address copied"))}
+            >
+              <FiCopy size={18} />
+            </Button>
+          </div>
         )}
         <p>
           <b>Prize pool:</b> {fmtNano(pool)} TON
