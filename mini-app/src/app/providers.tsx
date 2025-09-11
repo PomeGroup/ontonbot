@@ -3,7 +3,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { ConfigProvider } from "@/context/ConfigContext";
 import { NavigationHistoryProvider } from "@/context/NavigationHistoryContext";
-import * as Sentry from "@sentry/nextjs";
+// import * as Sentry from "@sentry/nextjs";
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { ThemeProvider } from "next-themes";
 import React from "react";
@@ -21,7 +21,8 @@ import ThemeSetter from "./themeSetter";
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
-    <Sentry.ErrorBoundary>
+    <>
+      {/* <Sentry.ErrorBoundary> */}
       <TonConnectUIProvider
         actionsConfiguration={{
           twaReturnUrl: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event`,
@@ -56,7 +57,8 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
           </WebAppProvider>
         </ThemeProvider>
       </TonConnectUIProvider>
-    </Sentry.ErrorBoundary>
+      {/* </Sentry.ErrorBoundary> */}
+    </>
   );
 };
 
