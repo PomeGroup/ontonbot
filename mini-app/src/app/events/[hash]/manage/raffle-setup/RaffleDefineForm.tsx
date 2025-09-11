@@ -15,6 +15,9 @@ import { FiUser, FiCopy } from "react-icons/fi";
 
 import { trpc } from "@/app/_trpc/client";
 import CustomButton from "@/app/_components/Button/CustomButton";
+import ListLayout from "@/app/_components/atoms/cards/ListLayout";
+import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
+import type { StatusChipProps } from "@/components/ui/status-chips";
 import {
   CHUNK_SIZE_RAFFLE,
   DEPLOY_FEE_NANO,
@@ -85,18 +88,15 @@ function TonForm({
   saving: boolean;
 }) {
   return (
-    <form
-      onSubmit={onSave}
-      className="px-4 space-y-4"
-    >
-      <BlockTitle>TON giveaway</BlockTitle>
-      <List>
+    <form onSubmit={onSave}>
+      <ListLayout title="TON giveaway">
         <Controller
           control={control}
           name="top_n"
           render={({ field }) => (
             <ListInput
               {...field}
+              outline
               disabled={!canEdit}
               label="Number of winners"
               type="number"
@@ -113,6 +113,7 @@ function TonForm({
           render={({ field }) => (
             <ListInput
               {...field}
+              outline
               disabled={!canEdit}
               label="Prize pool (TON)"
               type="number"
@@ -122,18 +123,20 @@ function TonForm({
             />
           )}
         />
-      </List>
+      </ListLayout>
       {canEdit && (
-        <CustomButton
-          className="w-full justify-center"
-          isLoading={saving}
-          onClick={(e) => {
-            onSave();
-            e.preventDefault();
-          }}
-        >
-          Save
-        </CustomButton>
+        <div className="px-4 mt-3">
+          <CustomButton
+            className="w-full justify-center"
+            isLoading={saving}
+            onClick={(e) => {
+              onSave();
+              e.preventDefault();
+            }}
+          >
+            Save
+          </CustomButton>
+        </div>
       )}
     </form>
   );
@@ -153,61 +156,72 @@ function SummaryTon({ info }: { info: any }) {
 
   return (
     <>
-      <BlockTitle className="mb-2">Raffle summary</BlockTitle>
-      {/* Wallet address row / message */}
-      {!w.address ? (
-        <Block
-          strong
-          className="text-sm text-gray-700 bg-yellow-50 border border-yellow-200"
-        >
-          wallet address will created soon
-        </Block>
-      ) : null}
-      <Block
-        strong
-        className="text-sm space-y-1"
-      >
-        <p>
-          <b>Status:</b> {r.status}
-        </p>
+      {/* Wallet */}
+      <div className="mt-3">
+      <ListLayout title="Funding Wallet">
+        {!w.address && <ListItem title="Wallet address will created soon" />}
         {w.address && (
-          <div className="flex items-center gap-2">
-            <input
+          <div className="relative">
+            <ListInput
+              outline
               readOnly
+              label="Wallet Address"
               value={w.address}
-              className="flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs sm:text-sm text-gray-800"
             />
-            <Button
-              className="aspect-square"
-              variant="secondary"
-              onClick={() => navigator.clipboard.writeText(w.address).then(() => toast.success("Wallet address copied"))}
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-600"
+              onClick={() =>
+                navigator.clipboard
+                  .writeText(w.address)
+                  .then(() => toast.success("Wallet address copied"))
+              }
             >
               <FiCopy size={18} />
-            </Button>
+            </button>
           </div>
         )}
-        <p>
-          <b>Prize pool:</b> {fmtNano(pool)} TON
-        </p>
-        <p>
-          <b>Deployment fee:</b> {fmtNano(DEPLOY_FEE_NANO)} TON
-        </p>
-        <p>
-          <b>External fees:</b> {fmtNano(extFees)} TON ({batches} batch{batches !== 1 ? "es" : ""})
-        </p>
-        <p>
-          <b>Internal fees:</b> {fmtNano(intFees)} TON ({r.top_n} winners)
-        </p>
-        <p>
-          <b>Safety floor:</b> {fmtNano(bufferFloor)} TON
-        </p>
-        <p>
-          <b>Total needed:</b> {fmtNano(need)} TON
-        </p>
-        <p>
-          <b>Balance:</b> {fmtNano(bal)} TON
-        </p>
-      </Block>
+      </ListLayout>
+      </div>
+
+      {/* Summary */}
+      {(() => {
+        const statusVariant: StatusChipProps["variant"] =
+          r.status === "completed" ? "success" : r.status === "waiting_funding" ? "warning" : "primary";
+        const statusLabel =
+          r.status === "waiting_funding"
+            ? "Waiting funding"
+            : r.status === "completed"
+            ? "Completed"
+            : r.status === "distributing"
+            ? "Distributing"
+            : r.status === "funded"
+            ? "Funded"
+            : String(r.status ?? "");
+        return (
+          <div className="mt-3">
+            <ListLayout
+              title="Raffle summary"
+              label={{ text: statusLabel, variant: statusVariant }}
+            >
+        
+        <ListItem title="Prize pool" after={<span className="font-medium">{fmtNano(pool)} TON</span>} />
+        <ListItem title="Deployment fee" after={<span className="font-medium">{fmtNano(DEPLOY_FEE_NANO)} TON</span>} />
+        <ListItem
+          title="External fees"
+          after={<span className="font-medium">{fmtNano(extFees)} TON ({batches} batch{batches !== 1 ? "es" : ""})</span>}
+        />
+        <ListItem
+          title="Internal fees"
+          after={<span className="font-medium">{fmtNano(intFees)} TON ({r.top_n} winners)</span>}
+        />
+        <ListItem title="Safety floor" after={<span className="font-medium">{fmtNano(bufferFloor)} TON</span>} />
+        <ListItem title="Total needed" after={<span className="font-medium">{fmtNano(need)} TON</span>} />
+        <ListItem title="Balance" after={<span className="font-medium">{fmtNano(bal)} TON</span>} />
+            </ListLayout>
+          </div>
+        );
+      })()}
 
       {!!info.winners?.length && (
         <>
@@ -521,24 +535,27 @@ export default function RaffleDefineForm() {
       <h1 className="p-4 text-2xl font-bold">Raffle setup</h1>
 
       {/* ── raffle kind selector ── */}
-      <Block className="px-4">
-        <BlockTitle>Choose type</BlockTitle>
-        <Block className="flex gap-6">
+      <div className="px-0">
+        <ListLayout title="Choose type">
           {(["ton", "merch"] as const).map((v) => (
-            <label
+            <ListItem
               key={v}
-              className="flex items-center gap-2 text-sm"
-            >
-              <Radio
-                checked={kind === v}
-                disabled={locked !== null && locked !== v}
-                onChange={() => setKind(v)}
-              />
-              {v === "ton" ? "TON giveaway" : "Merch raffle"}
-            </label>
+              title={v === "ton" ? "TON giveaway" : "Merch raffle"}
+              className={(locked !== null && locked !== v) ? "opacity-60" : ""}
+              after={
+                <Radio
+                  checked={kind === v}
+                  disabled={locked !== null && locked !== v}
+                  onChange={() => setKind(v)}
+                />
+              }
+              onClick={() => {
+                if (!(locked !== null && locked !== v)) setKind(v);
+              }}
+            />
           ))}
-        </Block>
-      </Block>
+        </ListLayout>
+      </div>
 
       {/* ================= TON ================= */}
       {kind === "ton" && (
@@ -552,12 +569,12 @@ export default function RaffleDefineForm() {
           />
 
           {tonData && (
-            <div className="space-y-4 px-4">
+            <div className="space-y-4 px-0">
               <SummaryTon info={tonData} />
 
               {tonData.raffle.status === "funded" && (
                 <CustomButton
-                  className="w-full justify-center"
+                  className="mx-4 w-[calc(100%-2rem)] justify-center"
                   onClick={() =>
                     toast.promise(
                       trigTon
@@ -571,29 +588,31 @@ export default function RaffleDefineForm() {
                 </CustomButton>
               )}
 
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => router.push(`/events/${eventUuid}/raffle-ui/${tonData.raffle.raffle_uuid}`)}
-              >
-                Open participant page
-              </Button>
-              <div className="flex gap-2">
-                <Button
-                  className="flex-1"
-                  variant="secondary"
-                  onClick={() => navigator.clipboard.writeText(tonUrl).then(() => toast.success("Link copied!"))}
-                >
-                  Copy link
-                </Button>
-                <Button
-                  className="aspect-square"
-                  onClick={() =>
-                    shareLink(tonUrl, `🤞 Join the raffle and win TON! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`)
-                  }
-                >
-                  <ShareIcon size={20} />
-                </Button>
+              <div className="mt-3">
+                <ListLayout title="Send to guests">
+                  <div className="p-4 flex flex-col gap-2 w-full">
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        variant="secondary"
+                        onClick={() => navigator.clipboard.writeText(tonUrl).then(() => toast.success("Link copied!"))}
+                      >
+                        Copy link
+                      </Button>
+                      <Button
+                        className="aspect-square"
+                        onClick={() =>
+                          shareLink(
+                            tonUrl,
+                            `🤞 Join the raffle and win TON! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`
+                          )
+                        }
+                      >
+                        <ShareIcon size={20} />
+                      </Button>
+                    </div>
+                  </div>
+                </ListLayout>
               </div>
             </div>
           )}
@@ -602,9 +621,10 @@ export default function RaffleDefineForm() {
 
       {/* ================= MERCH ================= */}
       {kind === "merch" && (
-        <div className="space-y-4 px-4">
+        <div className="space-y-4 px-0">
           {merchData?.prizes?.length ? (
-            merchData.prizes.map((row) => {
+            <>
+            {merchData.prizes.map((row) => {
               if (!row) return null;
 
               // ⬇️ provide a default empty array when guests key is absent
@@ -630,151 +650,183 @@ export default function RaffleDefineForm() {
               const listToShow = showWinners ? winners : guests;
 
               return (
-                <Block
-                  key={prize.merch_prize_id}
-                  strong
-                  className="space-y-2"
-                >
+                <>
                   {viewUser && (
                     <UserDialog
                       user={viewUser}
                       onClose={() => setViewUser(null)}
                     />
                   )}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{prize.item_name}</p>
-                      <p className="text-xs text-gray-500">
-                        Top&nbsp;{prize.top_n} • {prize.fulfil_method}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() =>
-                        setEditing({
-                          prizeId: prize.merch_prize_id,
-                          initial: {
-                            item_name: prize.item_name,
-                            item_description: prize.item_description ?? "",
-                            top_n: prize.top_n,
-                            fulfil_method: prize.fulfil_method,
-                          },
-                        })
-                      }
-                    >
-                      Edit
-                    </Button>
-                  </div>
-
-                  {!!listToShow.length && (
-                    <List>
-                      {listToShow.map((u: any, idx: number) => (
-                        <ListItem
-                          key={u.user_id}
-                          className="py-1"
-                          title={
-                            showWinners ? (
-                              <span className="font-medium text-primary">#{u.rank}</span>
-                            ) : (
-                              <span className="font-medium text-gray-400">{idx + 1}</span>
-                            )
-                          }
-                          subtitle={bestName(u)}
-                          after={u.status ?? "—"}
-                          onClick={() => setViewUser(u)}
-                          media={
-                            u.photo_url ? (
-                              <Image
-                                src={u.photo_url}
-                                width={28}
-                                height={28}
-                                alt=""
-                                className="rounded-full object-cover"
-                              />
-                            ) : (
-                              <FiUser className="h-5 w-5 text-gray-400" />
-                            )
+                  {(() => {
+                    const statusVariant: StatusChipProps["variant"] =
+                      prize.status === "completed"
+                        ? "success"
+                        : prize.status === "cancelled"
+                        ? "danger"
+                        : prize.status === "draft"
+                        ? "warning"
+                        : "primary";
+                    const statusLabel = prize.status.charAt(0).toUpperCase() + prize.status.slice(1);
+                    return (
+                      <div className="mt-3">
+                        <ListLayout
+                          key={prize.merch_prize_id}
+                          title={prize.item_name}
+                          label={{ text: statusLabel, variant: statusVariant }}
+                        >
+                        
+                          <ListItem
+                            title={<span className="text-sm text-gray-700">Top&nbsp;{prize.top_n} • {prize.fulfil_method}</span>}
+                            after={
+                              <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() =>
+                                setEditing({
+                                  prizeId: prize.merch_prize_id,
+                                  initial: {
+                                    item_name: prize.item_name,
+                                    item_description: prize.item_description ?? "",
+                                    top_n: prize.top_n,
+                                    fulfil_method: prize.fulfil_method,
+                                  },
+                                })
+                              }
+                            >
+                              Edit
+                            </Button>
                           }
                         />
-                      ))}
-                    </List>
-                  )}
-                </Block>
+                    
+                          {!!listToShow.length &&
+                            listToShow.map((u: any, idx: number) => (
+                              <ListItem
+                                key={u.user_id}
+                                className="py-1"
+                                title={
+                                  showWinners ? (
+                                    <span className="font-medium text-primary">#{u.rank}</span>
+                                  ) : (
+                                    <span className="font-medium text-gray-400">{idx + 1}</span>
+                                  )
+                                }
+                                subtitle={bestName(u)}
+                                after={u.status ?? "—"}
+                                onClick={() => setViewUser(u)}
+                                media={
+                                  u.photo_url ? (
+                                    <Image
+                                      src={u.photo_url}
+                                      width={28}
+                                      height={28}
+                                      alt=""
+                                      className="rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <FiUser className="h-5 w-5 text-gray-400" />
+                                  )
+                                }
+                              />
+                            ))}
+                        </ListLayout>
+                      </div>
+                    );
+                  })()}
+                </>
               );
-            })
+            })}
+            {/* Add reward just under the list */}
+            {(merchData?.prizes?.length ?? 0) > 0 && (
+              <div className="px-4 mt-2">
+                <Button
+                  variant="outline"
+                  className="w-full flex justify-center gap-2"
+                  onClick={() => setEditing({ prizeId: undefined, initial: {} })}
+                >
+                  <Plus size={16} />
+                  Add reward
+                </Button>
+              </div>
+            )}
+            </>
           ) : (
-            <Block
-              strong
-              className="text-center text-sm"
-            >
-              <p>No rewards yet.</p>
-              <p className="text-xs text-gray-500">Add your first merch reward below.</p>
-            </Block>
+            <div className="mt-3">
+              <ListLayout title="Merch rewards" inset>
+                <div className="my-6">
+                  <DataStatus
+                    status="not_found"
+                    title="No rewards yet"
+                    description="Add your first reward below."
+                    actionButton={
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => setEditing({ prizeId: undefined, initial: {} })}
+                      >
+                        <Plus size={14} className="mr-1" /> Add reward
+                      </Button>
+                    }
+                  />
+                </div>
+              </ListLayout>
+            </div>
           )}
 
           {/* pick winners – only when at least one prize still in draft */}
           {merchData?.prizes?.some((p) => p && p.prize.status === "draft") && (
-            <CustomButton
-              className="w-full justify-center"
-              isLoading={trigPrize.isLoading}
-              onClick={() => {
-                if (!merchData) return;
-                const draftIds = merchData.prizes
-                  .filter((p) => p && p.prize.status === "draft")
-                  .map((p) => p!.prize.merch_prize_id);
-                if (!draftIds.length) return;
+            <div className="px-4">
+              <CustomButton
+                className="w-full justify-center"
+                isLoading={trigPrize.isLoading}
+                onClick={() => {
+                  if (!merchData) return;
+                  const draftIds = merchData.prizes
+                    .filter((p) => p && p.prize.status === "draft")
+                    .map((p) => p!.prize.merch_prize_id);
+                  if (!draftIds.length) return;
 
-                toast.promise(
-                  Promise.all(draftIds.map((id) => trigPrize.mutateAsync({ merch_prize_id: id, event_uuid: eventUuid }))),
-                  {
-                    loading: "Picking winners…",
-                    success: "Winners selected!",
-                    error: (e) => e?.message ?? "Error",
-                  }
-                );
-              }}
-            >
-              Pick winners for all rewards
-            </CustomButton>
+                  toast.promise(
+                    Promise.all(draftIds.map((id) => trigPrize.mutateAsync({ merch_prize_id: id, event_uuid: eventUuid }))),
+                    {
+                      loading: "Picking winners…",
+                      success: "Winners selected!",
+                      error: (e) => e?.message ?? "Error",
+                    }
+                  );
+                }}
+              >
+                Pick winners for all rewards
+              </CustomButton>
+            </div>
           )}
 
           {merchData?.raffle && (
-            <>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => router.push(`/events/${eventUuid}/raffle-merch-ui/${merchData.raffle.merchRaffleUuid}`)}
-              >
-                Open participant page
-              </Button>
-              <div className="flex gap-2">
-                <Button
-                  className="flex-1"
-                  variant="secondary"
-                  onClick={() => navigator.clipboard.writeText(merchUrl).then(() => toast.success("Link copied!"))}
-                >
-                  Copy link
-                </Button>
-                <Button
-                  className="aspect-square"
-                  onClick={() =>
-                    shareLink(merchUrl, `🎁 Join the merch raffle! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`)
-                  }
-                >
-                  <ShareIcon size={20} />
-                </Button>
-              </div>
-            </>
+            <div className="mt-3">
+              <ListLayout title="Send to guests">
+                <div className="p-4 flex flex-col gap-2 w-full">
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1"
+                      variant="secondary"
+                      onClick={() => navigator.clipboard.writeText(merchUrl).then(() => toast.success("Link copied!"))}
+                    >
+                      Copy link
+                    </Button>
+                    <Button
+                      className="aspect-square"
+                      onClick={() =>
+                        shareLink(merchUrl, `🎁 Join the merch raffle! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`)
+                      }
+                    >
+                      <ShareIcon size={20} />
+                    </Button>
+                  </div>
+                </div>
+              </ListLayout>
+            </div>
           )}
 
-          <Button
-            className="flex w-full justify-center gap-2"
-            onClick={() => setEditing({ prizeId: undefined, initial: {} })}
-          >
-            <Plus size={16} />
-            Add reward
-          </Button>
         </div>
       )}
 

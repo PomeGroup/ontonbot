@@ -17,6 +17,7 @@ import Images from "@/app/_components/atoms/images";
 import Typography from "@/components/Typography";
 import Divider from "@/components/Divider";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
+import ListLayout from "@/app/_components/atoms/cards/ListLayout";
 
 /* ╭──────────────── helpers ─────────────────╮ */
 const random6 = () =>
@@ -104,6 +105,7 @@ function ShippingForm({
     reset, // ← to reset after success if you want
   } = useForm<ShipVals>({
     resolver: zodResolver(shipSchema),
+    shouldFocusError: false,
     defaultValues: {
       full_name: defaultVals.full_name ?? "",
       shipping_address: defaultVals.shipping_address ?? "",
@@ -117,7 +119,7 @@ function ShippingForm({
   return (
     <form
       ref={formRef}
-      className="space-y-3 pt-4"
+      className="pt-2"
       onSubmit={handleSubmit((vals) =>
         toast.promise(
           mutate({ merch_prize_id: prizeId, ...vals }).then(() => {
@@ -130,8 +132,7 @@ function ShippingForm({
       )}
     >
       <BlockTitle className="!mt-0">Shipping details</BlockTitle>
-
-      <List inset>
+      <List>
         <Controller
           control={control}
           name="full_name"
@@ -140,6 +141,8 @@ function ShippingForm({
               {...field}
               label="Full name"
               outline
+              autoComplete="name"
+              autoCapitalize="words"
               error={errors.full_name?.message}
             />
           )}
@@ -154,6 +157,8 @@ function ShippingForm({
               type="textarea"
               label="Address"
               outline
+              inputClassName="min-h-24"
+              autoComplete="street-address"
               error={errors.shipping_address?.message}
             />
           )}
@@ -166,6 +171,9 @@ function ShippingForm({
             <ListInput
               {...field}
               label="Phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               outline
               error={errors.phone?.message}
             />
