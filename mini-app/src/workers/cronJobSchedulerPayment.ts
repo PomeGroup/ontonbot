@@ -65,7 +65,7 @@ async function MainCronJob() {
     true // waitForCompletion
   );
   new CronJob(
-    "*/7 * * * * *", // second 0, minute 0, hour 0 → every midnight UTC
+    "*/7 * * * * *", //  Every 7 seconds
     cronJobs.createWalletsForUpcomingEvents,
     null, // onComplete
     true, // start immediately
