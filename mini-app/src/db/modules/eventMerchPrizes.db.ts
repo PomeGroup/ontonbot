@@ -41,6 +41,7 @@ export const getPrizeWithWinners = async (prizeId: number) => {
   /* 2. winners + user profile ----------------------------------------- */
   const winners = await db
     .select({
+      id: eventMerchPrizeResults.id,
       user_id: eventMerchPrizeResults.user_id,
       rank: eventMerchPrizeResults.rank,
       score: eventMerchPrizeResults.score,
@@ -48,6 +49,7 @@ export const getPrizeWithWinners = async (prizeId: number) => {
 
       /* fulfil-state cols */
       shipping_address: eventMerchPrizeResults.shipping_address,
+      zip_code: eventMerchPrizeResults.zip_code,
       phone: eventMerchPrizeResults.phone,
       tracking_number: eventMerchPrizeResults.tracking_number,
       shipped_at: eventMerchPrizeResults.shipped_at,

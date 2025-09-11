@@ -503,4 +503,46 @@ export const raffleRouter = router({
 
       return { ok: true };
     }),
+
+  /* ───────────────── ORGANISER – update shipping state ──────────── */
+  updateMerchPrizeShipping: eventManagementProtectedProcedure
+    .input(
+      z
+        .object({
+          event_uuid: z.string().uuid(),
+          merch_prize_result_id: z.number(),
+          action: z.enum(["ship", "deliver", "collect"]),
+          tracking_number: z.string().max(120).optional(),
+        })
+        .refine((v) => (v.action === "ship" ? Boolean(v.tracking_number && v.tracking_number.trim().length > 0) : true), {
+          message: "Tracking number is required to mark as shipped",
+          path: ["tracking_number"],
+        })
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Authorization: ensure the result belongs to the current event
+      const row = await eventMerchPrizeResultsDB.fetchResultWithPrizeAndEvent(input.merch_prize_result_id);
+      if (!row || !row.event_id || row.event_id !== ctx.event.event_id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Result not in this event" });
+      }
+
+      // Business rule checks by action
+      if (input.action === "ship") {
+        if (row.status !== "awaiting_shipping") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Result not awaiting shipping" });
+        }
+        await eventMerchPrizeResultsDB.markPrizeShipped(input.merch_prize_result_id, input.tracking_number ?? null);
+      } else if (input.action === "deliver") {
+        if (row.status !== "shipped") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Result not shipped yet" });
+        }
+        await eventMerchPrizeResultsDB.markPrizeDelivered(input.merch_prize_result_id);
+      } else if (input.action === "collect") {
+        if (row.status !== "awaiting_pickup") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Result not awaiting pickup" });
+        }
+        await eventMerchPrizeResultsDB.markPrizeCollected(input.merch_prize_result_id);
+      }
+      return { ok: true };
+    }),
 });

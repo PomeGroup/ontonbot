@@ -385,8 +385,10 @@ function PrizeEditor({
  * tiny modal to view shipping info                                   *
  * ------------------------------------------------------------------ */
 // ⭐ NEW
-function UserDialog({ user, onClose }: { user: any; onClose: () => void }) {
+function UserDialog({ user, onClose, onUpdated, eventUuid }: { user: any; onClose: () => void; onUpdated: () => void; eventUuid: string }) {
   if (!user) return null;
+  const [tracking, setTracking] = useState("");
+  const shipMut = trpc.raffle.updateMerchPrizeShipping.useMutation();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <Block className="bg-white rounded-lg w-[90%] max-w-md p-4">
@@ -417,11 +419,59 @@ function UserDialog({ user, onClose }: { user: any; onClose: () => void }) {
             <b>Phone:</b> {user.phone}
           </p>
         )}
+        {user.tracking_number && (
+          <p>
+            <b>Tracking:</b> {user.tracking_number}
+          </p>
+        )}
         <p>
           <b>Status:</b> {user.status ?? "—"}
         </p>
 
-        <Button className="w-full mt-4" onClick={onClose}>
+        {/* Ship action: only when awaiting shipping */}
+        {user.status === "awaiting_shipping" && (
+          <div className="mt-2 space-y-1">
+            <List className="!mx-0 !px-0">
+              <ListInput
+                className="!mx-0 w-full"
+                outline
+                label="Tracking number"
+                placeholder="e.g. DHL / UPS code"
+                value={tracking}
+                onChange={(e) => setTracking(e.target.value)}
+                inputClassName="w-full"
+              />
+            </List>
+            <div className="text-xs text-gray-500">
+              Enter the carrier tracking code to mark this prize as shipped.
+            </div>
+            <CustomButton
+              className="w-full justify-center"
+              isLoading={shipMut.isLoading}
+              onClick={() =>
+                toast.promise(
+                  shipMut
+                    .mutateAsync({
+                      event_uuid: eventUuid,
+                      merch_prize_result_id: user.id,
+                      action: "ship",
+                      tracking_number: tracking.trim(),
+                    })
+                    .then(() => {
+                      onUpdated();
+                      onClose();
+                    }),
+                  { loading: "Marking shipped…", success: "Marked as shipped", error: (e) => e?.message ?? "Error" }
+                )
+              }
+              disabled={!tracking.trim()}
+            >
+              Mark shipped
+            </CustomButton>
+          </div>
+        )}
+
+        <Button className="w-full mt-4" variant="secondary" onClick={onClose}>
           Close
         </Button>
         </div>
@@ -660,6 +710,8 @@ export default function RaffleDefineForm() {
                     <UserDialog
                       user={viewUser}
                       onClose={() => setViewUser(null)}
+                      onUpdated={() => merchDashQ.refetch()}
+                      eventUuid={eventUuid}
                     />
                   )}
                   {(() => {

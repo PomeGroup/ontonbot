@@ -5,6 +5,7 @@ import {
   EventMerchPrizeResultStatusType,
 } from "@/db/schema/eventMerchPrizeResults";
 import { eventMerchPrizes } from "@/db/schema/eventMerchPrizes";
+import { eventMerchRaffles } from "@/db/schema/eventMerchRaffles";
 import { eq, desc, and, sql, isNull, isNotNull, or } from "drizzle-orm";
 import { users } from "../schema";
 
@@ -124,6 +125,45 @@ export const assignPrize = async ({
       updated_at: new Date(),
     })
     .where(eq(eventMerchPrizeResults.id, id));
+
+/* fulfilment status transitions for prize results */
+export const markPrizeShipped = async (id: number, trackingNumber: string | null = null) =>
+  db
+    .update(eventMerchPrizeResults)
+    .set({ status: "shipped", tracking_number: trackingNumber ?? undefined, shipped_at: new Date(), updated_at: new Date() })
+    .where(eq(eventMerchPrizeResults.id, id))
+    .execute();
+
+export const markPrizeDelivered = async (id: number) =>
+  db
+    .update(eventMerchPrizeResults)
+    .set({ status: "delivered", delivered_at: new Date(), updated_at: new Date() })
+    .where(eq(eventMerchPrizeResults.id, id))
+    .execute();
+
+export const markPrizeCollected = async (id: number) =>
+  db
+    .update(eventMerchPrizeResults)
+    .set({ status: "collected", collected_at: new Date(), updated_at: new Date() })
+    .where(eq(eventMerchPrizeResults.id, id))
+    .execute();
+
+/** Fetch a prize-result row with its prize and parent raffle event ID for authorization checks */
+export const fetchResultWithPrizeAndEvent = async (id: number) =>
+  db
+    .select({
+      id: eventMerchPrizeResults.id,
+      merch_prize_id: eventMerchPrizeResults.merch_prize_id,
+      merch_raffle_id: eventMerchPrizes.merch_raffle_id,
+      event_id: eventMerchRaffles.eventId,
+      status: eventMerchPrizeResults.status,
+    })
+    .from(eventMerchPrizeResults)
+    .leftJoin(eventMerchPrizes, eq(eventMerchPrizes.merch_prize_id, eventMerchPrizeResults.merch_prize_id))
+    .leftJoin(eventMerchRaffles, eq(eventMerchRaffles.merchRaffleId, eventMerchPrizes.merch_raffle_id))
+    .where(eq(eventMerchPrizeResults.id, id))
+    .limit(1)
+    .then((r) => r[0] || null);
 /**
  * Return **all** un-assigned spin rows for a given merch raffle,
  * ordered by score **DESC** (highest first).
@@ -298,5 +338,9 @@ const eventMerchPrizeResultsDB = {
   setNotifStatus,
   setContactInfo,
   listParticipantsForPrize,
+  markPrizeShipped,
+  markPrizeDelivered,
+  markPrizeCollected,
+  fetchResultWithPrizeAndEvent,
 };
 export default eventMerchPrizeResultsDB;
