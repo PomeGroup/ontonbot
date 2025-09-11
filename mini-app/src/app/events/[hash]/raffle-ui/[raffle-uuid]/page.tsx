@@ -4,9 +4,9 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { SplitFlap, Presets } from "react-split-flap";
-import { useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
+import { useTonAddress, useTonConnectModal, useTonConnectUI } from "@tonconnect/ui-react";
 import { Address } from "@ton/core";
-import { Block, BlockTitle, List, ListItem, Preloader } from "konsta/react";
+import { Block, BlockTitle, List, ListItem, ListInput, Preloader } from "konsta/react";
 import Image from "next/image";
 import { FiUser } from "react-icons/fi";
 import { toast } from "sonner";
@@ -15,8 +15,10 @@ import Images from "@/app/_components/atoms/images";
 import Typography from "@/components/Typography";
 import Divider from "@/components/Divider";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
+import CustomButton from "@/app/_components/Button/CustomButton";
 import { trpc } from "@/app/_trpc/client";
 import { CHUNK_SIZE_RAFFLE, EXT_FEE_NANO, INT_FEE_NANO, SAFETY_FLOOR_NANO } from "@/constants";
+import { Trophy, Gift } from "lucide-react";
 
 /* ───────── helpers ───────── */
 const random6 = () =>
@@ -74,11 +76,25 @@ ScoreDisplay.displayName = "ScoreDisplay";
 
 /* Telegram main-button wrapper */
 const TGButton = memo(
-  ({ visible, label, busy, onClick }: { visible: boolean; label: string; busy: boolean; onClick: () => void }) =>
+  ({
+    visible,
+    label,
+    busy,
+    disabled,
+    onClick,
+  }: {
+    visible: boolean;
+    label: string;
+    busy: boolean;
+    disabled?: boolean;
+    onClick: () => void;
+  }) =>
     visible ? (
       <MainButton
         text={label}
         progress={busy}
+        color={disabled ? "secondary" : "primary"}
+        disabled={disabled}
         onClick={onClick}
       />
     ) : null
@@ -100,6 +116,7 @@ export default function RaffleUiPage() {
   const wallet = useTonAddress();
   const hasWallet = !!wallet;
   const modal = useTonConnectModal();
+  const [tonConnectUI] = useTonConnectUI();
 
   /* split-flap state */
   const [score, setScore] = useState("000000");
@@ -144,11 +161,10 @@ export default function RaffleUiPage() {
 
     setRoll(true); // start eye-candy immediately
 
-    toast.promise(spinMut.mutateAsync({ raffle_uuid: raffleUuid, wallet_address: wallet }), {
-      loading: "Spinning…",
-      success: (res) => {
+    spinMut
+      .mutateAsync({ raffle_uuid: raffleUuid, wallet_address: wallet })
+      .then((res) => {
         finalScore.current = res.score.toString().padStart(6, "0");
-        /* slow-down */
         const p = [150, 200, 300, 450, 700];
         let i = 0;
         const tick = () => {
@@ -161,14 +177,11 @@ export default function RaffleUiPage() {
           }
         };
         tick();
-        return `Your score: ${res.score}`;
-      },
-      error: (e) => {
+      })
+      .catch(() => {
         setRoll(false);
         setScore("000000");
-        return e?.message ?? "Spin failed";
-      },
-    });
+      });
   }, [hasWallet, modal, spinMut, raffleUuid, wallet, viewQ]);
 
   /* WHEN to show the button?
@@ -178,6 +191,7 @@ export default function RaffleUiPage() {
   */
   const canSpin = raffle && !my && ["waiting_funding", "funded"].includes(raffle.status);
   const btnVisible = canSpin && !spinMut.isLoading;
+  const showMain = hasWallet && btnVisible; // Only show TG main button when wallet connected and can spin
 
   /* loading states */
   if (eventQ.isLoading || viewQ.isLoading)
@@ -190,86 +204,123 @@ export default function RaffleUiPage() {
   if (viewQ.error) return <p>{viewQ.error.message}</p>;
 
   const event = eventQ.data!;
+  const eventNotStarted = event?.start_date ? Date.now() < Number(event.start_date) * 1000 : false;
 
   /* ───────── render ───────── */
   return (
     <>
-      <TGButton
-        visible={btnVisible ?? false}
-        label={hasWallet ? "Spin" : "Connect wallet"}
-        busy={spinMut.isLoading}
-        onClick={spin}
-      />
+      <TGButton visible={showMain ?? false} label="Spin" busy={spinMut.isLoading} disabled={eventNotStarted} onClick={spin} />
 
       <div className="min-h-screen bg-[#EFEFF4] pb-24 px-4">
         <EventImage url={event.image_url ?? ""} />
-        <EventTitle t={event.title ?? ""} />
-        <Divider margin="medium" />
+        {eventNotStarted && (
+          <Block strong className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg mb-4">
+            You can spin after the event starts.
+          </Block>
+        )}
 
-        <Block
-          strong
-          className="bg-white p-4 rounded-lg space-y-4 mb-8"
-        >
+        <Block strong className="bg-white p-4 rounded-lg space-y-4">
+          <EventTitle t={event.title ?? ""} />
+          <Divider margin="small" />
           <div className="flex justify-center">
             <ScoreDisplay value={score} />
           </div>
 
-          {walletB && (
-            <p>
-              <b>Your wallet:</b> <span className="break-all">{walletB}</span>
-            </p>
-          )}
+          {/* wallet text moved to bottom section */}
 
-          <p className="text-center font-semibold text-lg">
-            🏆 Pool {ton(pool)} TON • Top&nbsp;{raffle?.top_n} get {ton(perPrize)} TON each
-          </p>
+          {/* pool + reward info */}
+          <div className="grid grid-cols-1 gap-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <Typography variant="caption2" weight="semibold" className="uppercase tracking-wide text-gray-500 flex items-center gap-1 mb-1.5">
+                <Trophy size={14} className="text-amber-600" /> Total pool
+              </Typography>
+              <Typography variant="headline" weight="bold" className="mt-1.5">{ton(pool)} TON</Typography>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <Typography variant="caption2" weight="semibold" className="uppercase tracking-wide text-gray-500 flex items-center gap-1 mb-1.5">
+                <Gift size={14} className="text-emerald-600" /> Top {raffle?.top_n}
+              </Typography>
+              <Typography variant="headline" weight="bold" className="mt-1.5">{ton(perPrize)} TON each</Typography>
+            </div>
+          </div>
 
           {my?.reward_nanoton && (
             <p className="text-green-600 font-semibold text-center">🎉 You received {ton(my.reward_nanoton)} TON!</p>
           )}
-        </Block>
 
-        {raffle?.status === "completed" && winners.length > 0 && (
-          <>
-            <BlockTitle className="mt-6">Winners</BlockTitle>
-            <List inset>
-              {winners.map((w: any) => (
-                <ListItem
-                  key={w.rank}
-                  className="py-1"
-                  media={
-                    w.photo_url ? (
-                      <Image
-                        src={w.photo_url}
-                        width={32}
-                        height={32}
-                        alt=""
-                        className="rounded-full object-cover"
-                      />
-                    ) : (
-                      <FiUser className="w-6 h-6 text-gray-400" />
-                    )
-                  }
-                  title={<span className="font-medium">#{w.rank}</span>}
-                  after={w.reward_nanoton ? `${ton(w.reward_nanoton)} TON` : "—"}
-                  subtitle={
-                    w.username ? (
-                      <a
-                        href={`https://t.me/${w.username}`}
-                        target="_blank"
-                        className="text-blue-600 underline truncate max-w-[160px]"
-                      >
-                        @{truncate(w.username)}
-                      </a>
-                    ) : (
-                      <span className="truncate max-w-[160px]">{truncate(bestName(w).toString())}</span>
-                    )
-                  }
+          {/* winners inside the same section */}
+          {raffle?.status === "completed" && winners.length > 0 && (
+            <>
+              <BlockTitle className="mt-2">Winners</BlockTitle>
+              <List inset>
+                {winners.map((w: any) => (
+                  <ListItem
+                    key={w.rank}
+                    className="py-1"
+                    media={
+                      w.photo_url ? (
+                        <Image
+                          src={w.photo_url}
+                          width={32}
+                          height={32}
+                          alt=""
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <FiUser className="w-6 h-6 text-gray-400" />
+                      )
+                    }
+                    title={<span className="font-medium">#{w.rank}</span>}
+                    after={w.reward_nanoton ? `${ton(w.reward_nanoton)} TON` : "—"}
+                    subtitle={
+                      w.username ? (
+                        <a
+                          href={`https://t.me/${w.username}`}
+                          target="_blank"
+                          className="text-blue-600 underline truncate max-w-[160px]"
+                        >
+                          @{truncate(w.username)}
+                        </a>
+                      ) : (
+                        <span className="truncate max-w-[160px]">{truncate(bestName(w).toString())}</span>
+                      )
+                    }
+                  />
+                ))}
+              </List>
+            </>
+          )}
+
+          {/* wallet controls + address inside the same section */}
+          <div className="space-y-2">
+            {hasWallet && (
+              <List inset className="!mx-0 !px-0 !mt-0 !mb-0">
+                <ListInput
+                  outline
+                  readOnly
+                  label="Wallet Address"
+                  value={walletB ?? ""}
+                  className="!mx-0"
                 />
-              ))}
-            </List>
-          </>
-        )}
+              </List>
+            )}
+            {!hasWallet && (
+              <CustomButton className="justify-center" buttonClassName="w-full" onClick={() => modal.open()}>
+                Connect wallet
+              </CustomButton>
+            )}
+            {hasWallet && !my && (
+              <CustomButton
+                variant="secondary"
+                className="justify-center"
+                buttonClassName="w-full"
+                onClick={() => tonConnectUI.disconnect()}
+              >
+                Disconnect wallet
+              </CustomButton>
+            )}
+          </div>
+        </Block>
       </div>
     </>
   );
