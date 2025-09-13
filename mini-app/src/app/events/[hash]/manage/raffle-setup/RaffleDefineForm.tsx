@@ -11,10 +11,13 @@ import { toast } from "sonner";
 import { Block, BlockTitle, List, ListInput, ListItem, Preloader, Radio } from "konsta/react";
 import { Button } from "@/components/ui/button";
 import { Plus, Share as ShareIcon } from "lucide-react";
-import { FiUser } from "react-icons/fi";
+import { FiUser, FiCopy } from "react-icons/fi";
 
 import { trpc } from "@/app/_trpc/client";
 import CustomButton from "@/app/_components/Button/CustomButton";
+import ListLayout from "@/app/_components/atoms/cards/ListLayout";
+import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
+import type { StatusChipProps } from "@/components/ui/status-chips";
 import {
   CHUNK_SIZE_RAFFLE,
   DEPLOY_FEE_NANO,
@@ -32,6 +35,8 @@ type Kind = "ton" | "merch";
 const fmtNano = (x?: string | bigint | null, d = 3) => (x ? (Number(x) / 1e9).toFixed(d) : "—");
 const trunc = (s = "", m = 18) => (s.length <= m ? s : `${s.slice(0, m - 1)}…`);
 const bestName = (u: any) => u.username ?? ([u.first_name, u.last_name].filter(Boolean).join(" ") || u.user_id);
+const isTestnet = !(/*NOT*/ ["production", "stage", "staging"].includes(process.env.NEXT_PUBLIC_ENV || "development"));
+const txUrl = (h?: string | null) => (h ? `https://${isTestnet ? "testnet." : ""}tonviewer.com/transaction/${h}` : null);
 
 const shareLink = async (url: string, text: string) => {
   try {
@@ -53,17 +58,28 @@ const shareLink = async (url: string, text: string) => {
 /* ------------------------------------------------------------------ *
  * zod schemas                                                        *
  * ------------------------------------------------------------------ */
-const tonSchema = z.object({
-  event_uuid: z.string().uuid(),
-  top_n: z.coerce.number().int().min(1).max(100),
-  prize_pool_ton: z.coerce.number().positive(),
-});
+const tonSchema = z
+  .object({
+    event_uuid: z.string().uuid(),
+    top_n: z.coerce.number().int().min(1).max(1000),
+    prize_pool_ton: z.coerce.number().positive(),
+  })
+  .superRefine((val, ctx) => {
+    const perWinner = val.prize_pool_ton / val.top_n;
+    if (!(perWinner > 0.02)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["prize_pool_ton"],
+        message: `Per-winner amount must be greater than 0.02 TON. Your current per-winner amount is ${perWinner.toFixed(4)} TON.`,
+      });
+    }
+  });
 type TonVals = z.infer<typeof tonSchema>;
 
 const prizeSchema = z.object({
   item_name: z.string().min(3),
   item_description: z.string().optional(),
-  top_n: z.coerce.number().int().min(1).max(100),
+  top_n: z.coerce.number().int().min(1).max(1000),
   fulfil_method: z.enum(["ship", "pickup"]),
 });
 type PrizeVals = z.infer<typeof prizeSchema>;
@@ -85,23 +101,20 @@ function TonForm({
   saving: boolean;
 }) {
   return (
-    <form
-      onSubmit={onSave}
-      className="px-4 space-y-4"
-    >
-      <BlockTitle>TON giveaway</BlockTitle>
-      <List>
+    <form onSubmit={onSave}>
+      <ListLayout title="TON giveaway">
         <Controller
           control={control}
           name="top_n"
           render={({ field }) => (
             <ListInput
               {...field}
+              outline
               disabled={!canEdit}
               label="Number of winners"
               type="number"
               min={1}
-              max={100}
+              max={1000}
               required
               error={errors.top_n?.message}
             />
@@ -113,6 +126,7 @@ function TonForm({
           render={({ field }) => (
             <ListInput
               {...field}
+              outline
               disabled={!canEdit}
               label="Prize pool (TON)"
               type="number"
@@ -122,18 +136,20 @@ function TonForm({
             />
           )}
         />
-      </List>
+      </ListLayout>
       {canEdit && (
-        <CustomButton
-          className="w-full justify-center"
-          isLoading={saving}
-          onClick={(e) => {
-            onSave();
-            e.preventDefault();
-          }}
-        >
-          Save
-        </CustomButton>
+        <div className="px-4 mt-3">
+          <CustomButton
+            className="w-full justify-center"
+            isLoading={saving}
+            onClick={(e) => {
+              onSave();
+              e.preventDefault();
+            }}
+          >
+            Save
+          </CustomButton>
+        </div>
       )}
     </form>
   );
@@ -150,87 +166,82 @@ function SummaryTon({ info }: { info: any }) {
   const bal = BigInt(w.balanceNano ?? 0);
   const extFees = EXT_FEE_NANO * BigInt(batches);
   const intFees = INT_FEE_NANO * BigInt(r.top_n);
+  const perWinner = r.top_n > 0 ? pool / BigInt(r.top_n) : BigInt(0);
 
   return (
     <>
-      <BlockTitle className="mb-2">Raffle summary</BlockTitle>
-      <Block
-        strong
-        className="text-sm space-y-1"
-      >
-        <p>
-          <b>Status:</b> {r.status}
-        </p>
+      {/* Wallet */}
+      <div className="mt-3">
+      <ListLayout title="Funding Wallet">
+        {!w.address && <ListItem title="Wallet address will be created soon" />}
         {w.address && (
-          <p className="break-all">
-            <b>Wallet:</b> {w.address}
-          </p>
+          <div>
+            <div className="text-sm text-gray-700 mb-1">Wallet Address</div>
+            <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+              <ListInput outline readOnly value={w.address} />
+              <Button
+                variant="secondary"
+                className="h-10 px-3 mr-2"
+                onClick={() =>
+                  navigator.clipboard
+                    .writeText(w.address)
+                    .then(() => toast.success("Wallet address copied"))
+                }
+                title="Copy address"
+              >
+                <FiCopy size={18} />
+              </Button>
+            </div>
+          </div>
         )}
-        <p>
-          <b>Prize pool:</b> {fmtNano(pool)} TON
-        </p>
-        <p>
-          <b>Deployment fee:</b> {fmtNano(DEPLOY_FEE_NANO)} TON
-        </p>
-        <p>
-          <b>External fees:</b> {fmtNano(extFees)} TON ({batches} batch{batches !== 1 ? "es" : ""})
-        </p>
-        <p>
-          <b>Internal fees:</b> {fmtNano(intFees)} TON ({r.top_n} winners)
-        </p>
-        <p>
-          <b>Safety floor:</b> {fmtNano(bufferFloor)} TON
-        </p>
-        <p>
-          <b>Total needed:</b> {fmtNano(need)} TON
-        </p>
-        <p>
-          <b>Balance:</b> {fmtNano(bal)} TON
-        </p>
-      </Block>
+      </ListLayout>
+      </div>
 
-      {!!info.winners?.length && (
-        <>
-          <BlockTitle className="mt-4">Winners</BlockTitle>
-          <List>
-            {info.winners.map((w: any) => (
-              <ListItem
-                key={w.user_id}
-                className="py-1"
-                title={<span className="font-medium text-primary">#{w.rank}</span>}
-                subtitle={
-                  w.username ? (
-                    <a
-                      href={`https://t.me/${w.username}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline text-blue-600"
-                    >
-                      @{trunc(w.username)}
-                    </a>
-                  ) : (
-                    trunc(bestName(w))
-                  )
-                }
-                after={r.item_name}
-                media={
-                  w.photo_url ? (
-                    <Image
-                      src={w.photo_url}
-                      width={28}
-                      height={28}
-                      alt=""
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <FiUser className="h-5 w-5 text-gray-400" />
-                  )
-                }
-              />
-            ))}
-          </List>
-        </>
-      )}
+      {/* Summary */}
+      {(() => {
+        const statusVariant: StatusChipProps["variant"] =
+          r.status === "completed" ? "success" : r.status === "waiting_funding" ? "warning" : "primary";
+        const statusLabel =
+          r.status === "waiting_funding"
+            ? "Waiting funding"
+            : r.status === "completed"
+            ? "Completed"
+            : r.status === "distributing"
+            ? "Distributing"
+            : r.status === "funded"
+            ? "Funded"
+            : String(r.status ?? "");
+        return (
+          <div className="mt-3">
+            <ListLayout
+              title="Raffle summary"
+              label={{ text: statusLabel, variant: statusVariant }}
+            >
+        
+        <ListItem
+          title="Per-winner amount"
+          subtitle={<span className="text-gray-500">Note: If there are fewer participants than winners, the remaining prize pool will be redistributed among the winners.</span>}
+          after={<span className="font-medium">{fmtNano(perWinner)} TON</span>}
+        />
+        <ListItem title="Prize pool" after={<span className="font-medium">{fmtNano(pool)} TON</span>} />
+        <ListItem title="Deployment fee" after={<span className="font-medium">{fmtNano(DEPLOY_FEE_NANO)} TON</span>} />
+        <ListItem
+          title="External fees"
+          after={<span className="font-medium">{fmtNano(extFees)} TON ({batches} batch{batches !== 1 ? "es" : ""})</span>}
+        />
+        <ListItem
+          title="Internal fees"
+          after={<span className="font-medium">{fmtNano(intFees)} TON ({r.top_n} winners)</span>}
+        />
+        <ListItem title="Safety floor" after={<span className="font-medium">{fmtNano(bufferFloor)} TON</span>} />
+        <ListItem title="Total needed" after={<span className="font-medium">{fmtNano(need)} TON</span>} />
+        <ListItem title="Balance" after={<span className="font-medium">{fmtNano(bal)} TON</span>} />
+            </ListLayout>
+          </div>
+        );
+      })()}
+
+      
     </>
   );
 }
@@ -254,6 +265,7 @@ function PrizeEditor({
   } = useForm<PrizeVals>({
     resolver: zodResolver(prizeSchema),
     mode: "onBlur",
+    shouldFocusError: false,
     defaultValues: { top_n: 1, fulfil_method: "ship", ...initial },
   });
 
@@ -296,7 +308,7 @@ function PrizeEditor({
                   label="Winners"
                   type="number"
                   min={1}
-                  max={100}
+                  max={1000}
                   error={errors.top_n?.message}
                 />
               )}
@@ -351,12 +363,16 @@ function PrizeEditor({
  * tiny modal to view shipping info                                   *
  * ------------------------------------------------------------------ */
 // ⭐ NEW
-function UserDialog({ user, onClose }: { user: any; onClose: () => void }) {
+function UserDialog({ user, onClose, onUpdated, eventUuid }: { user: any; onClose: () => void; onUpdated: () => void; eventUuid: string }) {
   if (!user) return null;
+  const [tracking, setTracking] = useState("");
+  const shipMut = trpc.raffle.updateMerchPrizeShipping.useMutation();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <Block className="bg-white rounded-lg w-[90%] max-w-md p-4 space-y-2">
-        <BlockTitle>Participant details</BlockTitle>
+      <Block className="bg-white rounded-lg w-[90%] max-w-md p-4">
+        <BlockTitle className="!mt-0 mb-3">Participant details</BlockTitle>
+
+        <div className="space-y-2">
 
         <p>
           <b>Username / name:</b> {bestName(user)}
@@ -371,21 +387,72 @@ function UserDialog({ user, onClose }: { user: any; onClose: () => void }) {
             <b>Address:</b> {user.shipping_address}
           </p>
         )}
+        {user.zip_code && (
+          <p>
+            <b>ZIP:</b> {user.zip_code}
+          </p>
+        )}
         {user.phone && (
           <p>
             <b>Phone:</b> {user.phone}
+          </p>
+        )}
+        {user.tracking_number && (
+          <p>
+            <b>Tracking:</b> {user.tracking_number}
           </p>
         )}
         <p>
           <b>Status:</b> {user.status ?? "—"}
         </p>
 
-        <Button
-          className="w-full mt-4"
-          onClick={onClose}
-        >
+        {/* Ship action: only when awaiting shipping */}
+        {user.status === "awaiting_shipping" && (
+          <div className="mt-2 space-y-1">
+            <List className="!mx-0 !px-0">
+              <ListInput
+                className="!mx-0 w-full"
+                outline
+                label="Tracking number"
+                placeholder="e.g. DHL / UPS code"
+                value={tracking}
+                onChange={(e) => setTracking(e.target.value)}
+                inputClassName="w-full"
+              />
+            </List>
+            <div className="text-xs text-gray-500">
+              Enter the carrier tracking code to mark this prize as shipped.
+            </div>
+            <CustomButton
+              className="w-full justify-center"
+              isLoading={shipMut.isLoading}
+              onClick={() =>
+                toast.promise(
+                  shipMut
+                    .mutateAsync({
+                      event_uuid: eventUuid,
+                      merch_prize_result_id: user.id,
+                      action: "ship",
+                      tracking_number: tracking.trim(),
+                    })
+                    .then(() => {
+                      onUpdated();
+                      onClose();
+                    }),
+                  { loading: "Marking shipped…", success: "Marked as shipped", error: (e) => e?.message ?? "Error" }
+                )
+              }
+              disabled={!tracking.trim()}
+            >
+              Mark shipped
+            </CustomButton>
+          </div>
+        )}
+
+        <Button className="w-full mt-4" variant="secondary" onClick={onClose}>
           Close
         </Button>
+        </div>
       </Block>
     </div>
   );
@@ -414,6 +481,7 @@ export default function RaffleDefineForm() {
   /* ─── TON queries & mut ─── */
   const tonForm = useForm<TonVals>({
     resolver: zodResolver(tonSchema),
+    shouldFocusError: false,
     defaultValues: { event_uuid: eventUuid, top_n: 10, prize_pool_ton: 1 },
   });
   const tonQ = trpc.raffle.infoForOrganizer.useQuery({ event_uuid: eventUuid });
@@ -501,24 +569,27 @@ export default function RaffleDefineForm() {
       <h1 className="p-4 text-2xl font-bold">Raffle setup</h1>
 
       {/* ── raffle kind selector ── */}
-      <Block className="px-4">
-        <BlockTitle>Choose type</BlockTitle>
-        <Block className="flex gap-6">
+      <div className="px-0">
+        <ListLayout title="Choose type">
           {(["ton", "merch"] as const).map((v) => (
-            <label
+            <ListItem
               key={v}
-              className="flex items-center gap-2 text-sm"
-            >
-              <Radio
-                checked={kind === v}
-                disabled={locked !== null && locked !== v}
-                onChange={() => setKind(v)}
-              />
-              {v === "ton" ? "TON giveaway" : "Merch raffle"}
-            </label>
+              title={v === "ton" ? "TON giveaway" : "Merch raffle"}
+              className={(locked !== null && locked !== v) ? "opacity-60" : ""}
+              after={
+                <Radio
+                  checked={kind === v}
+                  disabled={locked !== null && locked !== v}
+                  onChange={() => setKind(v)}
+                />
+              }
+              onClick={() => {
+                if (!(locked !== null && locked !== v)) setKind(v);
+              }}
+            />
           ))}
-        </Block>
-      </Block>
+        </ListLayout>
+      </div>
 
       {/* ================= TON ================= */}
       {kind === "ton" && (
@@ -532,12 +603,13 @@ export default function RaffleDefineForm() {
           />
 
           {tonData && (
-            <div className="space-y-4 px-4">
+            <div className="space-y-4 px-0">
               <SummaryTon info={tonData} />
 
               {tonData.raffle.status === "funded" && (
                 <CustomButton
-                  className="w-full justify-center"
+                  buttonClassName="mx-4 w-[calc(100%-2rem)]"
+                  className="justify-center"
                   onClick={() =>
                     toast.promise(
                       trigTon
@@ -551,30 +623,122 @@ export default function RaffleDefineForm() {
                 </CustomButton>
               )}
 
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => router.push(`/events/${eventUuid}/raffle-ui/${tonData.raffle.raffle_uuid}`)}
-              >
-                Open participant page
-              </Button>
-              <div className="flex gap-2">
-                <Button
-                  className="flex-1"
-                  variant="secondary"
-                  onClick={() => navigator.clipboard.writeText(tonUrl).then(() => toast.success("Link copied!"))}
-                >
-                  Copy link
-                </Button>
-                <Button
-                  className="aspect-square"
-                  onClick={() =>
-                    shareLink(tonUrl, `🤞 Join the raffle and win TON! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`)
-                  }
-                >
-                  <ShareIcon size={20} />
-                </Button>
+              <div className="mt-3">
+                <ListLayout title="Send to guests">
+                  <div className="p-4 flex flex-col gap-2 w-full">
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        variant="secondary"
+                        onClick={() => navigator.clipboard.writeText(tonUrl).then(() => toast.success("Link copied!"))}
+                      >
+                        Copy link
+                      </Button>
+                      <Button
+                        className="aspect-square"
+                        onClick={() =>
+                          shareLink(
+                            tonUrl,
+                            `🤞 Join the raffle and win TON! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`
+                          )
+                        }
+                      >
+                        <ShareIcon size={20} />
+                      </Button>
+                    </div>
+                  </div>
+                </ListLayout>
               </div>
+
+              {/* Single list at page end: Eligible until completion; Winners after completion */}
+              {(() => {
+                const r = tonData.raffle;
+                const participants: any[] = tonData.winners ?? [];
+                const withRank = participants.filter((p) => p.rank !== null);
+
+                let list: any[] = [];
+                const isCompleted = r.status === "completed";
+                if (isCompleted) {
+                  list = participants
+                    .filter((p) => p.rank !== null)
+                    .slice()
+                    .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))
+                    .filter((p) => (p.rank ?? 0) <= r.top_n);
+                } else if (withRank.length) {
+                  list = withRank
+                    .slice()
+                    .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))
+                    .filter((p) => (p.rank ?? 0) <= r.top_n);
+                } else {
+                  list = participants
+                    .slice()
+                    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+                    .slice(0, r.top_n);
+                }
+
+                if (!list.length) return null;
+                return (
+                  <div className="mt-3">
+                    <BlockTitle className="mt-4">{isCompleted ? "Winners" : `Eligible now (Top ${r.top_n})`}</BlockTitle>
+                    <List>
+                      {list.map((u: any, idx: number) => (
+                        <ListItem
+                          key={u.user_id}
+                          className="py-1"
+                          title={<span className="font-medium text-primary">#{u.rank ?? idx + 1}</span>}
+                          after={
+                            isCompleted ? (
+                              <span className="flex items-center gap-2">
+                                {u.reward_nanoton ? <span>{fmtNano(u.reward_nanoton)} TON</span> : null}
+                                {u.tx_hash && u.tx_hash !== "toncenter-batch" && (
+                                  <a
+                                    href={txUrl(u.tx_hash) ?? undefined}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-blue-600 underline"
+                                    onClick={(e) => {
+                                      if (!txUrl(u.tx_hash)) e.preventDefault();
+                                    }}
+                                  >
+                                    TX
+                                  </a>
+                                )}
+                              </span>
+                            ) : undefined
+                          }
+                          subtitle={
+                            u.username ? (
+                              <a
+                                href={`https://t.me/${u.username}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline text-blue-600"
+                              >
+                                @{trunc(u.username)}
+                              </a>
+                            ) : (
+                              trunc(bestName(u))
+                            )
+                          }
+                          media={
+                            u.photo_url ? (
+                              <Image
+                                src={u.photo_url}
+                                width={28}
+                                height={28}
+                                alt=""
+                                className="rounded-full object-cover"
+                              />
+                            ) : (
+                              <FiUser className="h-5 w-5 text-gray-400" />
+                            )
+                          }
+                        />
+                      ))}
+                    </List>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </>
@@ -582,9 +746,10 @@ export default function RaffleDefineForm() {
 
       {/* ================= MERCH ================= */}
       {kind === "merch" && (
-        <div className="space-y-4 px-4">
+        <div className="space-y-4 px-0">
           {merchData?.prizes?.length ? (
-            merchData.prizes.map((row) => {
+            <>
+            {merchData.prizes.map((row) => {
               if (!row) return null;
 
               // ⬇️ provide a default empty array when guests key is absent
@@ -610,151 +775,185 @@ export default function RaffleDefineForm() {
               const listToShow = showWinners ? winners : guests;
 
               return (
-                <Block
-                  key={prize.merch_prize_id}
-                  strong
-                  className="space-y-2"
-                >
+                <>
                   {viewUser && (
                     <UserDialog
                       user={viewUser}
                       onClose={() => setViewUser(null)}
+                      onUpdated={() => merchDashQ.refetch()}
+                      eventUuid={eventUuid}
                     />
                   )}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{prize.item_name}</p>
-                      <p className="text-xs text-gray-500">
-                        Top&nbsp;{prize.top_n} • {prize.fulfil_method}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() =>
-                        setEditing({
-                          prizeId: prize.merch_prize_id,
-                          initial: {
-                            item_name: prize.item_name,
-                            item_description: prize.item_description ?? "",
-                            top_n: prize.top_n,
-                            fulfil_method: prize.fulfil_method,
-                          },
-                        })
-                      }
-                    >
-                      Edit
-                    </Button>
-                  </div>
-
-                  {!!listToShow.length && (
-                    <List>
-                      {listToShow.map((u: any, idx: number) => (
-                        <ListItem
-                          key={u.user_id}
-                          className="py-1"
-                          title={
-                            showWinners ? (
-                              <span className="font-medium text-primary">#{u.rank}</span>
-                            ) : (
-                              <span className="font-medium text-gray-400">{idx + 1}</span>
-                            )
-                          }
-                          subtitle={bestName(u)}
-                          after={u.status ?? "—"}
-                          onClick={() => setViewUser(u)}
-                          media={
-                            u.photo_url ? (
-                              <Image
-                                src={u.photo_url}
-                                width={28}
-                                height={28}
-                                alt=""
-                                className="rounded-full object-cover"
-                              />
-                            ) : (
-                              <FiUser className="h-5 w-5 text-gray-400" />
-                            )
+                  {(() => {
+                    const statusVariant: StatusChipProps["variant"] =
+                      prize.status === "completed"
+                        ? "success"
+                        : prize.status === "cancelled"
+                        ? "danger"
+                        : prize.status === "draft"
+                        ? "warning"
+                        : "primary";
+                    const statusLabel = prize.status.charAt(0).toUpperCase() + prize.status.slice(1);
+                    return (
+                      <div className="mt-3">
+                        <ListLayout
+                          key={prize.merch_prize_id}
+                          title={prize.item_name}
+                          label={{ text: statusLabel, variant: statusVariant }}
+                        >
+                        
+                          <ListItem
+                            title={<span className="text-sm text-gray-700">Top&nbsp;{prize.top_n} • {prize.fulfil_method}</span>}
+                            after={
+                              <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() =>
+                                setEditing({
+                                  prizeId: prize.merch_prize_id,
+                                  initial: {
+                                    item_name: prize.item_name,
+                                    item_description: prize.item_description ?? "",
+                                    top_n: prize.top_n,
+                                    fulfil_method: prize.fulfil_method,
+                                  },
+                                })
+                              }
+                            >
+                              Edit
+                            </Button>
                           }
                         />
-                      ))}
-                    </List>
-                  )}
-                </Block>
+                    
+                          {!!listToShow.length &&
+                            listToShow.map((u: any, idx: number) => (
+                              <ListItem
+                                key={u.user_id}
+                                className="py-1"
+                                title={
+                                  showWinners ? (
+                                    <span className="font-medium text-primary">#{u.rank}</span>
+                                  ) : (
+                                    <span className="font-medium text-gray-400">{idx + 1}</span>
+                                  )
+                                }
+                                subtitle={bestName(u)}
+                                after={u.status ?? "—"}
+                                onClick={() => setViewUser(u)}
+                                media={
+                                  u.photo_url ? (
+                                    <Image
+                                      src={u.photo_url}
+                                      width={28}
+                                      height={28}
+                                      alt=""
+                                      className="rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <FiUser className="h-5 w-5 text-gray-400" />
+                                  )
+                                }
+                              />
+                            ))}
+                        </ListLayout>
+                      </div>
+                    );
+                  })()}
+                </>
               );
-            })
+            })}
+            {/* Add reward just under the list */}
+            {(merchData?.prizes?.length ?? 0) > 0 && (
+              <div className="px-4 mt-2">
+                <Button
+                  variant="outline"
+                  className="w-full flex justify-center gap-2"
+                  onClick={() => setEditing({ prizeId: undefined, initial: {} })}
+                >
+                  <Plus size={16} />
+                  Add reward
+                </Button>
+              </div>
+            )}
+            </>
           ) : (
-            <Block
-              strong
-              className="text-center text-sm"
-            >
-              <p>No rewards yet.</p>
-              <p className="text-xs text-gray-500">Add your first merch reward below.</p>
-            </Block>
+            <div className="mt-3">
+              <ListLayout title="Merch rewards" inset>
+                <div className="my-6">
+                  <DataStatus
+                    status="not_found"
+                    title="No rewards yet"
+                    description="Add your first reward below."
+                    actionButton={
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => setEditing({ prizeId: undefined, initial: {} })}
+                      >
+                        <Plus size={14} className="mr-1" /> Add reward
+                      </Button>
+                    }
+                  />
+                </div>
+              </ListLayout>
+            </div>
           )}
 
           {/* pick winners – only when at least one prize still in draft */}
           {merchData?.prizes?.some((p) => p && p.prize.status === "draft") && (
-            <CustomButton
-              className="w-full justify-center"
-              isLoading={trigPrize.isLoading}
-              onClick={() => {
-                if (!merchData) return;
-                const draftIds = merchData.prizes
-                  .filter((p) => p && p.prize.status === "draft")
-                  .map((p) => p!.prize.merch_prize_id);
-                if (!draftIds.length) return;
+            <div className="px-4">
+              <CustomButton
+                className="w-full justify-center"
+                isLoading={trigPrize.isLoading}
+                onClick={() => {
+                  if (!merchData) return;
+                  const draftIds = merchData.prizes
+                    .filter((p) => p && p.prize.status === "draft")
+                    .map((p) => p!.prize.merch_prize_id);
+                  if (!draftIds.length) return;
 
-                toast.promise(
-                  Promise.all(draftIds.map((id) => trigPrize.mutateAsync({ merch_prize_id: id, event_uuid: eventUuid }))),
-                  {
-                    loading: "Picking winners…",
-                    success: "Winners selected!",
-                    error: (e) => e?.message ?? "Error",
-                  }
-                );
-              }}
-            >
-              Pick winners for all rewards
-            </CustomButton>
+                  toast.promise(
+                    Promise.all(draftIds.map((id) => trigPrize.mutateAsync({ merch_prize_id: id, event_uuid: eventUuid }))),
+                    {
+                      loading: "Picking winners…",
+                      success: "Winners selected!",
+                      error: (e) => e?.message ?? "Error",
+                    }
+                  );
+                }}
+              >
+                Pick winners for all rewards
+              </CustomButton>
+            </div>
           )}
 
           {merchData?.raffle && (
-            <>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => router.push(`/events/${eventUuid}/raffle-merch-ui/${merchData.raffle.merchRaffleUuid}`)}
-              >
-                Open participant page
-              </Button>
-              <div className="flex gap-2">
-                <Button
-                  className="flex-1"
-                  variant="secondary"
-                  onClick={() => navigator.clipboard.writeText(merchUrl).then(() => toast.success("Link copied!"))}
-                >
-                  Copy link
-                </Button>
-                <Button
-                  className="aspect-square"
-                  onClick={() =>
-                    shareLink(merchUrl, `🎁 Join the merch raffle! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`)
-                  }
-                >
-                  <ShareIcon size={20} />
-                </Button>
-              </div>
-            </>
+            <div className="mt-3">
+              <ListLayout title="Send to guests">
+                <div className="p-4 flex flex-col gap-2 w-full">
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1"
+                      variant="secondary"
+                      onClick={() => navigator.clipboard.writeText(merchUrl).then(() => toast.success("Link copied!"))}
+                    >
+                      Copy link
+                    </Button>
+                    <Button
+                      className="aspect-square"
+                      onClick={() =>
+                        shareLink(merchUrl, `🎁 Join the merch raffle! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`)
+                      }
+                    >
+                      <ShareIcon size={20} />
+                    </Button>
+                  </div>
+                </div>
+              </ListLayout>
+            </div>
           )}
 
-          <Button
-            className="flex w-full justify-center gap-2"
-            onClick={() => setEditing({ prizeId: undefined, initial: {} })}
-          >
-            <Plus size={16} />
-            Add reward
-          </Button>
         </div>
       )}
 

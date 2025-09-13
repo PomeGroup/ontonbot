@@ -17,6 +17,7 @@ import Images from "@/app/_components/atoms/images";
 import Typography from "@/components/Typography";
 import Divider from "@/components/Divider";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
+import ListLayout from "@/app/_components/atoms/cards/ListLayout";
 
 /* ╭──────────────── helpers ─────────────────╮ */
 const random6 = () =>
@@ -77,6 +78,7 @@ const SpinBtn = ({ show, busy, onClick }: { show: boolean; busy: boolean; onClic
 const shipSchema = z.object({
   full_name: z.string().min(3, "Required"),
   shipping_address: z.string().min(10, "Required"),
+  zip_code: z.string().min(3, "Required").max(16, "Too long"),
   phone: z.string().min(6, "Required"),
 });
 type ShipVals = z.infer<typeof shipSchema>;
@@ -104,9 +106,11 @@ function ShippingForm({
     reset, // ← to reset after success if you want
   } = useForm<ShipVals>({
     resolver: zodResolver(shipSchema),
+    shouldFocusError: false,
     defaultValues: {
       full_name: defaultVals.full_name ?? "",
       shipping_address: defaultVals.shipping_address ?? "",
+      zip_code: (defaultVals as any).zip_code ?? "",
       phone: defaultVals.phone ?? "",
     },
   });
@@ -117,7 +121,7 @@ function ShippingForm({
   return (
     <form
       ref={formRef}
-      className="space-y-3 pt-4"
+      className="pt-2"
       onSubmit={handleSubmit((vals) =>
         toast.promise(
           mutate({ merch_prize_id: prizeId, ...vals }).then(() => {
@@ -130,8 +134,7 @@ function ShippingForm({
       )}
     >
       <BlockTitle className="!mt-0">Shipping details</BlockTitle>
-
-      <List inset>
+      <List>
         <Controller
           control={control}
           name="full_name"
@@ -140,6 +143,8 @@ function ShippingForm({
               {...field}
               label="Full name"
               outline
+              autoComplete="name"
+              autoCapitalize="words"
               error={errors.full_name?.message}
             />
           )}
@@ -154,7 +159,22 @@ function ShippingForm({
               type="textarea"
               label="Address"
               outline
+              inputClassName="min-h-24"
+              autoComplete="street-address"
               error={errors.shipping_address?.message}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="zip_code"
+          render={({ field }) => (
+            <ListInput
+              {...field}
+              label="ZIP / Postal code"
+              outline
+              autoComplete="postal-code"
+              error={errors.zip_code?.message}
             />
           )}
         />
@@ -166,6 +186,9 @@ function ShippingForm({
             <ListInput
               {...field}
               label="Phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               outline
               error={errors.phone?.message}
             />
@@ -227,6 +250,7 @@ export default function RaffleMerchUiPage() {
       status: string | null;
       full_name?: string | null;
       shipping_address?: string | null;
+      zip_code?: string | null;
       phone?: string | null;
     };
   }[];
@@ -271,7 +295,23 @@ export default function RaffleMerchUiPage() {
       </div>
     );
   if (eventQ.error) return <p>{eventQ.error.message}</p>;
-  if (merchQ.error) return <p>{merchQ.error.message}</p>;
+  if (merchQ.error) {
+    const code = (merchQ.error as any)?.data?.code;
+    const isForbidden = code === "FORBIDDEN";
+    if (isForbidden) {
+      return (
+        <div className="bg-[#EFEFF4] min-h-screen px-4 pb-24">
+          <Block strong className="bg-gray-50 border border-gray-200 text-gray-800 p-4 rounded-lg mt-6">
+            <p className="font-semibold">Registration required</p>
+            <p className="text-sm mt-1 text-gray-600">
+              This raffle is available only to approved registrants. Please register for the event and wait for approval.
+            </p>
+          </Block>
+        </div>
+      );
+    }
+    return <p>{merchQ.error.message}</p>;
+  }
 
   const event = eventQ.data;
 
@@ -380,6 +420,7 @@ export default function RaffleMerchUiPage() {
                   defaultVals={{
                     full_name: my?.full_name ?? "",
                     shipping_address: my?.shipping_address ?? "",
+                    zip_code: my?.zip_code ?? "",
                     phone: my?.phone ?? "",
                   }}
                   mutate={(data) => shipMut.mutateAsync(data)}

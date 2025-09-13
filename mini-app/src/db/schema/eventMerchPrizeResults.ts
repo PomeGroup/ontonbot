@@ -53,6 +53,7 @@ export const eventMerchPrizeResults = pgTable(
     /* shipping info (optional) */
     full_name: text("full_name"),
     shipping_address: text("shipping_address"),
+    zip_code: text("zip_code"),
     phone: text("phone"),
     tracking_number: text("tracking_number"),
 

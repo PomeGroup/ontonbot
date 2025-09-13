@@ -26,6 +26,7 @@ import {
   STATE_FLIP_BUFFER_NANO,
 } from "@/constants";
 import eventDB from "@/db/modules/events.db";
+import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
 import { v2_client } from "@/services/tonCenter";
 
 export const ensureDateWindowOK = async (eventId: number): Promise<void> => {
@@ -46,6 +47,21 @@ export const ensureDateWindowOK = async (eventId: number): Promise<void> => {
   }
 };
 
+export const ensureRegistrationOK = async (eventId: number, userId: number): Promise<void> => {
+  const event = await eventDB.getEventById(eventId);
+  if (!event) throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+  if (!event.has_registration) return;
+
+  const reg = await eventRegistrantsDB.getRegistrantRequest(event.event_uuid, userId);
+  const ok = reg && (reg.status === "approved" || reg.status === "checkedin");
+  if (!ok) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "This event requires an approved registration to participate in the raffle.",
+    });
+  }
+};
+
 const serialise = (row: typeof eventRaffles.$inferSelect) => ({
   ...row,
   prize_pool_nanoton: row.prize_pool_nanoton ? row.prize_pool_nanoton.toString() : null,
@@ -57,11 +73,22 @@ export const raffleRouter = router({
 
   defineOrUpdate: eventManagementProtectedProcedure
     .input(
-      z.object({
-        event_uuid: z.string().uuid(),
-        top_n: z.number().int().min(1).max(100),
-        prize_pool_ton: z.number().positive(),
-      })
+      z
+        .object({
+          event_uuid: z.string().uuid(),
+          top_n: z.number().int().min(1).max(1000),
+          prize_pool_ton: z.number().positive(),
+        })
+        .superRefine((val, ctx) => {
+          const perWinner = val.prize_pool_ton / val.top_n;
+          if (!(perWinner > 0.02)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["prize_pool_ton"],
+              message: `Per-winner amount must be greater than 0.02 TON. Your current per-winner amount is ${perWinner.toFixed(4)} TON.`,
+            });
+          }
+        })
     )
     .mutation(async ({ input, ctx }) => {
       const eventId = ctx.event.event_id;
@@ -114,7 +141,7 @@ export const raffleRouter = router({
         item_name: z.string().min(3),
         item_description: z.string().optional(),
         image_url: z.string().url().nullable().optional(),
-        top_n: z.number().int().min(1).max(100),
+        top_n: z.number().int().min(1).max(1000),
         fulfil_method: z.enum(["ship", "pickup"]),
       })
     )
@@ -317,6 +344,7 @@ export const raffleRouter = router({
       /* 1 . raffle & prizes ------------------------------------------------- */
       const raffle = await eventMerchRafflesDB.fetchMerchRaffleByUuid(input.merch_raffle_uuid);
       if (!raffle) throw new TRPCError({ code: "NOT_FOUND" });
+      await ensureRegistrationOK(raffle.eventId, user.user_id);
 
       const prizes = await eventMerchPrizesDB.listPrizesForRaffle(raffle.merchRaffleId);
 
@@ -385,6 +413,7 @@ export const raffleRouter = router({
 
       /* 3. date window check */
       await ensureDateWindowOK(raffle.event_id);
+      await ensureRegistrationOK(raffle.event_id, user.user_id);
 
       /* 4. create & store score */
       const score = randomInt(1, 1_000_000);
@@ -438,6 +467,7 @@ export const raffleRouter = router({
 
       /* ③ date window */
       await ensureDateWindowOK(merch.eventId);
+      await ensureRegistrationOK(merch.eventId, user.user_id);
 
       /* ④ single score row (un-assigned) */
       const score = randomInt(1, 1_000_000);
@@ -454,7 +484,12 @@ export const raffleRouter = router({
 
   view: initDataProtectedProcedure
     .input(z.object({ raffle_uuid: z.string().uuid() }))
-    .query(({ ctx, input }) => eventRaffleResultsDB.getUserView(input.raffle_uuid, ctx.user.user_id)),
+    .query(async ({ ctx, input }) => {
+      const raffle = await eventRafflesDB.fetchRaffleByUuid(input.raffle_uuid);
+      if (!raffle) throw new TRPCError({ code: "NOT_FOUND" });
+      await ensureRegistrationOK(raffle.event_id, ctx.user.user_id);
+      return eventRaffleResultsDB.getUserView(input.raffle_uuid, ctx.user.user_id);
+    }),
 
   viewMerchPrize: initDataProtectedProcedure.input(z.object({ merch_prize_id: z.number() })).query(({ ctx, input }) =>
     eventMerchPrizeResultsDB.getPrizeWithWinners(input.merch_prize_id).then((r) => {
@@ -471,6 +506,7 @@ export const raffleRouter = router({
         merch_prize_id: z.number(),
         full_name: z.string().min(3).max(80),
         shipping_address: z.string().min(10).max(255),
+        zip_code: z.string().min(3).max(16),
         phone: z.string().min(6).max(32),
       })
     )
@@ -494,11 +530,54 @@ export const raffleRouter = router({
         user_id: user.user_id,
         full_name: input.full_name,
         shipping_address: input.shipping_address,
+        zip_code: input.zip_code,
         phone: input.phone,
       });
 
       // ④ bump status for pickup flow
 
+      return { ok: true };
+    }),
+
+  /* ───────────────── ORGANISER – update shipping state ──────────── */
+  updateMerchPrizeShipping: eventManagementProtectedProcedure
+    .input(
+      z
+        .object({
+          event_uuid: z.string().uuid(),
+          merch_prize_result_id: z.number(),
+          action: z.enum(["ship", "deliver", "collect"]),
+          tracking_number: z.string().max(120).optional(),
+        })
+        .refine((v) => (v.action === "ship" ? Boolean(v.tracking_number && v.tracking_number.trim().length > 0) : true), {
+          message: "Tracking number is required to mark as shipped",
+          path: ["tracking_number"],
+        })
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Authorization: ensure the result belongs to the current event
+      const row = await eventMerchPrizeResultsDB.fetchResultWithPrizeAndEvent(input.merch_prize_result_id);
+      if (!row || !row.event_id || row.event_id !== ctx.event.event_id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Result not in this event" });
+      }
+
+      // Business rule checks by action
+      if (input.action === "ship") {
+        if (row.status !== "awaiting_shipping") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Result not awaiting shipping" });
+        }
+        await eventMerchPrizeResultsDB.markPrizeShipped(input.merch_prize_result_id, input.tracking_number ?? null);
+      } else if (input.action === "deliver") {
+        if (row.status !== "shipped") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Result not shipped yet" });
+        }
+        await eventMerchPrizeResultsDB.markPrizeDelivered(input.merch_prize_result_id);
+      } else if (input.action === "collect") {
+        if (row.status !== "awaiting_pickup") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Result not awaiting pickup" });
+        }
+        await eventMerchPrizeResultsDB.markPrizeCollected(input.merch_prize_result_id);
+      }
       return { ok: true };
     }),
 });

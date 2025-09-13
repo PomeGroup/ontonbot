@@ -10,6 +10,7 @@ interface CustomButtonProps {
   variant?: VariantProps<typeof buttonVariants>["variant"];
   size?: "lg" | "md";
   isLoading?: boolean;
+  disabled?: boolean;
   icon?: ReactNode;
   fontSize?: TypographyProps["variant"];
   fontWeight?: TypographyProps["weight"];
@@ -38,13 +39,14 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   variant = "primary",
   size,
   isLoading = false,
+  disabled = false,
   className,
   onClick,
   buttonClassName,
 }) => (
   <Button
     itemType="button"
-    disabled={isLoading}
+    disabled={isLoading || disabled}
     onClick={(e) => {
       onClick?.(e);
     }}
