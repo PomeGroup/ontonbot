@@ -295,7 +295,23 @@ export default function RaffleMerchUiPage() {
       </div>
     );
   if (eventQ.error) return <p>{eventQ.error.message}</p>;
-  if (merchQ.error) return <p>{merchQ.error.message}</p>;
+  if (merchQ.error) {
+    const code = (merchQ.error as any)?.data?.code;
+    const isForbidden = code === "FORBIDDEN";
+    if (isForbidden) {
+      return (
+        <div className="bg-[#EFEFF4] min-h-screen px-4 pb-24">
+          <Block strong className="bg-gray-50 border border-gray-200 text-gray-800 p-4 rounded-lg mt-6">
+            <p className="font-semibold">Registration required</p>
+            <p className="text-sm mt-1 text-gray-600">
+              This raffle is available only to approved registrants. Please register for the event and wait for approval.
+            </p>
+          </Block>
+        </div>
+      );
+    }
+    return <p>{merchQ.error.message}</p>;
+  }
 
   const event = eventQ.data;
 

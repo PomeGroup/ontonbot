@@ -201,7 +201,23 @@ export default function RaffleUiPage() {
       </div>
     );
   if (eventQ.error) return <p>{eventQ.error.message}</p>;
-  if (viewQ.error) return <p>{viewQ.error.message}</p>;
+  if (viewQ.error) {
+    const code = (viewQ.error as any)?.data?.code;
+    const isForbidden = code === "FORBIDDEN";
+    if (isForbidden) {
+      return (
+        <div className="min-h-screen bg-[#EFEFF4] pb-24 px-4">
+          <Block strong className="bg-gray-50 border border-gray-200 text-gray-800 p-4 rounded-lg mt-6">
+            <p className="font-semibold">Registration required</p>
+            <p className="text-sm mt-1 text-gray-600">
+              This raffle is available only to approved registrants. Please register for the event and wait for approval.
+            </p>
+          </Block>
+        </div>
+      );
+    }
+    return <p>{viewQ.error.message}</p>;
+  }
 
   const event = eventQ.data!;
   const eventNotStarted = event?.start_date ? Date.now() < Number(event.start_date) * 1000 : false;

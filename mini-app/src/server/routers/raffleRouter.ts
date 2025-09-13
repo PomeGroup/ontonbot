@@ -26,6 +26,7 @@ import {
   STATE_FLIP_BUFFER_NANO,
 } from "@/constants";
 import eventDB from "@/db/modules/events.db";
+import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
 import { v2_client } from "@/services/tonCenter";
 
 export const ensureDateWindowOK = async (eventId: number): Promise<void> => {
@@ -42,6 +43,21 @@ export const ensureDateWindowOK = async (eventId: number): Promise<void> => {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message: `Raffle not open yet – event starts at ${new Date(start).toISOString()}`,
+    });
+  }
+};
+
+export const ensureRegistrationOK = async (eventId: number, userId: number): Promise<void> => {
+  const event = await eventDB.getEventById(eventId);
+  if (!event) throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+  if (!event.has_registration) return;
+
+  const reg = await eventRegistrantsDB.getRegistrantRequest(event.event_uuid, userId);
+  const ok = reg && (reg.status === "approved" || reg.status === "checkedin");
+  if (!ok) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "This event requires an approved registration to participate in the raffle.",
     });
   }
 };
@@ -328,6 +344,7 @@ export const raffleRouter = router({
       /* 1 . raffle & prizes ------------------------------------------------- */
       const raffle = await eventMerchRafflesDB.fetchMerchRaffleByUuid(input.merch_raffle_uuid);
       if (!raffle) throw new TRPCError({ code: "NOT_FOUND" });
+      await ensureRegistrationOK(raffle.eventId, user.user_id);
 
       const prizes = await eventMerchPrizesDB.listPrizesForRaffle(raffle.merchRaffleId);
 
@@ -396,6 +413,7 @@ export const raffleRouter = router({
 
       /* 3. date window check */
       await ensureDateWindowOK(raffle.event_id);
+      await ensureRegistrationOK(raffle.event_id, user.user_id);
 
       /* 4. create & store score */
       const score = randomInt(1, 1_000_000);
@@ -449,6 +467,7 @@ export const raffleRouter = router({
 
       /* ③ date window */
       await ensureDateWindowOK(merch.eventId);
+      await ensureRegistrationOK(merch.eventId, user.user_id);
 
       /* ④ single score row (un-assigned) */
       const score = randomInt(1, 1_000_000);
@@ -465,7 +484,12 @@ export const raffleRouter = router({
 
   view: initDataProtectedProcedure
     .input(z.object({ raffle_uuid: z.string().uuid() }))
-    .query(({ ctx, input }) => eventRaffleResultsDB.getUserView(input.raffle_uuid, ctx.user.user_id)),
+    .query(async ({ ctx, input }) => {
+      const raffle = await eventRafflesDB.fetchRaffleByUuid(input.raffle_uuid);
+      if (!raffle) throw new TRPCError({ code: "NOT_FOUND" });
+      await ensureRegistrationOK(raffle.event_id, ctx.user.user_id);
+      return eventRaffleResultsDB.getUserView(input.raffle_uuid, ctx.user.user_id);
+    }),
 
   viewMerchPrize: initDataProtectedProcedure.input(z.object({ merch_prize_id: z.number() })).query(({ ctx, input }) =>
     eventMerchPrizeResultsDB.getPrizeWithWinners(input.merch_prize_id).then((r) => {
