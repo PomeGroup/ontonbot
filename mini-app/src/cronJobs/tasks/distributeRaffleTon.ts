@@ -59,24 +59,49 @@ async function payOneRaffle(raffleId: number, eventId: number): Promise<void> {
   /* 3. deploy wallet (first run) */
   if (!(await deployWallet(row.mnemonicWords, row.wallet_address))) return;
 
-  /* 4. fee budget & per-user share */
-  const batchCount = Math.ceil(winners.length / CHUNK_SIZE_RAFFLE);
-  const balanceNano = await fetchTonBalance(row.wallet_address);
-
-  const gasBudget = EXT_FEE_NANO * BigInt(batchCount) + INT_FEE_NANO * BigInt(winners.length);
-
-  const prizePoolNano = balanceNano - gasBudget - SAFETY_FLOOR_NANO;
-
-  if (prizePoolNano <= BigInt(0)) {
-    logger.warn(`raffle ${raffleId}: wallet needs top-up (balance ${Number(balanceNano) / 1e9} TON)`);
+  /* 4. budget check based on configured prize pool */
+  const raffle = await eventRafflesDB.fetchRaffleByEvent(eventId);
+  if (!raffle || !raffle.prize_pool_nanoton) {
+    logger.warn(`raffle ${raffleId}: no configured prize pool`);
     return;
   }
 
-  const perUserNano = prizePoolNano / BigInt(winners.length);
+  const batchCount = Math.ceil(winners.length / CHUNK_SIZE_RAFFLE);
+  const balanceNano = await fetchTonBalance(row.wallet_address);
+  const gasBudget = EXT_FEE_NANO * BigInt(batchCount) + INT_FEE_NANO * BigInt(winners.length);
+  const required = raffle.prize_pool_nanoton + gasBudget + SAFETY_FLOOR_NANO;
+
+  // Detailed budget log for auditing
+  logger.log(
+    [
+      `raffle ${raffleId}: budget check`,
+      `pool=${Number(raffle.prize_pool_nanoton) / 1e9} TON`,
+      `winners=${winners.length}`,
+      `batches=${batchCount}`,
+      `gas=${Number(gasBudget) / 1e9} TON`,
+      `safety=${Number(SAFETY_FLOOR_NANO) / 1e9} TON`,
+      `required=${Number(required) / 1e9} TON`,
+      `balance=${Number(balanceNano) / 1e9} TON`,
+    ].join(" | ")
+  );
+
+  if (balanceNano < required) {
+    logger.warn(
+      `raffle ${raffleId}: insufficient funds – balance=${Number(balanceNano) / 1e9} TON, required=${Number(required) / 1e9} TON`
+    );
+    return;
+  }
+
+  /* 5. per-user share: redistribute full pool among actual winners */
+  const perUserNano = raffle.prize_pool_nanoton / BigInt(winners.length);
   if (perUserNano === BigInt(0)) {
     logger.warn(`raffle ${raffleId}: pool too small per user`);
     return;
   }
+
+  logger.log(
+    `raffle ${raffleId}: per-user ≈ ${Number(perUserNano) / 1e9} TON across ${winners.length} winners`
+  );
 
   /* 5. re-create wallet contract */
   const keyPair = await mnemonicToWalletKey(toWords(row.mnemonicWords));

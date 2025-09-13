@@ -767,7 +767,7 @@ export const TON_IN_NANO = BigInt("1000000000");
 export const CHUNK_SIZE_RAFFLE = 254;
 
 /* fee budget (nano-TON, all bigint) */
-export const EXT_FEE_NANO = BigInt("50000000"); // 0.05 TON
+export const EXT_FEE_NANO = BigInt("55000000"); // 0.055 TON
 export const INT_FEE_NANO = BigInt("20000000"); // 0.02 TON
 export const SAFETY_FLOOR_NANO = BigInt("10000000"); // 0.01 TON
 export const DEPLOY_FEE_NANO = BigInt("60000000"); // 0.06 TON
@@ -787,4 +787,3 @@ export const TBOOK_FAIRLAUNCH_MINIAPP_URL = "https://engage.tbook.com/fair-launc
 export const ORGANIZER_PROMOTE_PRICE = 1; // TON
 export const NFT_EVENT_PRICE = 1; // TON
 export const CSBT_EVENT_PRICE = 1; // TON
-

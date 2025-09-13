@@ -57,11 +57,22 @@ export const raffleRouter = router({
 
   defineOrUpdate: eventManagementProtectedProcedure
     .input(
-      z.object({
-        event_uuid: z.string().uuid(),
-        top_n: z.number().int().min(1).max(100),
-        prize_pool_ton: z.number().positive(),
-      })
+      z
+        .object({
+          event_uuid: z.string().uuid(),
+          top_n: z.number().int().min(1).max(1000),
+          prize_pool_ton: z.number().positive(),
+        })
+        .superRefine((val, ctx) => {
+          const perWinner = val.prize_pool_ton / val.top_n;
+          if (!(perWinner > 0.02)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["prize_pool_ton"],
+              message: `Per-winner amount must be greater than 0.02 TON. Your current per-winner amount is ${perWinner.toFixed(4)} TON.`,
+            });
+          }
+        })
     )
     .mutation(async ({ input, ctx }) => {
       const eventId = ctx.event.event_id;
@@ -114,7 +125,7 @@ export const raffleRouter = router({
         item_name: z.string().min(3),
         item_description: z.string().optional(),
         image_url: z.string().url().nullable().optional(),
-        top_n: z.number().int().min(1).max(100),
+        top_n: z.number().int().min(1).max(1000),
         fulfil_method: z.enum(["ship", "pickup"]),
       })
     )

@@ -30,6 +30,8 @@ const bestName = (u: { username: string | null; first_name: string | null; last_
   u.username ?? ([u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.user_id);
 const ton = (n?: string | bigint | null) => (n ? (Number(n) / 1e9).toFixed(3) : "—");
 const toBounce = (raw: string) => Address.parse(raw).toString({ bounceable: true, urlSafe: true });
+const isTestnet = !(/*NOT*/ ["production", "stage", "staging"].includes(process.env.NEXT_PUBLIC_ENV || "development"));
+const txUrl = (h?: string | null) => (h ? `https://${isTestnet ? "testnet." : ""}tonviewer.com/transaction/${h}` : null);
 
 /* ───────── small memo bits ───────── */
 const EventImage = memo(({ url }: { url: string }) => (
@@ -148,9 +150,7 @@ export default function RaffleUiPage() {
 
   /* prize maths */
   const pool = BigInt(raffle?.prize_pool_nanoton ?? 0);
-  const batches = BigInt(Math.ceil((raffle?.top_n ?? 1) / CHUNK_SIZE_RAFFLE));
-  const gas = EXT_FEE_NANO * batches + INT_FEE_NANO * BigInt(raffle?.top_n ?? 1) + SAFETY_FLOOR_NANO;
-  const perPrize = pool > gas ? (pool - gas) / BigInt(raffle?.top_n ?? 1) : BigInt(0);
+  const perPrize = BigInt(raffle?.top_n ?? 1) > BigInt(0) ? pool / BigInt(raffle?.top_n ?? 1) : BigInt(0);
 
   /* spin handler */
   const spin = useCallback(() => {
@@ -271,7 +271,24 @@ export default function RaffleUiPage() {
                       )
                     }
                     title={<span className="font-medium">#{w.rank}</span>}
-                    after={w.reward_nanoton ? `${ton(w.reward_nanoton)} TON` : "—"}
+                    after={
+                      <span className="flex items-center gap-2">
+                        {w.reward_nanoton ? <span>{ton(w.reward_nanoton)} TON</span> : <span>—</span>}
+                        {w.tx_hash && w.tx_hash !== "toncenter-batch" && (
+                          <a
+                            href={txUrl(w.tx_hash) ?? undefined}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 underline"
+                            onClick={(e) => {
+                              if (!txUrl(w.tx_hash)) e.preventDefault();
+                            }}
+                          >
+                            TX
+                          </a>
+                        )}
+                      </span>
+                    }
                     subtitle={
                       w.username ? (
                         <a

@@ -35,6 +35,8 @@ type Kind = "ton" | "merch";
 const fmtNano = (x?: string | bigint | null, d = 3) => (x ? (Number(x) / 1e9).toFixed(d) : "—");
 const trunc = (s = "", m = 18) => (s.length <= m ? s : `${s.slice(0, m - 1)}…`);
 const bestName = (u: any) => u.username ?? ([u.first_name, u.last_name].filter(Boolean).join(" ") || u.user_id);
+const isTestnet = !(/*NOT*/ ["production", "stage", "staging"].includes(process.env.NEXT_PUBLIC_ENV || "development"));
+const txUrl = (h?: string | null) => (h ? `https://${isTestnet ? "testnet." : ""}tonviewer.com/transaction/${h}` : null);
 
 const shareLink = async (url: string, text: string) => {
   try {
@@ -56,17 +58,28 @@ const shareLink = async (url: string, text: string) => {
 /* ------------------------------------------------------------------ *
  * zod schemas                                                        *
  * ------------------------------------------------------------------ */
-const tonSchema = z.object({
-  event_uuid: z.string().uuid(),
-  top_n: z.coerce.number().int().min(1).max(100),
-  prize_pool_ton: z.coerce.number().positive(),
-});
+const tonSchema = z
+  .object({
+    event_uuid: z.string().uuid(),
+    top_n: z.coerce.number().int().min(1).max(1000),
+    prize_pool_ton: z.coerce.number().positive(),
+  })
+  .superRefine((val, ctx) => {
+    const perWinner = val.prize_pool_ton / val.top_n;
+    if (!(perWinner > 0.02)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["prize_pool_ton"],
+        message: `Per-winner amount must be greater than 0.02 TON. Your current per-winner amount is ${perWinner.toFixed(4)} TON.`,
+      });
+    }
+  });
 type TonVals = z.infer<typeof tonSchema>;
 
 const prizeSchema = z.object({
   item_name: z.string().min(3),
   item_description: z.string().optional(),
-  top_n: z.coerce.number().int().min(1).max(100),
+  top_n: z.coerce.number().int().min(1).max(1000),
   fulfil_method: z.enum(["ship", "pickup"]),
 });
 type PrizeVals = z.infer<typeof prizeSchema>;
@@ -101,7 +114,7 @@ function TonForm({
               label="Number of winners"
               type="number"
               min={1}
-              max={100}
+              max={1000}
               required
               error={errors.top_n?.message}
             />
@@ -153,6 +166,7 @@ function SummaryTon({ info }: { info: any }) {
   const bal = BigInt(w.balanceNano ?? 0);
   const extFees = EXT_FEE_NANO * BigInt(batches);
   const intFees = INT_FEE_NANO * BigInt(r.top_n);
+  const perWinner = r.top_n > 0 ? pool / BigInt(r.top_n) : BigInt(0);
 
   return (
     <>
@@ -204,6 +218,11 @@ function SummaryTon({ info }: { info: any }) {
               label={{ text: statusLabel, variant: statusVariant }}
             >
         
+        <ListItem
+          title="Per-winner amount"
+          subtitle={<span className="text-gray-500">Note: If there are fewer participants than winners, the remaining prize pool will be redistributed among the winners.</span>}
+          after={<span className="font-medium">{fmtNano(perWinner)} TON</span>}
+        />
         <ListItem title="Prize pool" after={<span className="font-medium">{fmtNano(pool)} TON</span>} />
         <ListItem title="Deployment fee" after={<span className="font-medium">{fmtNano(DEPLOY_FEE_NANO)} TON</span>} />
         <ListItem
@@ -222,48 +241,7 @@ function SummaryTon({ info }: { info: any }) {
         );
       })()}
 
-      {!!info.winners?.length && (
-        <>
-          <BlockTitle className="mt-4">Winners</BlockTitle>
-          <List>
-            {info.winners.map((w: any) => (
-              <ListItem
-                key={w.user_id}
-                className="py-1"
-                title={<span className="font-medium text-primary">#{w.rank}</span>}
-                subtitle={
-                  w.username ? (
-                    <a
-                      href={`https://t.me/${w.username}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline text-blue-600"
-                    >
-                      @{trunc(w.username)}
-                    </a>
-                  ) : (
-                    trunc(bestName(w))
-                  )
-                }
-                after={r.item_name}
-                media={
-                  w.photo_url ? (
-                    <Image
-                      src={w.photo_url}
-                      width={28}
-                      height={28}
-                      alt=""
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <FiUser className="h-5 w-5 text-gray-400" />
-                  )
-                }
-              />
-            ))}
-          </List>
-        </>
-      )}
+      
     </>
   );
 }
@@ -287,6 +265,7 @@ function PrizeEditor({
   } = useForm<PrizeVals>({
     resolver: zodResolver(prizeSchema),
     mode: "onBlur",
+    shouldFocusError: false,
     defaultValues: { top_n: 1, fulfil_method: "ship", ...initial },
   });
 
@@ -329,7 +308,7 @@ function PrizeEditor({
                   label="Winners"
                   type="number"
                   min={1}
-                  max={100}
+                  max={1000}
                   error={errors.top_n?.message}
                 />
               )}
@@ -502,6 +481,7 @@ export default function RaffleDefineForm() {
   /* ─── TON queries & mut ─── */
   const tonForm = useForm<TonVals>({
     resolver: zodResolver(tonSchema),
+    shouldFocusError: false,
     defaultValues: { event_uuid: eventUuid, top_n: 10, prize_pool_ton: 1 },
   });
   const tonQ = trpc.raffle.infoForOrganizer.useQuery({ event_uuid: eventUuid });
@@ -669,6 +649,96 @@ export default function RaffleDefineForm() {
                   </div>
                 </ListLayout>
               </div>
+
+              {/* Single list at page end: Eligible until completion; Winners after completion */}
+              {(() => {
+                const r = tonData.raffle;
+                const participants: any[] = tonData.winners ?? [];
+                const withRank = participants.filter((p) => p.rank !== null);
+
+                let list: any[] = [];
+                const isCompleted = r.status === "completed";
+                if (isCompleted) {
+                  list = participants
+                    .filter((p) => p.rank !== null)
+                    .slice()
+                    .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))
+                    .filter((p) => (p.rank ?? 0) <= r.top_n);
+                } else if (withRank.length) {
+                  list = withRank
+                    .slice()
+                    .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))
+                    .filter((p) => (p.rank ?? 0) <= r.top_n);
+                } else {
+                  list = participants
+                    .slice()
+                    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+                    .slice(0, r.top_n);
+                }
+
+                if (!list.length) return null;
+                return (
+                  <div className="mt-3">
+                    <BlockTitle className="mt-4">{isCompleted ? "Winners" : `Eligible now (Top ${r.top_n})`}</BlockTitle>
+                    <List>
+                      {list.map((u: any, idx: number) => (
+                        <ListItem
+                          key={u.user_id}
+                          className="py-1"
+                          title={<span className="font-medium text-primary">#{u.rank ?? idx + 1}</span>}
+                          after={
+                            isCompleted ? (
+                              <span className="flex items-center gap-2">
+                                {u.reward_nanoton ? <span>{fmtNano(u.reward_nanoton)} TON</span> : null}
+                                {u.tx_hash && u.tx_hash !== "toncenter-batch" && (
+                                  <a
+                                    href={txUrl(u.tx_hash) ?? undefined}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-blue-600 underline"
+                                    onClick={(e) => {
+                                      if (!txUrl(u.tx_hash)) e.preventDefault();
+                                    }}
+                                  >
+                                    TX
+                                  </a>
+                                )}
+                              </span>
+                            ) : undefined
+                          }
+                          subtitle={
+                            u.username ? (
+                              <a
+                                href={`https://t.me/${u.username}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline text-blue-600"
+                              >
+                                @{trunc(u.username)}
+                              </a>
+                            ) : (
+                              trunc(bestName(u))
+                            )
+                          }
+                          media={
+                            u.photo_url ? (
+                              <Image
+                                src={u.photo_url}
+                                width={28}
+                                height={28}
+                                alt=""
+                                className="rounded-full object-cover"
+                              />
+                            ) : (
+                              <FiUser className="h-5 w-5 text-gray-400" />
+                            )
+                          }
+                        />
+                      ))}
+                    </List>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </>
