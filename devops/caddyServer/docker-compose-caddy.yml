@@ -230,7 +230,7 @@ volumes:
   registry_data:
     name: "server_registry_data"
   elasticsearch_data:
-    name: "server_elasticsearch_data"
+    name: "server_elasticsearch_data2"
 secrets:
   registry-onton-config:
     external: true
