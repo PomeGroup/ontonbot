@@ -44,12 +44,7 @@ services:
       KIBANA_HASHED_PASSWORD: ${KIBANA_HASHED_PASSWORD}
     secrets:
       - registry-onton-config
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: "127.0.0.1:24224"
-        tag: "docker.caddy-central"
-        #fluentd-async-connect: "true"
+
 
   registry:
     image: registry:latest
@@ -84,12 +79,7 @@ services:
         delay: 10s
     networks:
       - caddy-network
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: "127.0.0.1:24224"
-        tag: "docker.registry-central"
-        #fluentd-async-connect: "true"
+
 
   registry-ui:
     image: joxit/docker-registry-ui:latest
@@ -100,12 +90,7 @@ services:
       DELETE_IMAGES: "true"
     networks:
       - caddy-network
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: "127.0.0.1:24224"
-        tag: "docker.registry-ui-central"
-        #fluentd-async-connect: "true"
+
 
   elasticsearch:
     image:  docker.elastic.co/elasticsearch/elasticsearch:9.0.0
