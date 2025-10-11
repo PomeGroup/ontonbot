@@ -17,10 +17,16 @@ import Divider from "@/components/Divider";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import CustomButton from "@/app/_components/Button/CustomButton";
 import { trpc } from "@/app/_trpc/client";
-import { CHUNK_SIZE_RAFFLE, EXT_FEE_NANO, INT_FEE_NANO, SAFETY_FLOOR_NANO } from "@/constants";
 import { Trophy, Gift } from "lucide-react";
 
 /* ───────── helpers ───────── */
+const formatAmount = (value?: string | bigint | null, decimals = 9, digits = 3) => {
+  if (value === null || value === undefined) return "—";
+  const num = typeof value === "bigint" ? Number(value) : Number(value);
+  if (!Number.isFinite(num)) return "—";
+  const factor = 10 ** decimals;
+  return (num / factor).toFixed(digits);
+};
 const random6 = () =>
   Math.floor(Math.random() * 1_000_000)
     .toString()
@@ -28,7 +34,6 @@ const random6 = () =>
 const truncate = (s: string, m = 18) => (s.length <= m ? s : `${s.slice(0, m - 1)}…`);
 const bestName = (u: { username: string | null; first_name: string | null; last_name: string | null; user_id: number }) =>
   u.username ?? ([u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.user_id);
-const ton = (n?: string | bigint | null) => (n ? (Number(n) / 1e9).toFixed(3) : "—");
 const toBounce = (raw: string) => Address.parse(raw).toString({ bounceable: true, urlSafe: true });
 const isTestnet = !(/*NOT*/ ["production", "stage", "staging"].includes(process.env.NEXT_PUBLIC_ENV || "development"));
 const txUrl = (h?: string | null) => (h ? `https://${isTestnet ? "testnet." : ""}tonviewer.com/transaction/${h}` : null);
@@ -143,6 +148,9 @@ export default function RaffleUiPage() {
   const raffle = viewQ.data?.raffle;
   const my = viewQ.data?.my;
   const winners = viewQ.data?.winners ?? [];
+  const token = viewQ.data?.token;
+  const tokenSymbol = token?.symbol ?? "TON";
+  const tokenDecimals = token?.decimals ?? 9;
 
   /* wallet display */
   const rawAddr = my?.wallet_address || (hasWallet ? Address.parse(wallet).toRawString() : undefined);
@@ -250,18 +258,24 @@ export default function RaffleUiPage() {
               <Typography variant="caption2" weight="semibold" className="uppercase tracking-wide text-gray-500 flex items-center gap-1 mb-1.5">
                 <Trophy size={14} className="text-amber-600" /> Total pool
               </Typography>
-              <Typography variant="headline" weight="bold" className="mt-1.5">{ton(pool)} TON</Typography>
+              <Typography variant="headline" weight="bold" className="mt-1.5">
+                {`${formatAmount(pool, tokenDecimals, 4)} ${tokenSymbol}`}
+              </Typography>
             </div>
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <Typography variant="caption2" weight="semibold" className="uppercase tracking-wide text-gray-500 flex items-center gap-1 mb-1.5">
                 <Gift size={14} className="text-emerald-600" /> Top {raffle?.top_n}
               </Typography>
-              <Typography variant="headline" weight="bold" className="mt-1.5">{ton(perPrize)} TON each</Typography>
+              <Typography variant="headline" weight="bold" className="mt-1.5">
+                {`${formatAmount(perPrize, tokenDecimals, 4)} ${tokenSymbol} each`}
+              </Typography>
             </div>
           </div>
 
           {my?.reward_nanoton && (
-            <p className="text-green-600 font-semibold text-center">🎉 You received {ton(my.reward_nanoton)} TON!</p>
+            <p className="text-green-600 font-semibold text-center">
+              🎉 You received {`${formatAmount(my.reward_nanoton, tokenDecimals, 4)} ${tokenSymbol}`}!
+            </p>
           )}
 
           {/* winners inside the same section */}
@@ -289,7 +303,11 @@ export default function RaffleUiPage() {
                     title={<span className="font-medium">#{w.rank}</span>}
                     after={
                       <span className="flex items-center gap-2">
-                        {w.reward_nanoton ? <span>{ton(w.reward_nanoton)} TON</span> : <span>—</span>}
+                        {w.reward_nanoton ? (
+                          <span>{`${formatAmount(w.reward_nanoton, tokenDecimals, 4)} ${tokenSymbol}`}</span>
+                        ) : (
+                          <span>—</span>
+                        )}
                         {w.tx_hash && w.tx_hash !== "toncenter-batch" && (
                           <a
                             href={txUrl(w.tx_hash) ?? undefined}

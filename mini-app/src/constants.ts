@@ -773,6 +773,9 @@ export const SAFETY_FLOOR_NANO = BigInt("10000000"); // 0.01 TON
 export const DEPLOY_FEE_NANO = BigInt("60000000"); // 0.06 TON
 // Extra cushion added to funding check to avoid edge equality issues
 export const STATE_FLIP_BUFFER_NANO = BigInt("10000000"); // 0.01 TON
+export const JETTON_TRANSFER_TON = BigInt("550000000"); // 0.55 TON per transfer call
+export const JETTON_FORWARD_TON = BigInt("50000000"); // 0.05 TON forwarded to recipient
+export const JETTON_WALLET_DEPLOY_TON = BigInt("50000000"); // 0.05 TON to deploy recipient wallet
 
 /* helpers */
 export const nanoToTon = (nano: bigint) => Number(nano) / 1e9; // → float TON

@@ -18,21 +18,23 @@ import CustomButton from "@/app/_components/Button/CustomButton";
 import ListLayout from "@/app/_components/atoms/cards/ListLayout";
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import type { StatusChipProps } from "@/components/ui/status-chips";
-import {
-  CHUNK_SIZE_RAFFLE,
-  DEPLOY_FEE_NANO,
-  EXT_FEE_NANO,
-  INT_FEE_NANO,
-  SAFETY_FLOOR_NANO,
-  STATE_FLIP_BUFFER_NANO,
-} from "@/constants";
 
 /* ------------------------------------------------------------------ *
  * helpers                                                            *
  * ------------------------------------------------------------------ */
 type Kind = "ton" | "merch";
 
-const fmtNano = (x?: string | bigint | null, d = 3) => (x ? (Number(x) / 1e9).toFixed(d) : "—");
+const formatAmount = (value?: string | bigint | null, decimals = 9, digits = 3) => {
+  if (value === null || value === undefined) return "—";
+  const num = typeof value === "bigint" ? Number(value) : Number(value);
+  if (!Number.isFinite(num)) return "—";
+  const factor = 10 ** decimals;
+  return (num / factor).toFixed(digits);
+};
+const toDisplayNumber = (value?: string | null, decimals = 9) => {
+  if (!value) return 0;
+  return Number(value) / 10 ** decimals;
+};
 const trunc = (s = "", m = 18) => (s.length <= m ? s : `${s.slice(0, m - 1)}…`);
 const bestName = (u: any) => u.username ?? ([u.first_name, u.last_name].filter(Boolean).join(" ") || u.user_id);
 const isTestnet = !(/*NOT*/ ["production", "stage", "staging"].includes(process.env.NEXT_PUBLIC_ENV || "development"));
@@ -62,19 +64,20 @@ const tonSchema = z
   .object({
     event_uuid: z.string().uuid(),
     top_n: z.coerce.number().int().min(1).max(1000),
-    prize_pool_ton: z.coerce.number().positive(),
+    prize_pool_amount: z.coerce.number().positive(),
+    token_id: z.coerce.number().int().positive(),
   })
   .superRefine((val, ctx) => {
-    const perWinner = val.prize_pool_ton / val.top_n;
-    if (!(perWinner > 0.02)) {
+    const perWinner = val.prize_pool_amount / val.top_n;
+    if (!(perWinner > 0)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["prize_pool_ton"],
-        message: `Per-winner amount must be greater than 0.02 TON. Your current per-winner amount is ${perWinner.toFixed(4)} TON.`,
+        path: ["prize_pool_amount"],
+        message: "Per-winner amount must be greater than zero.",
       });
     }
   });
-type TonVals = z.infer<typeof tonSchema>;
+type TokenFormValues = z.infer<typeof tonSchema>;
 
 const prizeSchema = z.object({
   item_name: z.string().min(3),
@@ -87,22 +90,75 @@ type PrizeVals = z.infer<typeof prizeSchema>;
 /* ------------------------------------------------------------------ *
  * small TON components                                               *
  * ------------------------------------------------------------------ */
-function TonForm({
+type TokenOption = {
+  token_id: number;
+  symbol: string;
+  name: string | null;
+  decimals: number;
+  master_address: string | null;
+  is_native: boolean;
+};
+
+function TokenForm({
   control,
   errors,
   canEdit,
   onSave,
   saving,
+  tokens,
+  selectedToken,
 }: {
   control: any;
   errors: any;
   canEdit: boolean;
   onSave: () => void;
   saving: boolean;
+  tokens: TokenOption[];
+  selectedToken?: TokenOption | null;
 }) {
   return (
     <form onSubmit={onSave}>
-      <ListLayout title="TON giveaway">
+      <ListLayout title={`${selectedToken?.symbol ?? "Token"} giveaway`}>
+        <Controller
+          control={control}
+          name="token_id"
+          render={({ field }) => (
+            <ListItem
+              title="Reward token"
+              subtitle={selectedToken?.name ?? undefined}
+              media={
+                selectedToken?.logo_url ? (
+                  <img
+                    src={selectedToken.logo_url}
+                    alt={selectedToken.symbol}
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                ) : undefined
+              }
+              after={
+                <div className="flex items-center gap-2">
+                  {!selectedToken?.logo_url && (
+                    <span className="text-xs font-semibold text-gray-500">
+                      {selectedToken?.symbol ?? ""}
+                    </span>
+                  )}
+                  <select
+                    className="border rounded-md px-2 py-1 text-sm bg-white"
+                    disabled={!canEdit}
+                    value={field.value ?? tokens[0]?.token_id ?? 1}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  >
+                    {tokens.map((token) => (
+                      <option key={token.token_id} value={token.token_id}>
+                        {token.symbol}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              }
+            />
+          )}
+        />
         <Controller
           control={control}
           name="top_n"
@@ -122,17 +178,17 @@ function TonForm({
         />
         <Controller
           control={control}
-          name="prize_pool_ton"
+          name="prize_pool_amount"
           render={({ field }) => (
             <ListInput
               {...field}
               outline
               disabled={!canEdit}
-              label="Prize pool (TON)"
+              label={`Prize pool (${selectedToken?.symbol ?? "token"})`}
               type="number"
               step="0.001"
               required
-              error={errors.prize_pool_ton?.message}
+              error={errors.prize_pool_amount?.message}
             />
           )}
         />
@@ -155,93 +211,117 @@ function TonForm({
   );
 }
 
-function SummaryTon({ info }: { info: any }) {
-  const r = info.raffle;
-  const w = info.wallet ?? {};
+function SummaryToken({ info }: { info: any }) {
+  const raffle = info.raffle;
+  const token: TokenOption | undefined = info.token;
+  const wallet = info.wallet ?? {};
+  const funding = info.funding ?? {};
 
-  const batches = Math.ceil(r.top_n / CHUNK_SIZE_RAFFLE);
-  const pool = BigInt(r.prize_pool_nanoton ?? 0);
-  const bufferFloor = SAFETY_FLOOR_NANO + STATE_FLIP_BUFFER_NANO;
-  const need = pool + DEPLOY_FEE_NANO + EXT_FEE_NANO * BigInt(batches) + INT_FEE_NANO * BigInt(r.top_n) + bufferFloor;
-  const bal = BigInt(w.balanceNano ?? 0);
-  const extFees = EXT_FEE_NANO * BigInt(batches);
-  const intFees = INT_FEE_NANO * BigInt(r.top_n);
-  const perWinner = r.top_n > 0 ? pool / BigInt(r.top_n) : BigInt(0);
+  const decimals = token?.decimals ?? 9;
+  const pool = BigInt(raffle.prize_pool_nanoton ?? 0);
+  const perWinner = raffle.top_n > 0 ? pool / BigInt(raffle.top_n) : BigInt(0);
+
+  const tonBalance = wallet.tonBalanceNano ? BigInt(wallet.tonBalanceNano) : BigInt(0);
+  const tonRequired = funding.tonRequiredNano ? BigInt(funding.tonRequiredNano) : BigInt(0);
+  const tokenBalance = wallet.tokenBalanceNano ? BigInt(wallet.tokenBalanceNano) : BigInt(0);
+  const tokenRequired = funding.tokenRequiredNano ? BigInt(funding.tokenRequiredNano) : BigInt(0);
+
+  const tonSufficient = Boolean(funding.tonSufficient);
+  const tokenSufficient = Boolean(funding.tokenSufficient);
+
+  const statusVariant: StatusChipProps["variant"] =
+    raffle.status === "completed"
+      ? "success"
+      : raffle.status === "waiting_funding"
+      ? "warning"
+      : raffle.status === "distributing"
+      ? "primary"
+      : raffle.status === "funded"
+      ? "primary"
+      : "warning";
+  const statusLabel =
+    raffle.status === "waiting_funding"
+      ? "Waiting funding"
+      : raffle.status === "completed"
+      ? "Completed"
+      : raffle.status === "distributing"
+      ? "Distributing"
+      : raffle.status === "funded"
+      ? "Funded"
+      : String(raffle.status ?? "");
+
+  const balanceTag = (ok: boolean) => (
+    <span className={ok ? "text-emerald-600" : "text-red-500"}>{ok ? "OK" : "Needs funding"}</span>
+  );
 
   return (
     <>
-      {/* Wallet */}
       <div className="mt-3">
       <ListLayout title="Funding Wallet">
-        {!w.address && <ListItem title="Wallet address will be created soon" />}
-        {w.address && (
+        {!wallet.address && <ListItem title="Wallet address will be created soon" />}
+        {wallet.address && (
           <div>
             <div className="text-sm text-gray-700 mb-1">Wallet Address</div>
             <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-              <ListInput outline readOnly value={w.address} />
+              <ListInput outline readOnly value={wallet.address} />
               <Button
                 variant="secondary"
-                className="h-10 px-3 mr-2"
-                onClick={() =>
-                  navigator.clipboard
-                    .writeText(w.address)
-                    .then(() => toast.success("Wallet address copied"))
-                }
-                title="Copy address"
-              >
-                <FiCopy size={18} />
-              </Button>
+                  className="h-10 px-3 mr-2"
+                  onClick={() =>
+                    navigator.clipboard.writeText(wallet.address).then(() => toast.success("Wallet address copied"))
+                  }
+                  title="Copy address"
+                >
+                  <FiCopy size={18} />
+                </Button>
+              </div>
+              {wallet.deployed !== undefined && (
+                <p className="text-xs text-gray-500 mt-1">{wallet.deployed ? "Wallet deployed" : "Wallet not deployed yet"}</p>
+              )}
             </div>
-          </div>
-        )}
-      </ListLayout>
+          )}
+          {wallet.tokenWalletAddress && token && !token.is_native && (
+            <div className="mt-3">
+              <div className="text-sm text-gray-700 mb-1">{token.symbol} wallet</div>
+              <ListInput outline readOnly value={wallet.tokenWalletAddress} />
+            </div>
+          )}
+        </ListLayout>
       </div>
 
-      {/* Summary */}
-      {(() => {
-        const statusVariant: StatusChipProps["variant"] =
-          r.status === "completed" ? "success" : r.status === "waiting_funding" ? "warning" : "primary";
-        const statusLabel =
-          r.status === "waiting_funding"
-            ? "Waiting funding"
-            : r.status === "completed"
-            ? "Completed"
-            : r.status === "distributing"
-            ? "Distributing"
-            : r.status === "funded"
-            ? "Funded"
-            : String(r.status ?? "");
-        return (
-          <div className="mt-3">
-            <ListLayout
-              title="Raffle summary"
-              label={{ text: statusLabel, variant: statusVariant }}
-            >
-        
-        <ListItem
-          title="Per-winner amount"
-          subtitle={<span className="text-gray-500">Note: If there are fewer participants than winners, the remaining prize pool will be redistributed among the winners.</span>}
-          after={<span className="font-medium">{fmtNano(perWinner)} TON</span>}
-        />
-        <ListItem title="Prize pool" after={<span className="font-medium">{fmtNano(pool)} TON</span>} />
-        <ListItem title="Deployment fee" after={<span className="font-medium">{fmtNano(DEPLOY_FEE_NANO)} TON</span>} />
-        <ListItem
-          title="External fees"
-          after={<span className="font-medium">{fmtNano(extFees)} TON ({batches} batch{batches !== 1 ? "es" : ""})</span>}
-        />
-        <ListItem
-          title="Internal fees"
-          after={<span className="font-medium">{fmtNano(intFees)} TON ({r.top_n} winners)</span>}
-        />
-        <ListItem title="Safety floor" after={<span className="font-medium">{fmtNano(bufferFloor)} TON</span>} />
-        <ListItem title="Total needed" after={<span className="font-medium">{fmtNano(need)} TON</span>} />
-        <ListItem title="Balance" after={<span className="font-medium">{fmtNano(bal)} TON</span>} />
-            </ListLayout>
-          </div>
-        );
-      })()}
-
-      
+      <div className="mt-3">
+        <ListLayout title="Raffle summary" label={{ text: statusLabel, variant: statusVariant }}>
+          <ListItem
+            title="Per-winner amount"
+            subtitle={<span className="text-gray-500">If there are fewer winners, the remaining pool will be redistributed.</span>}
+            after={<span className="font-medium">{`${formatAmount(perWinner, decimals, 4)} ${token?.symbol ?? "token"}`}</span>}
+          />
+          <ListItem
+            title="Prize pool"
+            after={<span className="font-medium">{`${formatAmount(pool, decimals, 4)} ${token?.symbol ?? "token"}`}</span>}
+          />
+          <ListItem
+            title="TON balance"
+            subtitle="Must cover deployment and transaction fees"
+            after={
+              <span className="font-medium">
+                {`${formatAmount(tonBalance, 9, 4)} / ${formatAmount(tonRequired, 9, 4)} TON`} &nbsp;
+                {balanceTag(tonSufficient)}
+              </span>
+            }
+          />
+          <ListItem
+            title={`${token?.symbol ?? "Token"} balance`}
+            subtitle="Must cover the prize pool"
+            after={
+              <span className="font-medium">
+                {`${formatAmount(tokenBalance, decimals, 4)} / ${formatAmount(tokenRequired, decimals, 4)} ${token?.symbol ?? "token"}`} &nbsp;
+                {balanceTag(tokenSufficient)}
+              </span>
+            }
+          />
+        </ListLayout>
+      </div>
     </>
   );
 }
@@ -479,10 +559,12 @@ export default function RaffleDefineForm() {
   } | null>(null);
 
   /* ─── TON queries & mut ─── */
-  const tonForm = useForm<TonVals>({
+  const tokensQ = trpc.raffle.listTokens.useQuery({ event_uuid: eventUuid });
+
+  const tonForm = useForm<TokenFormValues>({
     resolver: zodResolver(tonSchema),
     shouldFocusError: false,
-    defaultValues: { event_uuid: eventUuid, top_n: 10, prize_pool_ton: 1 },
+    defaultValues: { event_uuid: eventUuid, top_n: 10, prize_pool_amount: 1, token_id: 1 },
   });
   const tonQ = trpc.raffle.infoForOrganizer.useQuery({ event_uuid: eventUuid });
   const saveTon = trpc.raffle.defineOrUpdate.useMutation();
@@ -496,6 +578,13 @@ export default function RaffleDefineForm() {
     onSuccess: () => merchDashQ.refetch(), // <= RESPOND IMMEDIATELY AFTER TRIGGER
   });
 
+  /* aliases */
+  const tonData = tonQ.data;
+  const merchData = merchDashQ.data;
+  const tokens = (tokensQ.data ?? []) as TokenOption[];
+  const selectedTokenId = tonForm.watch("token_id");
+  const selectedToken = tokens.find((t) => t.token_id === selectedTokenId) ?? tokens[0];
+
   /* ─── reflect raffleKind ─── */
   useEffect(() => {
     const rk = eventQ.data?.raffleKind as Kind | null | undefined;
@@ -505,17 +594,49 @@ export default function RaffleDefineForm() {
     }
   }, [eventQ.data?.raffleKind]);
 
+  useEffect(() => {
+    if (!tokens.length) return;
+
+    if (!tonData?.raffle) {
+      const currentTokenId = tonForm.getValues("token_id");
+      if (!currentTokenId) {
+        tonForm.setValue("token_id", tokens[0].token_id, { shouldDirty: false });
+      }
+      return;
+    }
+
+    if (tonForm.formState.isDirty) return;
+
+    const tokenId = tonData.token?.token_id ?? tokens[0].token_id;
+    const decimals = tonData.token?.decimals ?? tokens.find((t) => t.token_id === tokenId)?.decimals ?? 9;
+    const poolNumber = toDisplayNumber(tonData.raffle.prize_pool_nanoton, decimals);
+
+    tonForm.reset({
+      event_uuid: eventUuid,
+      top_n: tonData.raffle.top_n,
+      prize_pool_amount: poolNumber,
+      token_id: tokenId,
+    });
+  }, [tokens, tonData?.raffle, tonData?.token, eventUuid, tonForm]);
+
   /* ─── TON save ─── */
-  const handleSaveTon = tonForm.handleSubmit((v) =>
+  const handleSaveTon = tonForm.handleSubmit((vals) => {
+    const token = tokens.find((t) => t.token_id === vals.token_id) ?? selectedToken;
+    const perWinner = vals.prize_pool_amount / vals.top_n;
+    if (token?.is_native && perWinner <= 0.02) {
+      toast.error(`Per-winner amount must be greater than 0.02 TON. Current per-winner amount is ${perWinner.toFixed(4)} TON.`);
+      return;
+    }
+
     toast.promise(
-      saveTon.mutateAsync(v).then(() => tonQ.refetch()),
+      saveTon.mutateAsync(vals).then(() => tonQ.refetch()),
       {
         loading: "Saving…",
         success: "Saved",
         error: (e) => e?.message ?? "Error",
       }
-    )
-  );
+    );
+  });
 
   /* ─── merch prize save ─── */
   const handleSavePrize = async (vals: PrizeVals) => {
@@ -538,6 +659,9 @@ export default function RaffleDefineForm() {
   };
 
   /* ─── share URLs ─── */
+  const raffleTokenSymbol = tonQ.data?.token?.symbol ?? selectedToken?.symbol ?? "TON";
+  const raffleTokenDecimals = tonQ.data?.token?.decimals ?? selectedToken?.decimals ?? 9;
+
   const tonUrl = useMemo(() => {
     const id = tonQ.data?.raffle?.raffle_uuid;
     return id ? `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}-raffle-${id}` : "";
@@ -549,17 +673,14 @@ export default function RaffleDefineForm() {
   }, [merchDashQ.data, eventUuid]);
 
   /* loading splash */
-  if (eventQ.isLoading || tonQ.isLoading || merchDashQ.isLoading)
+  if (eventQ.isLoading || tonQ.isLoading || merchDashQ.isLoading || tokensQ.isLoading)
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#EFEFF4]">
         <Preloader />
       </div>
     );
   if (eventQ.error) return <p>{eventQ.error.message}</p>;
-
-  /* aliases */
-  const tonData = tonQ.data;
-  const merchData = merchDashQ.data;
+  if (tokensQ.error) return <p>{tokensQ.error.message}</p>;
 
   /* ------------------------------------------------------------------ *
    * RENDER                                                             *
@@ -574,7 +695,7 @@ export default function RaffleDefineForm() {
           {(["ton", "merch"] as const).map((v) => (
             <ListItem
               key={v}
-              title={v === "ton" ? "TON giveaway" : "Merch raffle"}
+              title={v === "ton" ? `${selectedToken?.symbol ?? "Token"} giveaway` : "Merch raffle"}
               className={(locked !== null && locked !== v) ? "opacity-60" : ""}
               after={
                 <Radio
@@ -591,20 +712,22 @@ export default function RaffleDefineForm() {
         </ListLayout>
       </div>
 
-      {/* ================= TON ================= */}
+      {/* ================= TOKEN ================= */}
       {kind === "ton" && (
         <>
-          <TonForm
+          <TokenForm
             control={tonForm.control}
             errors={tonForm.formState.errors}
             canEdit={!tonData?.raffle || ["waiting_funding", "funded"].includes(tonData.raffle.status)}
+            tokens={tokens}
+            selectedToken={selectedToken}
             onSave={handleSaveTon}
             saving={saveTon.isLoading}
           />
 
           {tonData && (
             <div className="space-y-4 px-0">
-              <SummaryTon info={tonData} />
+              <SummaryToken info={tonData} />
 
               {tonData.raffle.status === "funded" && (
                 <CustomButton
@@ -619,7 +742,7 @@ export default function RaffleDefineForm() {
                     )
                   }
                 >
-                  Start sending TON
+                  Start sending {raffleTokenSymbol}
                 </CustomButton>
               )}
 
@@ -639,7 +762,7 @@ export default function RaffleDefineForm() {
                         onClick={() =>
                           shareLink(
                             tonUrl,
-                            `🤞 Join the raffle and win TON! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`
+                            `🤞 Join the raffle and win ${raffleTokenSymbol}! Powered by @${process.env.NEXT_PUBLIC_BOT_USERNAME}`
                           )
                         }
                       >
@@ -689,7 +812,11 @@ export default function RaffleDefineForm() {
                           after={
                             isCompleted ? (
                               <span className="flex items-center gap-2">
-                                {u.reward_nanoton ? <span>{fmtNano(u.reward_nanoton)} TON</span> : null}
+                                {u.reward_nanoton ? (
+                                  <span>
+                                    {`${formatAmount(u.reward_nanoton, raffleTokenDecimals, 4)} ${raffleTokenSymbol}`}
+                                  </span>
+                                ) : null}
                                 {u.tx_hash && u.tx_hash !== "toncenter-batch" && (
                                   <a
                                     href={txUrl(u.tx_hash) ?? undefined}

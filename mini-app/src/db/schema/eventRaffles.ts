@@ -1,6 +1,7 @@
 import { pgTable, serial, integer, text, uuid, timestamp, bigint, index, uniqueIndex, pgEnum } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { events } from "@/db/schema/events";
+import { raffleTokens } from "@/db/schema/raffleTokens";
 
 /* ------------------------------ ENUMS ----------------------------------- */
 export const raffleStatus = pgEnum("raffle_status", [
@@ -19,6 +20,11 @@ export const eventRaffles = pgTable(
     event_id: integer("event_id")
       .references(() => events.event_id, { onDelete: "cascade" })
       .notNull(),
+
+    token_id: integer("token_id")
+      .references(() => raffleTokens.token_id, { onDelete: "restrict" })
+      .notNull()
+      .default(1),
 
     top_n: integer("top_n").notNull().default(10),
     prize_pool_nanoton: bigint("prize_pool_nanoton", { mode: "bigint" }),

@@ -190,6 +190,7 @@ import {
 
 import { eventWallets, EventWalletRow } from "./schema/eventWallets";
 import { eventRaffles, raffleStatus, EventRaffleInsert, EventRaffleRow, RaffleStatusType } from "./schema/eventRaffles";
+import { raffleTokens, RaffleTokenRow } from "./schema/raffleTokens";
 import {
   eventRaffleResults,
   EventRaffleResultRow,
@@ -278,6 +279,7 @@ export {
   walletTypeEnum,
   eventWallets,
   eventRaffles,
+  raffleTokens,
   raffleStatus,
   eventRaffleResults,
   eventRaffleResultStatus,
@@ -481,6 +483,7 @@ export type {
   TokenCampaignClaimOnionInsert,
   CouponMessageSendStatus,
   EventWalletRow,
+  RaffleTokenRow,
   EventRaffleRow,
   EventRaffleInsert,
   EventRaffleResultRow,

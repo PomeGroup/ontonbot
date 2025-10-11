@@ -205,9 +205,18 @@ async function fetchCollection(collection_address: string, limit: number = 100, 
 
 /* -------------------------------------------------------------------------- */
 
-async function getJettonWallet(address: string, retries: number = 3, limit = 1, offset = 0) {
+export async function getJettonWallet(
+  address: string,
+  {
+    retries = 3,
+    limit = 50,
+    offset = 0,
+    jettonAddress,
+  }: { retries?: number; limit?: number; offset?: number; jettonAddress?: string } = {}
+) {
   const endpoint = `${BASE_URL}/jetton/wallets`;
-  const params: Record<string, any> = { address, limit, offset };
+  const params: Record<string, any> = { owner_address: address, limit, offset };
+  if (jettonAddress) params.jetton_address = jettonAddress;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
