@@ -10,6 +10,7 @@ import { userRolesDB } from "@/db/modules/userRoles.db";
 import { getUserCacheKey, usersDB } from "@/db/modules/users.db";
 import { EventCategoryRow, eventFields, eventPayment, events, orders } from "@/db/schema";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
+import { EventTokenRow } from "@/db/schema/eventTokens";
 import { hashPassword } from "@/lib/bcrypt";
 import { timestampToIsoString } from "@/lib/DateAndTime";
 import { redisTools } from "@/lib/redisTools";
@@ -52,8 +53,10 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const userId = opts.ctx.user.user_id;
   const userRole = opts.ctx.user.role;
   const event_uuid = opts.input.event_uuid;
+  type PaymentDetailsWithToken = Partial<EventPaymentSelectType & { token?: EventTokenRow | null }>;
+
   let eventData = {
-    payment_details: {} as Partial<EventPaymentSelectType>,
+    payment_details: {} as PaymentDetailsWithToken,
     category: {} as EventCategoryRow,
     ...(await eventDB.selectEventByUuid(event_uuid)),
   };

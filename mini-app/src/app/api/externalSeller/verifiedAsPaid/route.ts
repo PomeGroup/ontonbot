@@ -2,6 +2,7 @@ import "@/lib/gracefullyShutdown";
 import { getAuthenticatedUserApi } from "@/server/auth";
 import externalSellerApi from "@/lib/externalSeller.api";
 import ordersDB from "@/db/modules/orders.db";
+import eventTokensDB from "@/db/modules/eventTokens.db";
 import { isStructuredErrorShape } from "@/lib/openAPIErrorHandler";
 import { is_local_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";

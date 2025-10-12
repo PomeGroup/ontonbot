@@ -130,7 +130,7 @@ export const getRaffleSummaryForOrganizer = async (raffle_uuid: string) => {
   const perUserNano =
     raffle.prize_pool_nanoton && raffle.top_n ? raffle.prize_pool_nanoton / BigInt(raffle.top_n) : BigInt(0);
 
-  const poolNano = BigInt(raffle.prize_pool_nanoton ?? 0n);
+  const poolNano = BigInt(raffle.prize_pool_nanoton ?? 0);
   const batches = Math.ceil(raffle.top_n / CHUNK_SIZE_RAFFLE);
   const extFees = token.is_native ? EXT_FEE_NANO * BigInt(batches) : BigInt(0);
   const intFees = token.is_native ? INT_FEE_NANO * BigInt(raffle.top_n) : BigInt(0);

@@ -97,6 +97,7 @@ type TokenOption = {
   decimals: number;
   master_address: string | null;
   is_native: boolean;
+  logo_url: string | null;
 };
 
 function TokenForm({

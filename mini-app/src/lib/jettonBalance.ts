@@ -31,7 +31,7 @@ export async function fetchJettonBalance(ownerAddress: string, masterAddress: st
     logger.log(`[JettonBalance] derived wallet`, walletAddressFriendly);
 
     try {
-      const wallet = client.open(JettonWallet.create(master, walletAddress));
+      const wallet = client.open(JettonWallet.create(walletAddress));
       const balance = await wallet.getBalance();
       logger.log(`[JettonBalance] balance fetched`, balance.toString());
       return {
