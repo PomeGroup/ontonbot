@@ -4,6 +4,7 @@ import eventCategoriesDB from "@/db/modules/eventCategories.db";
 import eventFieldsDB from "@/db/modules/eventFields.db";
 import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
 import eventDB from "@/db/modules/events.db";
+import eventTokensDB from "@/db/modules/eventTokens.db";
 import { organizerTsVerified, userHasModerationAccess } from "@/db/modules/userFlags.db";
 import { userRolesDB } from "@/db/modules/userRoles.db";
 import { getUserCacheKey, usersDB } from "@/db/modules/users.db";
@@ -156,7 +157,11 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
           message: "Event Payment Data Not found (Corrupted Event)",
         });
       }
-      eventData.payment_details = { ...payment_details };
+      const token = await eventTokensDB.getTokenById(payment_details.token_id);
+      eventData.payment_details = {
+        ...payment_details,
+        token,
+      };
     }
   }
 
@@ -222,6 +227,19 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     registrant_uuid,
     capacity: mask_event_capacity ? 99 : eventData.capacity,
   };
+});
+
+const listPaymentTokens = adminOrganizerProtectedProcedure.query(async () => {
+  const tokens = await eventTokensDB.listTokens();
+  return tokens.map((token) => ({
+    token_id: token.token_id,
+    symbol: token.symbol,
+    name: token.name,
+    decimals: token.decimals,
+    master_address: token.master_address,
+    is_native: token.is_native,
+    logo_url: token.logo_url,
+  }));
 });
 
 /* -------------------------------------------------------------------------- */
@@ -317,17 +335,25 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         if (opts.input.eventData?.paid_event?.ticket_type === undefined)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Ticket Type Required for paid events" });
 
-        if (input_event_data.paid_event.payment_type === undefined)
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Payment Type Required for paid events" });
+        const tokenId = input_event_data.paid_event.token_id;
+        if (tokenId === undefined)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Payment token required for paid events" });
+
+        const paymentToken = await eventTokensDB.getTokenById(tokenId);
+        if (!paymentToken)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown payment token selected" });
 
         const ticketType = opts.input.eventData?.paid_event?.ticket_type;
         const order_price = eventDB.getPaidEventPrice(input_event_data.capacity, ticketType);
+
+        const tonToken = await eventTokensDB.getTokenBySymbol("TON");
+        if (!tonToken) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "TON token not configured" });
 
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
           user_id: user_id,
           total_price: order_price,
-          payment_type: "TON",
+          token_id: tonToken.token_id,
           state: "new",
           order_type: "event_creation",
           owner_address: "",
@@ -340,7 +366,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         await trx.insert(eventPayment).values({
           event_uuid: newEvent[0].event_uuid,
           /* -------------------------------------------------------------------------- */
-          payment_type: input_event_data.paid_event.payment_type,
+          token_id: paymentToken.token_id,
           price: event_ticket_price,
           recipient_address: input_event_data.paid_event.payment_recipient_address,
           bought_capacity: input_event_data.capacity,
@@ -620,6 +646,8 @@ const updateEvent = eventManagerPP
 
           /* ------------------- Create Order For Increase Capacity ------------------- */
           if (eventData.capacity > paymentInfo!.bought_capacity) {
+            const tonToken = await eventTokensDB.getTokenBySymbol("TON");
+            if (!tonToken) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "TON token not configured" });
             // Increase in event capacity
             // create an update_capacity_order if not exists otherwise just update it
             const update_order = (
@@ -642,7 +670,7 @@ const updateEvent = eventManagerPP
               event_uuid: eventUuid,
               order_type: "event_capacity_increment" as const,
               state: "new" as const,
-              payment_type: "TON" as const,
+              token_id: tonToken.token_id,
               total_price: 0.06 * (eventData.capacity - paymentInfo!.bought_capacity),
               user_id: user_id,
             };
@@ -987,4 +1015,5 @@ export const eventsRouter = router({
   getEventsWithFilters,
   getEventsWithFiltersInfinite,
   getCategories,
+  listPaymentTokens,
 });

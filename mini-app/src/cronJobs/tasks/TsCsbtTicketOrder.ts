@@ -14,6 +14,7 @@ import { callPridipieForOnOntonPayment } from "@/cronJobs/helper/callPridipieFor
 import { couponItemsDB } from "@/db/modules/couponItems.db";
 import { is_mainnet } from "@/services/tonCenter";
 import eventDB from "@/db/modules/events.db";
+import eventTokensDB from "@/db/modules/eventTokens.db";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -56,6 +57,11 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
 
       if (!paymentInfo) {
         logger.error("error_what the fuck : ", "event Does not have payment !!!", event_uuid);
+        continue;
+      }
+      const paymentToken = await eventTokensDB.getTokenById(Number(paymentInfo.token_id));
+      if (!paymentToken) {
+        logger.error("missing payment token configuration", event_uuid);
         continue;
       }
       //
@@ -124,7 +130,7 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
           message: `CSBT Ticket ${order_count}
 <b>${eventData?.title || "Event"}</b>
 <b>${paymentInfo.title}</b>
-Price: ${paymentInfo.price} ${paymentInfo.payment_type}
+Price: ${paymentInfo.price} ${paymentToken.symbol}
 👤user_id : <code>${ordr.user_id}</code>
 👤username : @${username}
 Trx Hash: <a href='https://${prefix}tonviewer.com/transaction/${trxHashUrl}'>🔗 TRX</a>

@@ -154,7 +154,7 @@ export const PaidEventSchema = z
   .object({
     has_payment: z.boolean({ required_error: "payment status is required" }).optional().default(false),
     payment_recipient_address: z.string({ required_error: "recipient address is required" }).optional().default(""),
-    payment_type: z.enum(["USDT", "TON", "STAR"], { required_error: "payment type is required" }).optional(),
+    token_id: z.number({ required_error: "token is required" }).int().positive().optional(),
     payment_amount: z.number({ required_error: "payment amount is required" }).optional(),
     has_nft: z.boolean({ required_error: "NFT status is required" }).optional().default(false),
     nft_title: z.string({ required_error: "NFT title is required" }).optional().default(""),
@@ -183,12 +183,12 @@ export const PaidEventSchema = z
         }
       }
 
-      // Validate that `payment_type` is present
-      if (!data.payment_type)
+      // Validate that a payment token is present
+      if (!data.token_id)
         ctx.addIssue({
           code: "custom",
-          path: ["payment_type"],
-          message: "Payment type is required.",
+          path: ["token_id"],
+          message: "Payment token is required.",
         });
 
       // Validate that `payment_amount` is present and greater than 0

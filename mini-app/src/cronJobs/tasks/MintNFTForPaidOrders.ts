@@ -13,6 +13,8 @@ import { sendLogNotification } from "@/lib/tgBot";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { couponItemsDB } from "@/db/modules/couponItems.db";
+import { config } from "@/server/config";
+import { isAxiosError } from "axios";
 
 export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -26,6 +28,20 @@ export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
     .orderBy(asc(orders.created_at))
     .limit(100)
     .execute();
+
+  const minterWalletAddress = config?.ONTON_MINTER_WALLET as string | undefined;
+  if (!minterWalletAddress) {
+    logger.error("MintNFTForPaidOrders: ONTON_MINTER_WALLET not configured");
+    return;
+  }
+
+  const globalMnemonic = process.env.MNEMONIC;
+  if (!globalMnemonic) {
+    logger.error("MintNFTForPaidOrders: MNEMONIC env variable missing");
+    return;
+  }
+
+  logger.log(`MintNFTForPaidOrders: using global minter wallet ${minterWalletAddress}`);
 
   /* -------------------------------------------------------------------------- */
   /*                               ORDER PROCCESS                               */
@@ -96,11 +112,19 @@ export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
       const nft_index = nft_count_result[0].count || 0;
 
       logger.log(`minting_nft_${ordr.event_uuid}_${nft_index}_${paymentInfo?.collectionAddress}_${meta_data_url}`);
-
-      const nft_address = await mintNFT(ordr.owner_address, paymentInfo?.collectionAddress, nft_index, meta_data_url);
+      const nft_address = await mintNFT(
+        ordr.owner_address,
+        paymentInfo?.collectionAddress,
+        nft_index,
+        meta_data_url,
+        {
+          mnemonic: globalMnemonic,
+          expectedMinterAddress: minterWalletAddress,
+        }
+      );
       if (!nft_address) {
         logger.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_miss`);
-        return;
+        continue;
       }
       logger.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_${nft_address}`);
       /* -------------------------------------------------------------------------- */
@@ -168,7 +192,16 @@ export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
 
       // await pushLockTTl();
     } catch (error) {
-      logger.log(`nft_mint_error , ${error}`);
+      if (isAxiosError(error)) {
+        logger.error("nft_mint_error", {
+          message: error.message,
+          status: error.response?.status,
+          response: error.response?.data,
+          headers: error.response?.headers,
+        });
+      } else {
+        logger.error("nft_mint_error", error);
+      }
     }
   }
 };

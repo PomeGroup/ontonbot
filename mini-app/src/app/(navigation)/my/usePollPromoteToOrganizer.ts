@@ -48,7 +48,7 @@ export default function usePollPromoteToOrganizer(onFinish: (_success: boolean) 
       await transfer(
         (config.ONTON_WALLET_ADDRESS as string) || "UQA02ekDpWFrIL5xh5g7WVY6UrcQRINXli5gDlD7cQrEkfOM",
         Number(response.total_price),
-        response.payment_type,
+        response.token.symbol as "TON",
         {
           comment: `onton_order=${response.uuid}`,
         }

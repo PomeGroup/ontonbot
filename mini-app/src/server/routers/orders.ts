@@ -4,6 +4,7 @@ import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedPr
 import { logger } from "@/server/utils/logger";
 import ordersDB from "@/db/modules/orders.db";
 import { selectUserById } from "@/db/modules/users.db";
+import eventTokensDB from "@/db/modules/eventTokens.db";
 
 // Hard-coded example event UUID
 const hardCodedEventUuid = "4e76c66c-ef3d-483c-9836-a3e12815b044";
@@ -71,12 +72,15 @@ export const ordersRouter = router({
           });
         }
         // If it's 'new', 'confirming', or 'cancelled', just return it
-        return userOrder;
+        const token = await eventTokensDB.getTokenById(Number(userOrder.token_id));
+        return { ...userOrder, token };
       }
 
       // DB call: create a new 'promote_to_organizer' order
       const newOrder = await ordersDB.createPromoteToOrganizerOrder(user_id, hardCodedEventUuid);
-      return newOrder[0];
+      const inserted = newOrder[0];
+      const token = await eventTokensDB.getTokenById(Number(inserted.token_id));
+      return { ...inserted, token };
     }),
 
   // 4) Get a user's 'promote_to_organizer' order
@@ -86,7 +90,9 @@ export const ordersRouter = router({
       const user_id = opts.ctx.user.user_id;
       // DB call moved to ordersDB
       const resultOrder = await ordersDB.getPromoteToOrganizerOrder(user_id);
+      if (!resultOrder) return null;
+      const token = await eventTokensDB.getTokenById(Number(resultOrder.token_id));
 
-      return resultOrder ?? null;
+      return { ...resultOrder, token };
     }),
 });

@@ -1,4 +1,4 @@
-import { PaymentType } from "./order.types";
+import { PaymentToken } from "./order.types";
 
 export interface OrganizerType {
   user_id: number;
@@ -38,7 +38,8 @@ export interface EventDataOnlyType {
     ticketImage: string;
     count: number;
     collectionAddress: string | null;
-    payment_type: PaymentType;
+    payment_type?: string;
+    token?: PaymentToken;
   };
   event_id: number;
   event_uuid: string;
