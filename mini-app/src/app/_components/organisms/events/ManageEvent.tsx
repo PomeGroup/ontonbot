@@ -92,11 +92,11 @@ function ManageEvent({ event }: ManageEventProps) {
           has_waiting_list: Boolean(event.has_waiting_list),
           // Payment
           paid_event: {
-            payment_type: event.payment_details?.payment_type,
+            token_id: event.payment_details?.token_id,
             payment_recipient_address: event.payment_details?.recipient_address,
             nft_description: event.payment_details?.description || undefined,
             nft_title: event.payment_details?.title || undefined,
-            has_payment: Boolean(event.payment_details?.payment_type),
+            has_payment: Boolean(event.payment_details?.token_id),
             payment_amount: event.payment_details?.price,
             nft_image_url: event.payment_details?.ticketImage || undefined,
             bought_capacity: event.payment_details?.bought_capacity,

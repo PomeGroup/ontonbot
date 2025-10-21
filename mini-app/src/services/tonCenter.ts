@@ -205,9 +205,18 @@ async function fetchCollection(collection_address: string, limit: number = 100, 
 
 /* -------------------------------------------------------------------------- */
 
-async function getJettonWallet(address: string, retries: number = 3, limit = 1, offset = 0) {
+export async function getJettonWallet(
+  address: string,
+  {
+    retries = 3,
+    limit = 50,
+    offset = 0,
+    jettonAddress,
+  }: { retries?: number; limit?: number; offset?: number; jettonAddress?: string } = {}
+) {
   const endpoint = `${BASE_URL}/jetton/wallets`;
-  const params: Record<string, any> = { address, limit, offset };
+  const params: Record<string, any> = { owner_address: address, limit, offset };
+  if (jettonAddress) params.jetton_address = jettonAddress;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -325,12 +334,13 @@ type InMsg = {
   };
 };
 type OrderTransaction = {
-  value: number;
+  rawAmount: bigint;
   order_uuid: string;
-  order_type: "TON" | "USDT";
+  kind: "ton" | "jetton";
   verfied: boolean;
   owner: Address;
   trx_hash: string;
+  jettonMaster?: string;
 };
 
 async function parseTransactions(
@@ -360,8 +370,8 @@ async function parseTransactions(
         if (comment.startsWith(ORDER_PREFIX)) {
           orders.push({
             order_uuid: comment.replace(ORDER_PREFIX, ""),
-            value: in_msg.value / 1e9,
-            order_type: "TON",
+            rawAmount: BigInt(Math.round(Number(in_msg.value))),
+            kind: "ton",
             verfied: true,
             owner: Address.parse(source),
             trx_hash: trx?.hash,
@@ -383,13 +393,11 @@ async function parseTransactions(
       let forwardPayload = originalForwardPayload.clone();
 
       // IMPORTANT: we have to verify the source of this message because it can be faked
-      const jetton_wallet_data = await getJettonWallet(source);
-      let jetton_master = "";
-      if (jetton_wallet_data?.jetton_wallets) {
-        if (jetton_wallet_data?.jetton_wallets[0].jetton) {
-          jetton_master = jetton_wallet_data.jetton_wallets[0].jetton;
-        }
-      }
+      const jetton_wallet_data = await getJettonWallet(source).catch((err) => {
+        console.warn("Failed to fetch jetton wallet data", err);
+        return null;
+      });
+      const jetton_master = jetton_wallet_data?.jetton_wallets?.[0]?.jetton ?? "";
       // logger.log("jetton_master" , jetton_master)
 
       if (forwardPayload.remainingBits > 32) {
@@ -402,9 +410,10 @@ async function parseTransactions(
           if (comment.startsWith(ORDER_PREFIX)) {
             orders.push({
               order_uuid: comment.replace(ORDER_PREFIX, ""),
-              value: Number(jettonAmount) / 1e6,
-              order_type: "USDT",
-              verfied: jetton_master === USDT_CADDRESS,
+              rawAmount: jettonAmount,
+              kind: "jetton",
+              jettonMaster: jetton_master,
+              verfied: Boolean(jetton_master),
               owner: Address.parse(jettonSender?.toString()!),
               trx_hash: trx?.hash,
             });

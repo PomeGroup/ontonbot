@@ -4,6 +4,7 @@ import { Address, Cell, internal, beginCell, contractAddress, StateInit, SendMod
 import { KeyPair, mnemonicToPrivateKey } from "@ton/crypto";
 import { TonClient, WalletContractV4 } from "@ton/ton";
 import { logger } from "@/server/utils/logger";
+import { config } from "@/server/config";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -164,33 +165,10 @@ export class NftCollection {
     body.storeCoins(params.amount);
     const nftItemContent = beginCell();
     nftItemContent.storeAddress(params.itemOwnerAddress);
-    const uriContent = beginCell();
-    uriContent.storeBuffer(Buffer.from(params.commonContentUrl));
-    nftItemContent.storeRef(uriContent.endCell());
+    const offChainCell = encodeOffChainContent(params.commonContentUrl);
+    nftItemContent.storeRef(offChainCell);
     body.storeRef(nftItemContent.endCell());
     logger.log(`params.commonContentUrl : `, params.commonContentUrl);
-    return body.endCell();
-  }
-
-  public createMintBody2(params: mintParams): Cell {
-    const body = beginCell();
-    body.storeUint(1, 32);
-    body.storeUint(params.queryId || 0, 64);
-    body.storeUint(params.itemIndex, 64);
-    body.storeCoins(params.amount);
-
-    // Begin a cell that stores the itemOwnerAddress and the NFT content
-    const nftItemContent = beginCell();
-    nftItemContent.storeAddress(params.itemOwnerAddress);
-
-    // Use encodeOffChainContent to insert the URL with the 0x01 prefix & snake cell
-    const offChainCell = encodeOffChainContent(params.commonContentUrl);
-
-    // Store the off-chain cell as a reference
-    nftItemContent.storeRef(offChainCell);
-
-    // Finally, store the nftItemContent cell into the body
-    body.storeRef(nftItemContent.endCell());
     return body.endCell();
   }
 
@@ -300,13 +278,42 @@ export class NftItem {
   }
 }
 
+type MintWalletOptions = string | { mnemonic?: string; expectedMinterAddress?: string };
+
+function extractWalletOptions(options?: MintWalletOptions): {
+  mnemonic: string | undefined;
+  expectedMinterAddress: string | undefined;
+} {
+  if (!options) {
+    return { mnemonic: undefined, expectedMinterAddress: undefined };
+  }
+
+  if (typeof options === "string") {
+    return { mnemonic: options, expectedMinterAddress: undefined };
+  }
+
+  return {
+    mnemonic: options.mnemonic,
+    expectedMinterAddress: options.expectedMinterAddress,
+  };
+}
+
+function normalizeAddress(address: string): string | null {
+  try {
+    return Address.parse(address).toString({ bounceable: false });
+  } catch (error) {
+    logger.error("normalizeAddress: failed to parse address", { address, error });
+    return null;
+  }
+}
+
 export async function mintNFT(
   owner_address: string,
   collection_address: string,
   nftIndex: number | null,
   nft_metadata_url: string,
-  MNEMONIC?: string
-) {
+  options?: MintWalletOptions
+): Promise<string | null> {
   if (nftIndex === null) {
     const result = await tonCenter.fetchCollection(collection_address);
     nftIndex = Number(result?.nft_collections[0]?.next_item_index);
@@ -315,8 +322,35 @@ export async function mintNFT(
   let nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);
   if (nft_addres) return nft_addres;
 
-  const wallet = await openWallet(MNEMONIC?.split(" ") || process.env.MNEMONIC!.split(" "));
+  const { mnemonic, expectedMinterAddress } = extractWalletOptions(options);
+  const mnemonicSource = mnemonic ?? process.env.MNEMONIC ?? "";
+  const mnemonicWords = mnemonicSource.split(" ").filter(Boolean);
+  if (mnemonicWords.length === 0) {
+    logger.error("mintNFT: MNEMONIC is not configured or empty");
+    return null;
+  }
+
+  const wallet = await openWallet(mnemonicWords);
   logger.log(`mintNFT: openWallet minting nft address : ${nft_addres} `, wallet.contract.address);
+
+  const normalizedExpected =
+    expectedMinterAddress !== undefined
+      ? normalizeAddress(expectedMinterAddress)
+      : mnemonic
+        ? null
+        : config?.ONTON_MINTER_WALLET
+          ? normalizeAddress(config.ONTON_MINTER_WALLET)
+          : null;
+  const normalizedWalletAddress = wallet.contract.address.toString({ bounceable: false });
+
+  if (normalizedExpected && normalizedWalletAddress !== normalizedExpected) {
+    logger.error("mintNFT: mnemonic address mismatch", {
+      expected: normalizedExpected,
+      derived: normalizedWalletAddress,
+    });
+    return null;
+  }
+
   const collectionData = {
     ownerAddress: wallet.contract.address,
     royaltyPercent: 0.1, // 0.1 = 10%
@@ -355,8 +389,37 @@ export async function mintNFT(
   return null;
 }
 
-export async function deployCollection(collectio_metadata_url: string, MNEMONIC?: string) {
-  const wallet = await openWallet(MNEMONIC?.split(" ") || process.env.MNEMONIC!.split(" "));
+export async function deployCollection(
+  collectio_metadata_url: string,
+  options?: MintWalletOptions
+): Promise<string | null> {
+  const { mnemonic, expectedMinterAddress } = extractWalletOptions(options);
+  const mnemonicSource = mnemonic ?? process.env.MNEMONIC ?? "";
+  const mnemonicWords = mnemonicSource.split(" ").filter(Boolean);
+  if (mnemonicWords.length === 0) {
+    logger.error("deployCollection: MNEMONIC is not configured or empty");
+    return null;
+  }
+
+  const wallet = await openWallet(mnemonicWords);
+
+  const normalizedExpected =
+    expectedMinterAddress !== undefined
+      ? normalizeAddress(expectedMinterAddress)
+      : mnemonic
+        ? null
+        : config?.ONTON_MINTER_WALLET
+          ? normalizeAddress(config.ONTON_MINTER_WALLET)
+          : null;
+  const normalizedWalletAddress = wallet.contract.address.toString({ bounceable: false });
+
+  if (normalizedExpected && normalizedWalletAddress !== normalizedExpected) {
+    logger.error("deployCollection: mnemonic address mismatch", {
+      expected: normalizedExpected,
+      derived: normalizedWalletAddress,
+    });
+    return null;
+  }
 
   logger.log("Start deploy of nft collection...");
   const collectionData = {

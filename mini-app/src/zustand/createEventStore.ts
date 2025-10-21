@@ -22,12 +22,10 @@ export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
   };
 };
 
-type PaymentType = "USDT" | "TON" | "STAR";
-
 type PaidInfoErrors = {
   has_payment?: string[] | undefined;
   payment_recipient_address?: string[] | undefined;
-  payment_type?: string[] | undefined;
+  token_id?: string[] | undefined;
   payment_amount?: string[] | undefined;
   has_nft?: string[] | undefined;
   nft_title?: string[] | undefined;
@@ -73,7 +71,7 @@ export type CreateEventStoreType = {
    * PAID EVENT CREATION ACTIONS
    */
   togglePaidEvent: () => void;
-  changePaymentType: (paymentType: PaymentType) => void;
+  changePaymentToken: (tokenId: number) => void;
   changeTicketType: (ticketType: EventTicketType) => void;
   changePaymentAmount: (amount: number) => void;
   // --- // nft info
@@ -225,7 +223,7 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           const paidEventInfo = {
             has_payment: !state.eventData?.paid_event?.has_payment,
             has_nft: true,
-            payment_type: "TON",
+            token_id: state.eventData?.paid_event?.token_id ?? 1,
             ticket_type: "NFT",
             payment_amount: 1,
           } as Partial<PaidEventType>;
@@ -260,10 +258,12 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           }
         });
       },
-      changePaymentType(payment_type) {
+      changePaymentToken(tokenId) {
         set((state) => {
-          state.eventData.paid_event.payment_type = payment_type;
-          state.eventData.paid_event.payment_amount = payment_type === "USDT" ? 5 : 1;
+          state.eventData.paid_event.token_id = tokenId;
+          if (!state.eventData.paid_event.payment_amount) {
+            state.eventData.paid_event.payment_amount = 1;
+          }
         });
       },
       changePaymentAmount(amount: number) {

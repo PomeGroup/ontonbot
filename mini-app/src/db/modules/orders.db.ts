@@ -1,5 +1,6 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema";
+import eventTokensDB from "@/db/modules/eventTokens.db";
 import { and, count, eq, isNull, not, or } from "drizzle-orm";
 import { is_dev_env, is_stage_env } from "../../server/utils/evnutils";
 import { OrderTypeValues } from "@/db/schema/orders";
@@ -54,12 +55,14 @@ const findPromoteToOrganizerOrder = async (userId: number) => {
  * and return the newly inserted row(s).
  */
 const createPromoteToOrganizerOrder = async (userId: number, eventUuid: string) => {
+  const tonToken = await eventTokensDB.getTokenBySymbol("TON");
+  if (!tonToken) throw new Error("TON token not configured");
   return db
     .insert(orders)
     .values({
       order_type: "promote_to_organizer",
       user_id: userId,
-      payment_type: "TON",
+      token_id: tonToken.token_id,
       total_price: ORGANIZER_PROMOTE_PRICE,
       state: "new",
       event_uuid: eventUuid,

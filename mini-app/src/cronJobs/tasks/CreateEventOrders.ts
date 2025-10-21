@@ -13,6 +13,7 @@ import { buildEventDraft } from "@/cronJobs/helper/buildEventDraft";
 import ordersDB from "@/db/modules/orders.db";
 import eventPaymentDB from "@/db/modules/eventPayment.db";
 import { handleTicketType } from "@/cronJobs/helper/handleTicketType";
+import { isAxiosError } from "axios";
 
 /**
  * Main entry for your cron job:
@@ -80,7 +81,16 @@ async function processOrderCreation(order: OrderRow) {
     // Update DB in a transaction
     await updateDatabaseRecords(order, event, paymentInfo, mainEventActivityId, collectionAddress, ticketActivityId);
   } catch (error) {
-    logger.error(`event_creation_error ${error}`);
+    if (isAxiosError(error)) {
+      logger.error("event_creation_error", {
+        message: error.message,
+        status: error.response?.status,
+        response: error.response?.data,
+        headers: error.response?.headers,
+      });
+    } else {
+      logger.error("event_creation_error", error);
+    }
   }
 }
 

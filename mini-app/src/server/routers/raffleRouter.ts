@@ -2,7 +2,7 @@
 
 import { router, eventManagementProtectedProcedure, initDataProtectedProcedure } from "@/server/trpc";
 import { z } from "zod";
-import { Address, toNano } from "@ton/ton";
+import { Address } from "@ton/ton";
 import { randomInt } from "crypto";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -13,18 +13,12 @@ import eventMerchRafflesDB from "@/db/modules/eventMerchRaffles.db";
 import eventMerchPrizesDB from "@/db/modules/eventMerchPrizes.db";
 import eventMerchPrizeResultsDB from "@/db/modules/eventMerchPrizeResults.db";
 import { eventRaffles, RaffleStatusType } from "@/db/schema/eventRaffles";
+import raffleTokensDB from "@/db/modules/raffleTokens.db";
 
 import { db } from "@/db/db";
 
 import { fetchTonBalance } from "@/lib/tonBalance";
-import {
-  CHUNK_SIZE_RAFFLE,
-  DEPLOY_FEE_NANO,
-  EXT_FEE_NANO,
-  INT_FEE_NANO,
-  SAFETY_FLOOR_NANO,
-  STATE_FLIP_BUFFER_NANO,
-} from "@/constants";
+import { amountToUnits } from "@/lib/tokenUnits";
 import eventDB from "@/db/modules/events.db";
 import { eventRegistrantsDB } from "@/db/modules/eventRegistrants.db";
 import { v2_client } from "@/services/tonCenter";
@@ -62,10 +56,24 @@ export const ensureRegistrationOK = async (eventId: number, userId: number): Pro
   }
 };
 
-const serialise = (row: typeof eventRaffles.$inferSelect) => ({
-  ...row,
-  prize_pool_nanoton: row.prize_pool_nanoton ? row.prize_pool_nanoton.toString() : null,
-});
+const serialise = async (row: typeof eventRaffles.$inferSelect) => {
+  const token = await raffleTokensDB.getTokenById(row.token_id);
+  return {
+    ...row,
+    prize_pool_nanoton: row.prize_pool_nanoton ? row.prize_pool_nanoton.toString() : null,
+    token: token
+      ? {
+          token_id: token.token_id,
+          symbol: token.symbol,
+          name: token.name,
+          decimals: token.decimals,
+          master_address: token.master_address,
+          is_native: token.is_native,
+          logo_url: token.logo_url,
+        }
+      : null,
+  };
+};
 
 /* ───────── router ───────── */
 export const raffleRouter = router({
@@ -77,15 +85,16 @@ export const raffleRouter = router({
         .object({
           event_uuid: z.string().uuid(),
           top_n: z.number().int().min(1).max(1000),
-          prize_pool_ton: z.number().positive(),
+          prize_pool_amount: z.number().positive(),
+          token_id: z.number().int().positive().optional(),
         })
         .superRefine((val, ctx) => {
-          const perWinner = val.prize_pool_ton / val.top_n;
-          if (!(perWinner > 0.02)) {
+          const perWinner = val.prize_pool_amount / val.top_n;
+          if (!(perWinner > 0)) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              path: ["prize_pool_ton"],
-              message: `Per-winner amount must be greater than 0.02 TON. Your current per-winner amount is ${perWinner.toFixed(4)} TON.`,
+              path: ["prize_pool_amount"],
+              message: "Per-winner amount must be greater than zero.",
             });
           }
         })
@@ -99,13 +108,46 @@ export const raffleRouter = router({
           message: "Already using merch raffle",
         });
 
-      const nano = toNano(input.prize_pool_ton.toString());
-      const row = await eventRafflesDB.upsert(eventId, input.top_n, nano); // helper you already have
+      const tokenId = input.token_id ?? 1;
+      const token = await raffleTokensDB.getTokenById(tokenId);
+      if (!token) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown raffle token" });
+      }
+
+      const perWinner = input.prize_pool_amount / input.top_n;
+      if (token.is_native && perWinner <= 0.02) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Per-winner amount must be greater than 0.02 TON. Your current per-winner amount is ${perWinner.toFixed(4)} TON.`,
+        });
+      }
+
+      const poolNano = amountToUnits(input.prize_pool_amount, token.decimals ?? 0);
+      if (poolNano <= BigInt(0)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Prize pool must be greater than zero." });
+      }
+
+      const row = await eventRafflesDB.upsert(eventId, input.top_n, poolNano, tokenId);
       /* ❷ mark the event the first time */
       if (kind === null) {
         await eventDB.patchEvent(eventId, { raffleKind: "ton" });
       }
       return serialise(row);
+    }),
+
+  listTokens: eventManagementProtectedProcedure
+    .input(z.object({ event_uuid: z.string().uuid() }))
+    .query(async () => {
+      const tokens = await raffleTokensDB.listTokens();
+      return tokens.map((token) => ({
+        token_id: token.token_id,
+        symbol: token.symbol,
+        name: token.name,
+        decimals: token.decimals,
+        master_address: token.master_address,
+        is_native: token.is_native,
+        logo_url: token.logo_url,
+      }));
     }),
 
   /* ───────────────── MERCH  –  RAFFLE SHELL ───────────────── */
@@ -184,47 +226,20 @@ export const raffleRouter = router({
     const summary = await eventRafflesDB.getRaffleSummaryForOrganizer(raffle.raffle_uuid);
     if (!summary) throw new TRPCError({ code: "NOT_FOUND", message: "raffle disappeared" });
 
-    /* 3️⃣ live wallet probe */
-    let balanceNano = BigInt(0);
+    /* 3️⃣ live deployment probe (balance already calculated inside summary) */
     let deployed = false;
-    try {
-      balanceNano = await fetchTonBalance(summary.wallet.address!);
-    } catch {
-      // balance probe failed; keep as 0 and deployed=false
-    }
-    try {
-      const provider = v2_client().provider(Address.parse(summary.wallet.address!));
-      const st: any = await provider.getState();
-      deployed = st?.state === "active"; // explicit deployment flag for UI
-    } catch {
-      deployed = false;
+    if (summary.wallet.address) {
+      try {
+        const provider = v2_client().provider(Address.parse(summary.wallet.address));
+        const st: any = await provider.getState();
+        deployed = st?.state === "active";
+      } catch {
+        deployed = false;
+      }
     }
     Object.assign(summary.wallet as any, {
-      balanceNano: balanceNano.toString(),
       deployed,
     });
-
-    /* 4️⃣ auto-flip status based on balance ONLY (deployment independent) */
-    if (raffle.status !== "distributing" && raffle.status !== "completed") {
-      const batches = BigInt(Math.ceil(raffle.top_n / CHUNK_SIZE_RAFFLE));
-      const poolNano = BigInt(raffle.prize_pool_nanoton ?? 0);
-      const needNano =
-        poolNano + EXT_FEE_NANO * batches + INT_FEE_NANO * BigInt(raffle.top_n) + DEPLOY_FEE_NANO + SAFETY_FLOOR_NANO;
-
-      const funded = balanceNano >= needNano;
-
-      const FUNDED: RaffleStatusType = "funded";
-      const WAITING_FUNDING: RaffleStatusType = "waiting_funding";
-
-      if (funded && raffle.status === WAITING_FUNDING) {
-        await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: FUNDED });
-        summary.raffle = { ...summary.raffle, status: FUNDED };
-      }
-      if (!funded && raffle.status === FUNDED) {
-        await eventRafflesDB.updateRaffle(raffle.raffle_id, { status: WAITING_FUNDING });
-        summary.raffle = { ...summary.raffle, status: WAITING_FUNDING };
-      }
-    }
 
     return summary;
   }),
@@ -272,6 +287,14 @@ export const raffleRouter = router({
       if (!raffle || raffle.status !== "funded") throw new TRPCError({ code: "BAD_REQUEST" });
 
       /* <-- use the helper */
+      const fundingSnapshot = await eventRafflesDB.getRaffleSummaryForOrganizer(raffle.raffle_uuid);
+      if (!fundingSnapshot?.funding?.tonSufficient || !fundingSnapshot.funding.tokenSufficient) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Raffle wallet is not fully funded.",
+        });
+      }
+
       const n = await eventRaffleResultsDB.countParticipantsForRaffle(raffle.raffle_id);
       if (n === 0)
         throw new TRPCError({

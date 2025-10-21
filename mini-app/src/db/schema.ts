@@ -37,6 +37,7 @@ import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResult
 import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 import { events, raffleKindEnum, RaffleKindType } from "./schema/events";
+import { eventTokens } from "./schema/eventTokens";
 import { giataCity } from "./schema/giataCity";
 import { moderationLog, ModerationLogActionType } from "./schema/moderation_log";
 import { nftItems } from "./schema/nft_items";
@@ -190,6 +191,7 @@ import {
 
 import { eventWallets, EventWalletRow } from "./schema/eventWallets";
 import { eventRaffles, raffleStatus, EventRaffleInsert, EventRaffleRow, RaffleStatusType } from "./schema/eventRaffles";
+import { raffleTokens, RaffleTokenRow } from "./schema/raffleTokens";
 import {
   eventRaffleResults,
   EventRaffleResultRow,
@@ -278,6 +280,7 @@ export {
   walletTypeEnum,
   eventWallets,
   eventRaffles,
+  raffleTokens,
   raffleStatus,
   eventRaffleResults,
   eventRaffleResultStatus,
@@ -291,6 +294,7 @@ export {
   eventMerchPrizeResultStatus,
   raffleKindEnum,
   eventMerchNotifStatus,
+  eventTokens,
 };
 
 // export all the tables and relations
@@ -481,6 +485,7 @@ export type {
   TokenCampaignClaimOnionInsert,
   CouponMessageSendStatus,
   EventWalletRow,
+  RaffleTokenRow,
   EventRaffleRow,
   EventRaffleInsert,
   EventRaffleResultRow,

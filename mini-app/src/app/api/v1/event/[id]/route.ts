@@ -7,6 +7,7 @@ import { getAuthenticatedUser } from "@/server/auth";
 import { affiliateClicksDB } from "@/db/modules/affiliateClicks.db";
 import { affiliateLinksDB } from "@/db/modules/affiliateLinks.db";
 import { couponItemsDB } from "@/db/modules/couponItems.db";
+import eventTokensDB from "@/db/modules/eventTokens.db";
 import { getByEventUuidAndUserId } from "@/db/modules/eventRegistrants.db";
 import eventDB from "@/db/modules/events.db";
 import ordersDB from "@/db/modules/orders.db";
@@ -164,6 +165,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         },
       });
       if (event_payment_info) {
+        const paymentToken = await eventTokensDB.getTokenById(Number(event_payment_info.token_id));
+        event_payment_info = {
+          ...event_payment_info,
+          token: paymentToken,
+          payment_type: paymentToken?.symbol ?? null,
+        } as typeof event_payment_info;
         const eventTicketingType = event_payment_info?.ticket_type;
 
         const ticketOrderTypeMap = {

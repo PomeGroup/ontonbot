@@ -90,8 +90,9 @@ function EventCard({ event, afterTitle, timeOnly, noClick }: EventCardProps, ref
   const isOnline = participationType === "online";
 
   // Determine currency for ticket price
-  const validCurrencies = ["USDT", "TON"];
-  const currency = validCurrencies.includes(paymentType?.toUpperCase()) ? paymentType?.toUpperCase() : "";
+  const normalizedPaymentType = paymentType?.toString().toUpperCase();
+  const currency =
+    normalizedPaymentType && !["FREE", "UNKNOWN", ""].includes(normalizedPaymentType) ? normalizedPaymentType : "";
 
   const handleEventClick = () => {
     // If noClick prop is set, do nothing

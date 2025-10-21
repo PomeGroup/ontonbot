@@ -2,6 +2,7 @@ import { db } from "@/db/db";
 import { eventRaffleResults } from "@/db/schema/eventRaffleResults";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import eventRafflesDB from "./eventRaffles.db";
+import raffleTokensDB from "./raffleTokens.db";
 import { users } from "@/db/schema";
 
 /* ------------------------- INSERT USER SCORE ---------------------------- */
@@ -57,6 +58,8 @@ export const getUserView = async (raffle_uuid: string, user_id: number) => {
   /* 1) raffle row ---------------------------------------------------- */
   const raffle = await eventRafflesDB.fetchRaffleByUuid(raffle_uuid);
   if (!raffle) return null;
+
+  const token = await raffleTokensDB.getTokenById(raffle.token_id);
 
   /* 2) user’s own result (if any) ----------------------------------- */
   const myRaw = (
@@ -117,6 +120,17 @@ export const getUserView = async (raffle_uuid: string, user_id: number) => {
       ...raffle,
       prize_pool_nanoton: raffle.prize_pool_nanoton ? raffle.prize_pool_nanoton.toString() : undefined,
     },
+    token: token
+      ? {
+          token_id: token.token_id,
+          symbol: token.symbol,
+          name: token.name,
+          decimals: token.decimals,
+          master_address: token.master_address,
+          is_native: token.is_native,
+          logo_url: token.logo_url,
+        }
+      : null,
     my,
     winners,
   };
